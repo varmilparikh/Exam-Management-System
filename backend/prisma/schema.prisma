@@ -1,0 +1,353 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  COE
+  HOD
+  FACULTY
+}
+
+model Department {
+  id String @id @default(uuid())
+
+  name String @unique
+
+  employees Employee[]
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@map("departments")
+}
+
+model Employee {
+  // Primary Key
+  id String @id @default(uuid())
+
+  // Basic Information
+  employeeCode String  @unique
+  name         String
+  email        String  @unique
+  phone        String?
+
+  // Authentication
+  password String?
+
+  loginProvider LoginProvider @default(LOCAL)
+
+  isEmailVerified Boolean @default(false)
+
+  lastLogin DateTime?
+
+  // Profile
+  profileImage String? @default("/default-avatar.png")
+
+  designation String
+
+  role Role
+
+  // Duty Statistics
+  averageDuty   Int @default(10)
+  attendedCount Int @default(0)
+  transferCount Int @default(0)
+
+  // Account Status
+  isActive Boolean @default(true)
+
+  isDeleted Boolean @default(false)
+
+  // Department Relation
+  departmentId String
+
+  department Department @relation(fields: [departmentId], references: [id])
+
+  // Exam Duties
+  duties ExamDuty[]
+
+  // Notifications
+  notifications Notification[]
+
+  // Activity Logs
+  activityLogs ActivityLog[]
+
+  // Approval Requests
+  approvalRequests ApprovalRequest[] @relation("RequestOwner")
+
+  approvedRequests ApprovalRequest[] @relation("RequestApprover")
+
+  // Transfers
+  transfersGiven TransferLog[] @relation("TransferFrom")
+
+  transfersReceived TransferLog[] @relation("TransferTo")
+
+  // Swap Requests
+  swapRequestsSent SwapRequest[] @relation("SwapRequester")
+
+  swapRequestsReceived SwapRequest[] @relation("SwapReceiver")
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([email])
+  @@index([employeeCode])
+  @@index([departmentId])
+  @@map("employees")
+}
+
+enum ExamStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum DutyStatus {
+  OPTED_IN
+  ATTENDED
+  TRANSFERRED
+  ABSENT
+}
+
+enum TransferStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LoginProvider {
+  LOCAL
+  GOOGLE
+  MICROSOFT
+}
+
+enum SwapStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RequestType {
+  OPT_OUT
+  TRANSFER
+  SWAP
+}
+
+model Exam {
+  id String @id @default(uuid())
+
+  examName String
+  examDate DateTime
+
+  requiredFaculty Int
+
+  status ExamStatus
+
+  duties ExamDuty[]
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([examDate])
+  @@map("exams")
+}
+
+model ExamDuty {
+  id String @id @default(uuid())
+
+  employeeId String
+  examId     String
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  exam Exam @relation(fields: [examId], references: [id])
+
+  status DutyStatus
+
+  transfers TransferLog[]
+
+  swapRequestsAsRequester SwapRequest[] @relation("RequesterDuty")
+
+  swapRequestsAsReceiver SwapRequest[] @relation("ReceiverDuty")
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, examId])
+  @@index([employeeId])
+  @@index([examId])
+  @@map("exam_duties")
+}
+
+model TransferLog {
+  id String @id @default(uuid())
+
+  fromEmployeeId String
+  toEmployeeId   String
+
+  examDutyId String
+
+  status TransferStatus
+
+  reason String?
+
+  fromEmployee Employee @relation("TransferFrom", fields: [fromEmployeeId], references: [id])
+
+  toEmployee Employee @relation("TransferTo", fields: [toEmployeeId], references: [id])
+
+  examDuty ExamDuty @relation(fields: [examDutyId], references: [id])
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([fromEmployeeId])
+  @@index([toEmployeeId])
+  @@index([examDutyId])
+  @@map("transfer_logs")
+}
+
+model SwapRequest {
+  id String @id @default(uuid())
+
+  requesterId String
+
+  receiverId String
+
+  requesterDutyId String
+
+  receiverDutyId String
+
+  status SwapStatus
+
+  reason String?
+
+  requester Employee @relation("SwapRequester", fields: [requesterId], references: [id])
+
+  receiver Employee @relation("SwapReceiver", fields: [receiverId], references: [id])
+
+  requesterDuty ExamDuty @relation("RequesterDuty", fields: [requesterDutyId], references: [id])
+
+  receiverDuty ExamDuty @relation("ReceiverDuty", fields: [receiverDutyId], references: [id])
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([requesterId])
+  @@index([receiverId])
+  @@map("swap_requests")
+}
+
+model Notification {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  title String
+
+  message String
+
+  isRead Boolean @default(false)
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([employeeId, isRead])
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  action String
+
+  description String
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@map("activity_logs")
+}
+
+model ApprovalRequest {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  approvedById String?
+
+  approvedAt DateTime?
+
+  requestType RequestType
+
+  requestId String?
+
+  status ApprovalStatus
+
+  reason String?
+
+  employee Employee @relation("RequestOwner", fields: [employeeId], references: [id])
+
+  approvedBy Employee? @relation("RequestApprover", fields: [approvedById], references: [id])
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([employeeId, status])
+  @@index([approvedById])
+  @@map("approval_requests")
+}
