@@ -47,6 +47,10 @@ model Employee {
   email        String  @unique
   phone        String?
 
+  googleId String? @unique
+
+  microsoftId String? @unique
+
   // Authentication
   password String?
 
