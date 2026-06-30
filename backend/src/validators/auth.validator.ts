@@ -1,14 +1,24 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
+  employeeCode: z.string().min(3),
 
-    name: z.string(),
+  name: z.string().min(3),
 
-    email: z.email(),
+  email: z.email(),
 
-    password: z.string()
-        .min(6),
+  password: z
+    .string()
+    .min(8)
+    .max(30),
 
-    employeeCode: z.string(),
+  designation: z.string(),
 
+  departmentId: z.uuid(),
+});
+
+export const loginSchema = z.object({
+  email: z.email(),
+
+  password: z.string(),
 });

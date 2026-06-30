@@ -65,7 +65,7 @@ model Employee {
 
   designation String
 
-  role Role
+  role Role @default(FACULTY)
 
   // Duty Statistics
   averageDuty   Int @default(10)
@@ -115,6 +115,7 @@ model Employee {
   @@index([email])
   @@index([employeeCode])
   @@index([departmentId])
+  @@index([role])
   @@map("employees")
 }
 
