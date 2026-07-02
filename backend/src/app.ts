@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 
 import authRoutes from "./routes/auth.routes.js";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
 
@@ -17,11 +18,15 @@ app.use(morgan("dev"));
 
 app.use("/api/auth", authRoutes);
 
+console.log("App initialized");
+
 app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Exam Management API",
   });
 });
+
+app.use(errorHandler);
 
 export default app;

@@ -1,15 +1,38 @@
-import { Request, Response, NextFunction } from "express";
+import type {
+  NextFunction,
+  Request,
+  Response,
+} from "express";
 
-export const authenticate = (
+import { ApiError } from "../utils/apiError.js";
+import { verifyToken } from "../utils/verifyToken.js";
+
+export function verifyJWT(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
-): void => {
-  next();
-};
+) {
+  const authHeader = req.headers.authorization;
 
-export const authorizeRoles =
-  (...roles: string[]) =>
-  (req: Request, res: Response, next: NextFunction): void => {
-    next();
-  };
+  if (!authHeader) {
+    throw new ApiError(
+      401,
+      "Authorization header is missing"
+    );
+  }
+
+  if (!authHeader.startsWith("Bearer ")) {
+    throw new ApiError(
+      401,
+      "Invalid authorization header"
+    );
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  const decoded = verifyToken(token);
+
+  req.user = decoded;
+
+  next();
+}

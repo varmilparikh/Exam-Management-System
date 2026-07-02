@@ -1,19 +1,25 @@
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
+import { ApiError } from "./apiError.js";
+import type { Role } from "../generated/prisma/client.js";
 
-interface JwtPayload {
+export interface JwtPayload {
   id: string;
   email: string;
-  role: string;
+  role: Role;
 }
 
-export const generateToken = (payload: JwtPayload): string => {
+export const generateToken = (
+  payload: JwtPayload
+): string => {
   const secret = process.env.JWT_SECRET;
 
   if (!secret) {
-    throw new Error("JWT_SECRET is not defined");
+    throw new ApiError(500, "JWT secret is not configured");
   }
 
-  return jwt.sign(payload, secret, {
-    expiresIn: "15m",
-  });
+  const options: SignOptions = {
+    expiresIn: "7d",
+  };
+
+  return jwt.sign(payload, secret, options);
 };

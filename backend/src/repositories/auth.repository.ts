@@ -9,9 +9,7 @@ class AuthRepository {
   /**
    * Find employee using email
    */
-  async findByEmail(
-    email: string
-  ): Promise<Employee | null> {
+  async findByEmail(email: string): Promise<Employee | null> {
     return prisma.employee.findUnique({
       where: {
         email,
@@ -22,9 +20,7 @@ class AuthRepository {
   /**
    * Find employee using employee code
    */
-  async findByEmployeeCode(
-    employeeCode: string
-  ): Promise<Employee | null> {
+  async findByEmployeeCode(employeeCode: string): Promise<Employee | null> {
     return prisma.employee.findUnique({
       where: {
         employeeCode,
@@ -35,9 +31,7 @@ class AuthRepository {
   /**
    * Check department exists
    */
-  async findDepartmentById(
-    id: string
-  ): Promise<Department | null> {
+  async findDepartmentById(id: string): Promise<Department | null> {
     return prisma.department.findUnique({
       where: {
         id,
@@ -48,11 +42,23 @@ class AuthRepository {
   /**
    * Create employee
    */
-  async create(
-    data: Prisma.EmployeeCreateInput
-  ): Promise<Employee> {
+  async create(data: Prisma.EmployeeCreateInput): Promise<Employee> {
     return prisma.employee.create({
       data,
+    });
+  }
+
+  /**
+   * Update employee last login time
+   */
+  async updateLastLogin(id: string): Promise<Employee> {
+    return prisma.employee.update({
+      where: {
+        id,
+      },
+      data: {
+        lastLogin: new Date(),
+      },
     });
   }
 }
