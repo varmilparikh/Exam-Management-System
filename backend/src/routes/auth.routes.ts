@@ -10,6 +10,10 @@ import { verifyJWT } from "../middleware/auth.middleware.js";
 
 import { validate } from "../middleware/validate.middleware.js";
 
+import { authorizeRoles } from "../middleware/role.middleware.js";
+
+import { ApiResponse } from "../utils/apiResponse.js";
+
 import {
   registerSchema,
   loginSchema,
@@ -41,11 +45,5 @@ router.get(
   me
 );
 
-router.get("/test", (_req, res) => {
-  res.json({
-    success: true,
-    message: "Auth router is working",
-  });
-});
-console.log("Auth routes loaded");
+
 export default router;
