@@ -29,7 +29,23 @@ export const employeeSelect = {
   },
 } satisfies Prisma.EmployeeSelect;
 
-export type EmployeeResponse =
-  Prisma.EmployeeGetPayload<{
-    select: typeof employeeSelect;
-  }>;
+export type EmployeeResponse = Prisma.EmployeeGetPayload<{
+  select: typeof employeeSelect;
+}>;
+
+
+export const examSelect = {
+  id: true,
+  examName: true,
+  examDate: true,
+  requiredFaculty: true,
+  status: true,
+  isDeleted: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.ExamSelect;
+
+export type ExamResponse = Prisma.ExamGetPayload<{
+  select: typeof examSelect;
+}>;
+

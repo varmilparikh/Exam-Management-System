@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import departmentRoutes from "./routes/department.routes.js";
 import employeeRoutes from "./routes/employee.routes.js";
+import examRoutes from "./routes/exam.routes.js";
 
 const app = express();
 
@@ -23,6 +24,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/departments", departmentRoutes);
 
 app.use("/api/employees", employeeRoutes);
+
+app.use("/api/exams", examRoutes);
 
 console.log("App initialized");
 
