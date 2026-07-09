@@ -135,3 +135,36 @@ export type ActivityLogResponse =
   Prisma.ActivityLogGetPayload<{
     select: typeof activityLogSelect;
   }>;
+
+
+export const notificationSelect = {
+  id: true,
+
+  employeeId: true,
+
+  title: true,
+
+  message: true,
+
+  isRead: true,
+
+  isDeleted: true,
+
+  createdAt: true,
+
+  updatedAt: true,
+
+  employee: {
+    select: {
+      id: true,
+      employeeCode: true,
+      name: true,
+      role: true,
+    },
+  },
+} satisfies Prisma.NotificationSelect;
+
+export type NotificationResponse =
+  Prisma.NotificationGetPayload<{
+    select: typeof notificationSelect;
+  }>;

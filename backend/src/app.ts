@@ -10,6 +10,7 @@ import employeeRoutes from "./routes/employee.routes.js";
 import examRoutes from "./routes/exam.routes.js";
 import examDutyRoutes from "./routes/examDuty.routes.js";
 import activityLogRoutes from "./routes/activityLog.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 
 const app = express();
 
@@ -32,6 +33,8 @@ app.use("/api/exams", examRoutes);
 app.use("/api/exam-duties", examDutyRoutes);
 
 app.use("/api/activity-logs", activityLogRoutes);
+
+app.use("/api/notifications", notificationRoutes);
 
 console.log("App initialized");
 
