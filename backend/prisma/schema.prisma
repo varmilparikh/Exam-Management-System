@@ -127,7 +127,7 @@ enum ExamStatus {
 }
 
 enum DutyStatus {
-  OPTED_IN
+  ASSIGNED
   ATTENDED
   TRANSFERRED
   ABSENT

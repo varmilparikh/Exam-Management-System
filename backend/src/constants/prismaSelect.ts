@@ -49,3 +49,50 @@ export type ExamResponse = Prisma.ExamGetPayload<{
   select: typeof examSelect;
 }>;
 
+
+export const examDutySelect = {
+  id: true,
+
+  employeeId: true,
+
+  examId: true,
+
+  status: true,
+
+  isDeleted: true,
+
+  createdAt: true,
+
+  updatedAt: true,
+
+  employee: {
+    select: {
+      id: true,
+      employeeCode: true,
+      name: true,
+      designation: true,
+
+      department: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
+
+  exam: {
+    select: {
+      id: true,
+      examName: true,
+      examDate: true,
+      requiredFaculty: true,
+      status: true,
+    },
+  },
+} satisfies Prisma.ExamDutySelect;
+
+export type ExamDutyResponse =
+  Prisma.ExamDutyGetPayload<{
+    select: typeof examDutySelect;
+  }>;

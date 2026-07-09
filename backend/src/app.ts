@@ -8,6 +8,7 @@ import { errorHandler } from "./middleware/error.middleware.js";
 import departmentRoutes from "./routes/department.routes.js";
 import employeeRoutes from "./routes/employee.routes.js";
 import examRoutes from "./routes/exam.routes.js";
+import examDutyRoutes from "./routes/examDuty.routes.js";
 
 const app = express();
 
@@ -26,6 +27,8 @@ app.use("/api/departments", departmentRoutes);
 app.use("/api/employees", employeeRoutes);
 
 app.use("/api/exams", examRoutes);
+
+app.use("/api/exam-duties", examDutyRoutes);
 
 console.log("App initialized");
 

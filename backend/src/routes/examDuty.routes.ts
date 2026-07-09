@@ -1,74 +1,74 @@
 import { Router } from "express";
 
 import {
-  createExam,
-  getExams,
-  getExamById,
-  updateExam,
-  deleteExam,
-} from "../controllers/exam.controller.js";
+  createExamDuty,
+  getExamDuties,
+  getExamDutyById,
+  updateExamDuty,
+  deleteExamDuty,
+} from "../controllers/examDuty.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 
 import {
-  createExamSchema,
-  updateExamSchema,
-} from "../validators/exam.validator.js";
+  createExamDutySchema,
+  updateExamDutySchema,
+} from "../validators/examDuty.validator.js";
 
 const router = Router();
 
 /**
- * Create Exam
+ * Create Exam Duty
  */
 router.post(
   "/",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE"),
-  validate(createExamSchema),
-  createExam,
+  validate(createExamDutySchema),
+  createExamDuty,
 );
 
 /**
- * Get All Exams
+ * Get All Exam Duties
  */
 router.get(
   "/",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE", "HOD", "FACULTY"),
-  getExams,
+  getExamDuties,
 );
 
 /**
- * Get Exam By ID
+ * Get Exam Duty By ID
  */
 router.get(
   "/:id",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE", "HOD", "FACULTY"),
-  getExamById,
+  getExamDutyById,
 );
 
 /**
- * Update Exam
+ * Update Exam Duty
  */
 router.put(
   "/:id",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE"),
-  validate(updateExamSchema),
-  updateExam,
+  validate(updateExamDutySchema),
+  updateExamDuty,
 );
 
 /**
- * Delete Exam
+ * Delete Exam Duty
  */
 router.delete(
   "/:id",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE"),
-  deleteExam,
+  deleteExamDuty,
 );
 
 export default router;
