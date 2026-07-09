@@ -1,3 +1,7 @@
+import activityLogService from "./activityLog.service.js";
+
+import { ActivityAction } from "../generated/prisma/client.js";
+
 import bcrypt from "bcryptjs";
 
 import authRepository from "../repositories/auth.repository.js";
@@ -84,6 +88,15 @@ class AuthService {
 
     // Update last login
     const updatedEmployee = await authRepository.updateLastLogin(employee.id);
+
+    // Create activity log
+    await activityLogService.log({
+      employeeId: updatedEmployee.id,
+      action: ActivityAction.LOGIN,
+      description: `${updatedEmployee.name} logged in`,
+      entityType: "Employee",
+      entityId: updatedEmployee.id,
+    });
 
     const token = generateToken({
       id: updatedEmployee.id,

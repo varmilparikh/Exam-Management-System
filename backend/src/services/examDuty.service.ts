@@ -84,9 +84,7 @@ class ExamDutyService {
     return examDutyRepository.findAll();
   }
 
-  /**
-   * Get Exam Duty By ID
-   */
+  
   /**
    * Get Exam Duty By ID
    */

@@ -9,6 +9,7 @@ import departmentRoutes from "./routes/department.routes.js";
 import employeeRoutes from "./routes/employee.routes.js";
 import examRoutes from "./routes/exam.routes.js";
 import examDutyRoutes from "./routes/examDuty.routes.js";
+import activityLogRoutes from "./routes/activityLog.routes.js";
 
 const app = express();
 
@@ -29,6 +30,8 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/exams", examRoutes);
 
 app.use("/api/exam-duties", examDutyRoutes);
+
+app.use("/api/activity-logs", activityLogRoutes);
 
 console.log("App initialized");
 

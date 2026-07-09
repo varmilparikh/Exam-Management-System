@@ -96,3 +96,42 @@ export type ExamDutyResponse =
   Prisma.ExamDutyGetPayload<{
     select: typeof examDutySelect;
   }>;
+
+
+export const activityLogSelect = {
+  id: true,
+
+  employeeId: true,
+
+  action: true,
+
+  description: true,
+
+  entityType: true,
+
+  entityId: true,
+
+  ipAddress: true,
+
+  userAgent: true,
+
+  isDeleted: true,
+
+  createdAt: true,
+
+  updatedAt: true,
+
+  employee: {
+    select: {
+      id: true,
+      employeeCode: true,
+      name: true,
+      role: true,
+    },
+  },
+} satisfies Prisma.ActivityLogSelect;
+
+export type ActivityLogResponse =
+  Prisma.ActivityLogGetPayload<{
+    select: typeof activityLogSelect;
+  }>;

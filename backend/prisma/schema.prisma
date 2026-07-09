@@ -303,14 +303,60 @@ model Notification {
   @@map("notifications")
 }
 
+enum ActivityAction {
+  LOGIN
+  LOGOUT
+
+  CREATE_DEPARTMENT
+  UPDATE_DEPARTMENT
+  DELETE_DEPARTMENT
+
+  CREATE_EMPLOYEE
+  UPDATE_EMPLOYEE
+  DELETE_EMPLOYEE
+
+  CREATE_EXAM
+  UPDATE_EXAM
+  DELETE_EXAM
+
+  ASSIGN_EXAM_DUTY
+  UPDATE_EXAM_DUTY
+  DELETE_EXAM_DUTY
+
+  CREATE_TRANSFER_REQUEST
+  APPROVE_TRANSFER_REQUEST
+  REJECT_TRANSFER_REQUEST
+
+  CREATE_SWAP_REQUEST
+  APPROVE_SWAP_REQUEST
+  REJECT_SWAP_REQUEST
+}
+
+enum EntityType {
+  EMPLOYEE
+  DEPARTMENT
+  EXAM
+  EXAM_DUTY
+  TRANSFER_REQUEST
+  SWAP_REQUEST
+}
+
 model ActivityLog {
   id String @id @default(uuid())
 
   employeeId String
 
-  action String
+  action ActivityAction
 
   description String
+
+  entityType EntityType?
+
+  entityId String?
+
+  ipAddress String?
+
+  userAgent String?
 
   employee Employee @relation(fields: [employeeId], references: [id])
 
@@ -321,6 +367,8 @@ model ActivityLog {
   updatedAt DateTime @updatedAt
 
   @@index([employeeId])
+  @@index([action])
+  @@index([entityType])
   @@map("activity_logs")
 }
 
