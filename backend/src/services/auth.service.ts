@@ -1,7 +1,9 @@
 import activityLogService from "./activityLog.service.js";
 
-import { ActivityAction } from "../generated/prisma/client.js";
-
+import {
+  ActivityAction,
+  EntityType,
+} from "../generated/prisma/client.js";
 import bcrypt from "bcryptjs";
 
 import authRepository from "../repositories/auth.repository.js";
@@ -94,7 +96,7 @@ class AuthService {
       employeeId: updatedEmployee.id,
       action: ActivityAction.LOGIN,
       description: `${updatedEmployee.name} logged in`,
-      entityType: "Employee",
+      entityType: EntityType.EMPLOYEE,
       entityId: updatedEmployee.id,
     });
 

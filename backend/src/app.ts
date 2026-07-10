@@ -11,6 +11,7 @@ import examRoutes from "./routes/exam.routes.js";
 import examDutyRoutes from "./routes/examDuty.routes.js";
 import activityLogRoutes from "./routes/activityLog.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import transferRequestRoutes from "./routes/transferRequest.routes.js";
 
 const app = express();
 
@@ -35,6 +36,8 @@ app.use("/api/exam-duties", examDutyRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
 
 app.use("/api/notifications", notificationRoutes);
+
+app.use("/api/transfer-requests", transferRequestRoutes);
 
 console.log("App initialized");
 

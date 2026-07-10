@@ -168,3 +168,74 @@ export type NotificationResponse =
   Prisma.NotificationGetPayload<{
     select: typeof notificationSelect;
   }>;
+
+
+export const transferRequestSelect = {
+  id: true,
+
+  fromEmployeeId: true,
+  toEmployeeId: true,
+
+  examDutyId: true,
+
+  status: true,
+
+  reason: true,
+
+  approvedById: true,
+  approvedAt: true,
+  approvalRemark: true,
+
+  isDeleted: true,
+
+  createdAt: true,
+  updatedAt: true,
+
+  fromEmployee: {
+    select: {
+      id: true,
+      employeeCode: true,
+      name: true,
+      role: true,
+    },
+  },
+
+  toEmployee: {
+    select: {
+      id: true,
+      employeeCode: true,
+      name: true,
+      role: true,
+    },
+  },
+
+  approvedBy: {
+    select: {
+      id: true,
+      employeeCode: true,
+      name: true,
+      role: true,
+    },
+  },
+
+  examDuty: {
+    select: {
+      id: true,
+      status: true,
+
+      exam: {
+        select: {
+          id: true,
+          examName: true,
+          examDate: true,
+          status: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.TransferRequestSelect;
+
+export type TransferRequestResponse =
+  Prisma.TransferRequestGetPayload<{
+    select: typeof transferRequestSelect;
+  }>;

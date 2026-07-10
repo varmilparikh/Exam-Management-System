@@ -1,5 +1,6 @@
-import type {
+import {
   ActivityAction,
+  EntityType,
 } from "../generated/prisma/client.js";
 
 /**
@@ -9,7 +10,7 @@ export interface CreateActivityLogDto {
   employeeId: string;
   action: ActivityAction;
   description: string;
-  entityType?: string;
+  entityType?: EntityType;
   entityId?: string;
   ipAddress?: string;
   userAgent?: string;
