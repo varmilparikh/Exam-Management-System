@@ -108,6 +108,8 @@ model Employee {
 
   swapRequestsReceived SwapRequest[] @relation("SwapReceiver")
 
+  approvedSwapRequests SwapRequest[] @relation("SwapApprover")
+
   // Timestamps
   createdAt DateTime @default(now())
 
@@ -149,9 +151,11 @@ enum LoginProvider {
 }
 
 enum SwapStatus {
-  PENDING
-  APPROVED
-  REJECTED
+  PENDING // Waiting for receiver
+  ACCEPTED // Receiver accepted, waiting for COE
+  APPROVED // COE approved and duties swapped
+  REJECTED // Receiver or COE rejected
+  CANCELLED // Requester cancelled
 }
 
 enum ApprovalStatus {
@@ -266,6 +270,13 @@ model SwapRequest {
 
   reason String?
 
+  approvedById String?
+  approvedBy   Employee? @relation("SwapApprover", fields: [approvedById], references: [id])
+
+  approvedAt DateTime?
+
+  approvalRemark String?
+
   requester Employee @relation("SwapRequester", fields: [requesterId], references: [id])
 
   receiver Employee @relation("SwapReceiver", fields: [receiverId], references: [id])
@@ -282,6 +293,12 @@ model SwapRequest {
 
   @@index([requesterId])
   @@index([receiverId])
+
+  @@index([requesterDutyId])
+  @@index([receiverDutyId])
+
+  @@index([status])
+  @@index([approvedById])
   @@map("swap_requests")
 }
 
@@ -335,8 +352,11 @@ enum ActivityAction {
   CANCEL_TRANSFER_REQUEST
 
   CREATE_SWAP_REQUEST
+  ACCEPT_SWAP_REQUEST
   APPROVE_SWAP_REQUEST
-  REJECT_SWAP_REQUEST
+  CANCEL_SWAP_REQUEST
+  REJECT_SWAP_REQUEST_BY_RECEIVER
+  REJECT_SWAP_REQUEST_BY_COE
 }
 
 enum EntityType {

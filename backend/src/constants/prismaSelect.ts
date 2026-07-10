@@ -237,3 +237,76 @@ export type TransferRequestResponse =
   Prisma.TransferRequestGetPayload<{
     select: typeof transferRequestSelect;
   }>;
+
+
+export const swapRequestSelect = {
+  id: true,
+
+  requesterId: true,
+  receiverId: true,
+
+  requesterDutyId: true,
+  receiverDutyId: true,
+
+  status: true,
+
+  reason: true,
+
+  isDeleted: true,
+
+  createdAt: true,
+  updatedAt: true,
+
+  requester: {
+    select: {
+      id: true,
+      employeeCode: true,
+      name: true,
+      role: true,
+    },
+  },
+
+  receiver: {
+    select: {
+      id: true,
+      employeeCode: true,
+      name: true,
+      role: true,
+    },
+  },
+
+  requesterDuty: {
+    select: {
+      id: true,
+      status: true,
+
+      exam: {
+        select: {
+          id: true,
+          examName: true,
+          examDate: true,
+        },
+      },
+    },
+  },
+
+  receiverDuty: {
+    select: {
+      id: true,
+      status: true,
+
+      exam: {
+        select: {
+          id: true,
+          examName: true,
+          examDate: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.SwapRequestSelect;
+
+export type SwapRequestResponse =
+  Prisma.SwapRequestGetPayload<{
+    select: typeof swapRequestSelect;
+  }>;
