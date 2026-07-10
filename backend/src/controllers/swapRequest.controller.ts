@@ -7,18 +7,30 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const createSwapRequest = asyncHandler(
   async (req: Request, res: Response) => {
-    const swapRequest =
-      await swapRequestService.requestSwap(
-        req.user!.id,
-        req.body,
-      );
-
-    res.status(201).json(
-      new ApiResponse(
-        201,
-        swapRequest,
-        "Swap request created successfully",
-      ),
+    const swapRequest = await swapRequestService.requestSwap(
+      req.user!.id,
+      req.body,
     );
+
+    res
+      .status(201)
+      .json(
+        new ApiResponse(201, swapRequest, "Swap request created successfully"),
+      );
+  },
+);
+
+export const acceptSwapRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const swapRequest = await swapRequestService.acceptSwap(
+      req.params.id as string,
+      req.user!.id,
+    );
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, swapRequest, "Swap request accepted successfully"),
+      );
   },
 );

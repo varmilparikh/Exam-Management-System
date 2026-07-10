@@ -17,3 +17,10 @@ export const createSwapRequestSchema = z.object({
     .max(500, "Reason cannot exceed 500 characters")
     .optional(),
 });
+
+/**
+ * Accept Swap Request
+ */
+export const acceptSwapRequestSchema = z.object({
+  receiverId: z.uuid("Invalid receiver ID"),
+});

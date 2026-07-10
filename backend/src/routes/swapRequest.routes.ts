@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
   createSwapRequest,
+  acceptSwapRequest,
 } from "../controllers/swapRequest.controller.js";
 
 import {
@@ -20,6 +21,13 @@ router.post(
   authorizeRoles("FACULTY"),
   validate(createSwapRequestSchema),
   createSwapRequest,
+);
+
+router.patch(
+  "/:id/accept",
+  verifyJWT,
+  authorizeRoles("FACULTY"),
+  acceptSwapRequest,
 );
 
 export default router;

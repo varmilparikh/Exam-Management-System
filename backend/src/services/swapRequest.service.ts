@@ -11,6 +11,7 @@ import {
   DutyStatus,
   EntityType,
   ExamStatus,
+  Role,
   SwapStatus,
 } from "../generated/prisma/client.js";
 
@@ -151,6 +152,64 @@ class SwapRequestService {
     });
 
     return swapRequest;
+  }
+
+  /**
+   * Receiver accepts swap request
+   */
+  async acceptSwap(
+    id: string,
+    receiverId: string,
+  ): Promise<SwapRequestResponse> {
+    const swapRequest = await swapRequestRepository.findById(id);
+
+    if (!swapRequest) {
+      throw new ApiError(404, "Swap request not found");
+    }
+
+    const receiver = await employeeRepository.findById(receiverId);
+
+    if (!receiver) {
+      throw new ApiError(404, "Receiver not found");
+    }
+
+    if (!receiver.isActive) {
+      throw new ApiError(400, "Receiver account is inactive");
+    }
+
+    if (swapRequest.status !== SwapStatus.PENDING) {
+      throw new ApiError(400, "Only pending swap requests can be accepted.");
+    }
+
+    const updatedSwapRequest = await swapRequestRepository.update(id, {
+      status: SwapStatus.ACCEPTED,
+    });
+
+    await activityLogService.log({
+      employeeId: receiverId,
+
+      action: ActivityAction.ACCEPT_SWAP_REQUEST,
+
+      description: `${updatedSwapRequest.receiver.name} accepted the swap request from ${updatedSwapRequest.requester.name}.`,
+
+      entityType: EntityType.SWAP_REQUEST,
+
+      entityId: updatedSwapRequest.id,
+    });
+
+    const coes = await employeeRepository.findByRole(Role.COE);
+
+    for (const coe of coes) {
+      await notificationService.create({
+        employeeId: coe.id,
+
+        title: "Swap Request Awaiting Approval",
+
+        message: `${updatedSwapRequest.requester.name} and ${updatedSwapRequest.receiver.name} have agreed to swap examination duties. Approval is required.`,
+      });
+    }
+
+    return updatedSwapRequest;
   }
 }
 

@@ -31,3 +31,10 @@ export interface RejectSwapRequestDto {
 export interface UpdateSwapRequestDto {
   status?: SwapStatus;
 }
+
+/**
+ * Receiver accepts swap request
+ */
+export interface AcceptSwapRequestDto {
+  receiverId: string;
+}
