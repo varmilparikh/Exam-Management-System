@@ -59,8 +59,6 @@ export const examDutySelect = {
 
   status: true,
 
-  isDeleted: true,
-
   createdAt: true,
 
   updatedAt: true,

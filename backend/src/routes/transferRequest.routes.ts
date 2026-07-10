@@ -7,6 +7,8 @@ import {
   getTransferRequestById,
   getMyTransferRequests,
   approveTransferRequest,
+  rejectTransferRequest,
+  cancelTransferRequest,
 } from "../controllers/transferRequest.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -15,7 +17,9 @@ import { validate } from "../middleware/validate.middleware.js";
 
 import {
   createTransferRequestSchema,
-  approveTransferRequestSchema
+  approveTransferRequestSchema,
+  rejectTransferRequestSchema,
+  cancelTransferRequestSchema,
 } from "../validators/transferRequest.validator.js";
 
 const router = Router();
@@ -85,6 +89,22 @@ router.patch(
   authorizeRoles("SUPER_ADMIN", "COE"),
   validate(approveTransferRequestSchema),
   approveTransferRequest,
+);
+
+router.patch(
+  "/:id/reject",
+  verifyJWT,
+  authorizeRoles("SUPER_ADMIN", "COE"),
+  validate(rejectTransferRequestSchema),
+  rejectTransferRequest,
+);
+
+router.patch(
+  "/:id/cancel",
+  verifyJWT,
+  authorizeRoles("FACULTY"),
+  validate(cancelTransferRequestSchema),
+  cancelTransferRequest,
 );
 
 export default router;

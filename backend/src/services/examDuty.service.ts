@@ -112,19 +112,6 @@ class ExamDutyService {
       ...data,
     });
   }
-
-  /**
-   * Soft Delete Exam Duty
-   */
-  async delete(id: string): Promise<ExamDutyResponse> {
-    const examDuty = await examDutyRepository.findById(id);
-
-    if (!examDuty) {
-      throw new ApiError(404, "Exam duty not found");
-    }
-
-    return examDutyRepository.softDelete(id);
-  }
 }
 
 export default new ExamDutyService();

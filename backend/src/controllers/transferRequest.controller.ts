@@ -124,3 +124,48 @@ export const approveTransferRequest = asyncHandler(
     );
   },
 );
+
+/**
+ * Reject Transfer Request
+ */
+export const rejectTransferRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+
+    const transferRequest =
+      await transferRequestService.rejectTransfer(
+        id,
+        req.body,
+      );
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        transferRequest,
+        "Transfer request rejected successfully",
+      ),
+    );
+  },
+);
+
+/**
+ * Cancel Transfer Request
+ */
+export const cancelTransferRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const transferRequest =
+      await transferRequestService.cancelTransfer(
+        req.params.id as string,
+        req.user!.id,
+        req.body,
+      );
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        transferRequest,
+        "Transfer request cancelled successfully",
+      ),
+    );
+  },
+);

@@ -79,22 +79,3 @@ export const updateExamDuty = asyncHandler(
     );
   },
 );
-
-/**
- * Delete Exam Duty
- */
-export const deleteExamDuty = asyncHandler(
-  async (req: Request, res: Response) => {
-    const id = req.params.id as string;
-
-    await examDutyService.delete(id);
-
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        null,
-        "Exam duty deleted successfully",
-      ),
-    );
-  },
-);

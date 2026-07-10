@@ -17,7 +17,6 @@ class ExamDutyRepository {
     return prisma.examDuty.findFirst({
       where: {
         id,
-        isDeleted: false,
       },
       select: examDutySelect,
     });
@@ -28,9 +27,6 @@ class ExamDutyRepository {
    */
   async findAll(): Promise<ExamDutyResponse[]> {
     return prisma.examDuty.findMany({
-      where: {
-        isDeleted: false,
-      },
       orderBy: {
         createdAt: "desc",
       },
@@ -49,7 +45,6 @@ class ExamDutyRepository {
       where: {
         employeeId,
         examId,
-        isDeleted: false,
       },
       select: examDutySelect,
     });
@@ -64,7 +59,6 @@ class ExamDutyRepository {
     return prisma.examDuty.count({
       where: {
         examId,
-        isDeleted: false,
       },
     });
   }
@@ -93,23 +87,6 @@ class ExamDutyRepository {
         id,
       },
       data,
-      select: examDutySelect,
-    });
-  }
-
-  /**
-   * Soft Delete Exam Duty
-   */
-  async softDelete(
-    id: string,
-  ): Promise<ExamDutyResponse> {
-    return prisma.examDuty.update({
-      where: {
-        id,
-      },
-      data: {
-        isDeleted: true,
-      },
       select: examDutySelect,
     });
   }

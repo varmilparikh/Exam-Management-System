@@ -11,6 +11,8 @@ import prisma from "../config/prisma.js";
 import type {
   CreateTransferRequestDto,
   ApproveTransferRequestDto,
+  RejectTransferRequestDto,
+  CancelTransferRequestDto,
 } from "../types/transferRequest.types.js";
 
 import {
@@ -169,12 +171,16 @@ class TransferRequestService {
     id: string,
     data: ApproveTransferRequestDto,
   ): Promise<TransferRequestResponse> {
-    const transferRequest = await transferRequestRepository.findPendingById(id);
+    const transferRequest = await transferRequestRepository.findById(id);
 
     if (!transferRequest) {
+      throw new ApiError(404, "Transfer request not found");
+    }
+
+    if (transferRequest.status !== TransferStatus.PENDING) {
       throw new ApiError(
-        404,
-        "Transfer request not found or already processed",
+        409,
+        `Transfer request is already ${transferRequest.status.toLowerCase()}.`,
       );
     }
 
@@ -296,6 +302,129 @@ class TransferRequestService {
 
       return updatedTransferRequest;
     });
+  }
+
+  /**
+   * Reject Transfer Request
+   */
+  async rejectTransfer(
+    id: string,
+    data: RejectTransferRequestDto,
+  ): Promise<TransferRequestResponse> {
+    const transferRequest = await transferRequestRepository.findById(id);
+
+    if (!transferRequest) {
+      throw new ApiError(404, "Transfer request not found");
+    }
+
+    if (transferRequest.status !== TransferStatus.PENDING) {
+      throw new ApiError(
+        409,
+        `Transfer request is already ${transferRequest.status.toLowerCase()}.`,
+      );
+    }
+
+    const approver = await employeeRepository.findById(data.approvedById);
+
+    if (!approver) {
+      throw new ApiError(404, "Approver not found");
+    }
+
+    return prisma.$transaction(async (tx) => {
+      await tx.transferRequest.update({
+        where: {
+          id,
+        },
+        data: {
+          status: TransferStatus.REJECTED,
+          approvedAt: new Date(),
+          approvalRemark: data.approvalRemark,
+          approvedBy: {
+            connect: {
+              id: data.approvedById,
+            },
+          },
+        },
+      });
+
+      await tx.activityLog.create({
+        data: {
+          employee: {
+            connect: {
+              id: data.approvedById,
+            },
+          },
+          action: ActivityAction.REJECT_TRANSFER_REQUEST,
+          description: `${approver.name} rejected transfer request of ${transferRequest.fromEmployee.name}.`,
+          entityType: EntityType.TRANSFER_REQUEST,
+          entityId: transferRequest.id,
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          employee: {
+            connect: {
+              id: transferRequest.fromEmployeeId,
+            },
+          },
+          title: "Transfer Request Rejected",
+          message: `Your transfer request for ${transferRequest.examDuty.exam.examName} has been rejected.`,
+        },
+      });
+
+      return tx.transferRequest.findUniqueOrThrow({
+        where: {
+          id,
+        },
+        select: transferRequestSelect,
+      });
+    });
+  }
+
+  /**
+   * Cancel Transfer Request
+   */
+  async cancelTransfer(
+    id: string,
+    employeeId: string,
+    data: CancelTransferRequestDto,
+  ): Promise<TransferRequestResponse> {
+    const transferRequest = await transferRequestRepository.findById(id);
+
+    if (!transferRequest) {
+      throw new ApiError(404, "Transfer request not found");
+    }
+
+    if (transferRequest.status !== TransferStatus.PENDING) {
+      throw new ApiError(
+        409,
+        `Transfer request is already ${transferRequest.status.toLowerCase()}.`,
+      );
+    }
+
+    if (transferRequest.fromEmployeeId !== employeeId) {
+      throw new ApiError(403, "You can only cancel your own transfer request.");
+    }
+
+    const cancelledRequest = await transferRequestRepository.update(id, {
+      status: TransferStatus.CANCELLED,
+      reason: data.reason ?? transferRequest.reason,
+    });
+
+    await activityLogService.log({
+      employeeId,
+
+      action: ActivityAction.CANCEL_TRANSFER_REQUEST,
+
+      description: `${transferRequest.fromEmployee.name} cancelled the transfer request.`,
+
+      entityType: EntityType.TRANSFER_REQUEST,
+
+      entityId: transferRequest.id,
+    });
+
+    return cancelledRequest;
   }
 }
 

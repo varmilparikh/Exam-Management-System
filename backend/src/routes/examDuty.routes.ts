@@ -5,7 +5,6 @@ import {
   getExamDuties,
   getExamDutyById,
   updateExamDuty,
-  deleteExamDuty,
 } from "../controllers/examDuty.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -59,16 +58,6 @@ router.put(
   authorizeRoles("SUPER_ADMIN", "COE"),
   validate(updateExamDutySchema),
   updateExamDuty,
-);
-
-/**
- * Delete Exam Duty
- */
-router.delete(
-  "/:id",
-  verifyJWT,
-  authorizeRoles("SUPER_ADMIN", "COE"),
-  deleteExamDuty,
 );
 
 export default router;
