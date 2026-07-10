@@ -12,6 +12,7 @@ import examDutyRoutes from "./routes/examDuty.routes.js";
 import activityLogRoutes from "./routes/activityLog.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import transferRequestRoutes from "./routes/transferRequest.routes.js";
+import swapRequestRoutes from "./routes/swapRequest.routes.js";
 
 const app = express();
 
@@ -38,6 +39,8 @@ app.use("/api/activity-logs", activityLogRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 app.use("/api/transfer-requests", transferRequestRoutes);
+
+app.use("/api/swap-requests", swapRequestRoutes);
 
 console.log("App initialized");
 

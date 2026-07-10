@@ -97,6 +97,10 @@ class SwapRequestService {
       throw new ApiError(409, "A pending swap request already exists.");
     }
 
+    if (requesterDuty.examId === receiverDuty.examId) {
+      throw new ApiError(400, "Cannot swap duties for the same examination.");
+    }
+
     const swapRequest = await swapRequestRepository.create({
       requester: {
         connect: {
