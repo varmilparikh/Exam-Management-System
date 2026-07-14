@@ -39,6 +39,13 @@ export interface CancelSwapRequestDto {
 }
 
 /**
+ * COE Reject Swap Request DTO
+ */
+export interface RejectSwapByCoeDto {
+  approvalRemark: string;
+}
+
+/**
  * Update Swap Request DTO
  */
 export interface UpdateSwapRequestDto {

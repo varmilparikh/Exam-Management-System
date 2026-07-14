@@ -21,7 +21,9 @@ import type {
   ApproveSwapRequestDto,
   RejectSwapRequestDto,
   CancelSwapRequestDto,
+  RejectSwapByCoeDto,
 } from "../types/swapRequest.types.js";
+
 import {
   swapRequestSelect,
   type SwapRequestResponse,
@@ -487,6 +489,89 @@ class SwapRequestService {
       title: "Swap Request Cancelled",
 
       message: `${updatedSwapRequest.requester.name} cancelled the swap request.`,
+    });
+
+    return updatedSwapRequest;
+  }
+
+  /**
+   * COE rejects an accepted swap request
+   */
+  async rejectSwapByCoe(
+    id: string,
+    approvedById: string,
+    data: RejectSwapByCoeDto,
+  ): Promise<SwapRequestResponse> {
+    // 1. Find approver
+    const approver = await employeeRepository.findById(approvedById);
+
+    if (!approver) {
+      throw new ApiError(404, "Approver not found");
+    }
+
+    if (!approver.isActive) {
+      throw new ApiError(400, "Approver account is inactive");
+    }
+
+    // 2. Find swap request
+    const swapRequest = await swapRequestRepository.findById(id);
+
+    if (!swapRequest) {
+      throw new ApiError(404, "Swap request not found");
+    }
+
+    // 3. Must already be accepted
+    if (swapRequest.status !== SwapStatus.ACCEPTED) {
+      throw new ApiError(400, "Only accepted swap requests can be rejected.");
+    }
+
+    // 4. Reject request
+    const updatedSwapRequest = await swapRequestRepository.update(id, {
+      status: SwapStatus.REJECTED,
+
+      approvedBy: {
+        connect: {
+          id: approvedById,
+        },
+      },
+
+      approvedAt: new Date(),
+
+      approvalRemark: data.approvalRemark,
+    });
+
+    // 5. Activity Log
+    await activityLogService.log({
+      employeeId: approvedById,
+
+      action: ActivityAction.REJECT_SWAP_REQUEST_BY_COE,
+
+      description:
+        `${approver.name} rejected the swap request between ` +
+        `${updatedSwapRequest.requester.name} and ` +
+        `${updatedSwapRequest.receiver.name}.`,
+
+      entityType: EntityType.SWAP_REQUEST,
+
+      entityId: updatedSwapRequest.id,
+    });
+
+    // 6. Notify requester
+    await notificationService.create({
+      employeeId: updatedSwapRequest.requesterId,
+
+      title: "Swap Request Rejected",
+
+      message: "Your accepted swap request has been rejected by the COE.",
+    });
+
+    // 7. Notify receiver
+    await notificationService.create({
+      employeeId: updatedSwapRequest.receiverId,
+
+      title: "Swap Request Rejected",
+
+      message: "The swap request you accepted has been rejected by the COE.",
     });
 
     return updatedSwapRequest;

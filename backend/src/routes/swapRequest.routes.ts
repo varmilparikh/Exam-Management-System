@@ -6,6 +6,7 @@ import {
   rejectSwapRequest,
   cancelSwapRequest,
   approveSwapRequest,
+  rejectSwapByCoe
 } from "../controllers/swapRequest.controller.js";
 
 import {
@@ -14,6 +15,7 @@ import {
   rejectSwapRequestSchema,
   cancelSwapRequestSchema,
   approveSwapRequestSchema,
+  rejectSwapByCoeSchema
 } from "../validators/swapRequest.validator.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -60,6 +62,14 @@ router.patch(
   authorizeRoles("COE"),
   validate(approveSwapRequestSchema),
   approveSwapRequest,
+);
+
+router.patch(
+  "/:id/reject-by-coe",
+  verifyJWT,
+  authorizeRoles("COE"),
+  validate(rejectSwapByCoeSchema),
+  rejectSwapByCoe,
 );
 
 export default router;

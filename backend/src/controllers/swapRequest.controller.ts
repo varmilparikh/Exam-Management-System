@@ -86,3 +86,22 @@ export const cancelSwapRequest = asyncHandler(
       );
   },
 );
+
+export const rejectSwapByCoe = asyncHandler(
+  async (req: Request, res: Response) => {
+    const swapRequest =
+      await swapRequestService.rejectSwapByCoe(
+        req.params.id as string,
+        req.user!.id,
+        req.body,
+      );
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        swapRequest,
+        "Swap request rejected successfully",
+      ),
+    );
+  },
+);

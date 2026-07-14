@@ -52,3 +52,14 @@ export const cancelSwapRequestSchema = z.object({
     .max(500, "Reason cannot exceed 500 characters.")
     .optional(),
 });
+
+/**
+ * Reject Swap Request by COE Schema
+ */
+export const rejectSwapByCoeSchema = z.object({
+  approvalRemark: z
+    .string()
+    .trim()
+    .min(3, "Approval remark must be at least 3 characters.")
+    .max(500, "Approval remark cannot exceed 500 characters."),
+});
