@@ -11,28 +11,6 @@ export interface CreateSwapRequestDto {
 }
 
 /**
- * Approve Swap Request DTO
- */
-export interface ApproveSwapRequestDto {
-  approvedById: string;
-}
-
-/**
- * Reject Swap Request DTO
- */
-export interface RejectSwapRequestDto {
-  approvedById: string;
-  reason: string;
-}
-
-/**
- * Update Swap Request DTO
- */
-export interface UpdateSwapRequestDto {
-  status?: SwapStatus;
-}
-
-/**
  * Receiver accepts swap request
  */
 export interface AcceptSwapRequestDto {
@@ -44,4 +22,18 @@ export interface AcceptSwapRequestDto {
  */
 export interface ApproveSwapRequestDto {
   approvalRemark: string;
+}
+
+/**
+ * Receiver rejects swap request
+ */
+export interface RejectSwapRequestDto {
+  reason?: string;
+}
+
+/**
+ * Update Swap Request DTO
+ */
+export interface UpdateSwapRequestDto {
+  status?: SwapStatus;
 }

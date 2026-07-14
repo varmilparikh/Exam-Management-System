@@ -19,6 +19,7 @@ import {
 import type {
   CreateSwapRequestDto,
   ApproveSwapRequestDto,
+  RejectSwapRequestDto,
 } from "../types/swapRequest.types.js";
 import {
   swapRequestSelect,
@@ -369,6 +370,65 @@ class SwapRequestService {
     });
 
     // 10. Return response
+    return updatedSwapRequest;
+  }
+
+  /**
+   * Receiver rejects swap request
+   */
+  async rejectSwap(
+    id: string,
+    receiverId: string,
+    data: RejectSwapRequestDto,
+  ): Promise<SwapRequestResponse> {
+    // 1. Find swap request
+    const swapRequest = await swapRequestRepository.findById(id);
+
+    if (!swapRequest) {
+      throw new ApiError(404, "Swap request not found");
+    }
+
+    // 2. Verify receiver
+    if (swapRequest.receiverId !== receiverId) {
+      throw new ApiError(
+        403,
+        "Only the receiver can reject this swap request.",
+      );
+    }
+
+    // 3. Only pending requests can be rejected
+    if (swapRequest.status !== SwapStatus.PENDING) {
+      throw new ApiError(400, "Only pending swap requests can be rejected.");
+    }
+
+    // 4. Update request
+    const updatedSwapRequest = await swapRequestRepository.update(id, {
+      status: SwapStatus.REJECTED,
+      reason: data.reason ?? swapRequest.reason,
+    });
+
+    // 5. Activity Log
+    await activityLogService.log({
+      employeeId: receiverId,
+
+      action: ActivityAction.REJECT_SWAP_REQUEST_BY_RECEIVER,
+
+      description: `${updatedSwapRequest.receiver.name} rejected the swap request from ${updatedSwapRequest.requester.name}.`,
+
+      entityType: EntityType.SWAP_REQUEST,
+
+      entityId: updatedSwapRequest.id,
+    });
+
+    // 6. Notify requester
+    await notificationService.create({
+      employeeId: updatedSwapRequest.requesterId,
+
+      title: "Swap Request Rejected",
+
+      message: `${updatedSwapRequest.receiver.name} rejected your swap request.`,
+    });
+
     return updatedSwapRequest;
   }
 }
