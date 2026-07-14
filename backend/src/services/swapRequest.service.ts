@@ -4,6 +4,8 @@ import employeeRepository from "../repositories/employee.repository.js";
 import examDutyRepository from "../repositories/examDuty.repository.js";
 import activityLogService from "./activityLog.service.js";
 import notificationService from "./notification.service.js";
+import employeeValidationService from "./employeeValidation.service.js";
+import notificationHelperService from "./notificationHelper.service.js";
 
 import { ApiError } from "../utils/apiError.js";
 
@@ -37,25 +39,15 @@ class SwapRequestService {
     requesterId: string,
     data: CreateSwapRequestDto,
   ): Promise<SwapRequestResponse> {
-    const requester = await employeeRepository.findById(requesterId);
+    const requester = await employeeValidationService.validateEmployee(
+      requesterId,
+      "Requester",
+    );
 
-    if (!requester) {
-      throw new ApiError(404, "Requester not found");
-    }
-
-    if (!requester.isActive) {
-      throw new ApiError(400, "Requester is inactive");
-    }
-
-    const receiver = await employeeRepository.findById(data.receiverId);
-
-    if (!receiver) {
-      throw new ApiError(404, "Receiver not found");
-    }
-
-    if (!receiver.isActive) {
-      throw new ApiError(400, "Receiver is inactive");
-    }
+    const receiver = await employeeValidationService.validateEmployee(
+      data.receiverId,
+      "Receiver",
+    );
 
     if (requester.id === receiver.id) {
       throw new ApiError(400, "You cannot swap duties with yourself.");
@@ -153,13 +145,11 @@ class SwapRequestService {
       entityId: swapRequest.id,
     });
 
-    await notificationService.create({
-      employeeId: receiver.id,
-
-      title: "Swap Request Received",
-
-      message: `${requester.name} has requested to swap examination duties with you.`,
-    });
+    await notificationHelperService.notify(
+      receiver.id,
+      "Swap Request Received",
+      `${requester.name} has requested to swap examination duties with you.`,
+    );
 
     return swapRequest;
   }
@@ -177,15 +167,10 @@ class SwapRequestService {
       throw new ApiError(404, "Swap request not found");
     }
 
-    const receiver = await employeeRepository.findById(receiverId);
-
-    if (!receiver) {
-      throw new ApiError(404, "Receiver not found");
-    }
-
-    if (!receiver.isActive) {
-      throw new ApiError(400, "Receiver account is inactive");
-    }
+    const receiver = await employeeValidationService.validateEmployee(
+      receiverId,
+      "Receiver",
+    );
 
     if (swapRequest.status !== SwapStatus.PENDING) {
       throw new ApiError(400, "Only pending swap requests can be accepted.");
@@ -209,15 +194,11 @@ class SwapRequestService {
 
     const coes = await employeeRepository.findByRole(Role.COE);
 
-    for (const coe of coes) {
-      await notificationService.create({
-        employeeId: coe.id,
-
-        title: "Swap Request Awaiting Approval",
-
-        message: `${updatedSwapRequest.requester.name} and ${updatedSwapRequest.receiver.name} have agreed to swap examination duties. Approval is required.`,
-      });
-    }
+    await notificationHelperService.notifyMany(
+      coes.map((coe) => coe.id),
+      "Swap Request Awaiting Approval",
+      `${updatedSwapRequest.requester.name} and ${updatedSwapRequest.receiver.name} have agreed to swap examination duties. Approval is required.`,
+    );
 
     return updatedSwapRequest;
   }
@@ -231,15 +212,10 @@ class SwapRequestService {
     data: ApproveSwapRequestDto,
   ): Promise<SwapRequestResponse> {
     // 1. Check approver
-    const approver = await employeeRepository.findById(approvedById);
-
-    if (!approver) {
-      throw new ApiError(404, "Approver not found");
-    }
-
-    if (!approver.isActive) {
-      throw new ApiError(400, "Approver account is inactive");
-    }
+    const approver = await employeeValidationService.validateEmployee(
+      approvedById,
+      "Approver",
+    );
 
     // 2. Find swap request
     const swapRequest = await swapRequestRepository.findById(id);
@@ -355,22 +331,18 @@ class SwapRequestService {
     });
 
     // 8. Notify requester
-    await notificationService.create({
-      employeeId: swapRequest.requesterId,
-
-      title: "Swap Request Approved",
-
-      message: "Your swap request has been approved by the COE.",
-    });
+    await notificationHelperService.notify(
+      swapRequest.requesterId,
+      "Swap Request Approved",
+      "Your swap request has been approved by the COE.",
+    );
 
     // 9. Notify receiver
-    await notificationService.create({
-      employeeId: swapRequest.receiverId,
-
-      title: "Swap Request Approved",
-
-      message: "Your accepted swap request has been approved by the COE.",
-    });
+    await notificationHelperService.notify(
+      swapRequest.receiverId,
+      "Swap Request Approved",
+      "Your accepted swap request has been approved by the COE.",
+    );
 
     // 10. Return response
     return updatedSwapRequest;
@@ -424,14 +396,11 @@ class SwapRequestService {
     });
 
     // 6. Notify requester
-    await notificationService.create({
-      employeeId: updatedSwapRequest.requesterId,
-
-      title: "Swap Request Rejected",
-
-      message: `${updatedSwapRequest.receiver.name} rejected your swap request.`,
-    });
-
+    await notificationHelperService.notify(
+      updatedSwapRequest.requesterId,
+      "Swap Request Rejected",
+      `${updatedSwapRequest.receiver.name} rejected your swap request.`,
+    );
     return updatedSwapRequest;
   }
 
@@ -483,13 +452,11 @@ class SwapRequestService {
     });
 
     // 6. Notify receiver
-    await notificationService.create({
-      employeeId: updatedSwapRequest.receiverId,
-
-      title: "Swap Request Cancelled",
-
-      message: `${updatedSwapRequest.requester.name} cancelled the swap request.`,
-    });
+    await notificationHelperService.notify(
+      updatedSwapRequest.receiverId,
+      "Swap Request Cancelled",
+      `${updatedSwapRequest.requester.name} cancelled the swap request.`,
+    );
 
     return updatedSwapRequest;
   }
@@ -503,15 +470,10 @@ class SwapRequestService {
     data: RejectSwapByCoeDto,
   ): Promise<SwapRequestResponse> {
     // 1. Find approver
-    const approver = await employeeRepository.findById(approvedById);
-
-    if (!approver) {
-      throw new ApiError(404, "Approver not found");
-    }
-
-    if (!approver.isActive) {
-      throw new ApiError(400, "Approver account is inactive");
-    }
+    const approver = await employeeValidationService.validateEmployee(
+      approvedById,
+      "Approver",
+    );
 
     // 2. Find swap request
     const swapRequest = await swapRequestRepository.findById(id);
@@ -557,22 +519,18 @@ class SwapRequestService {
     });
 
     // 6. Notify requester
-    await notificationService.create({
-      employeeId: updatedSwapRequest.requesterId,
-
-      title: "Swap Request Rejected",
-
-      message: "Your accepted swap request has been rejected by the COE.",
-    });
+    await notificationHelperService.notify(
+      updatedSwapRequest.requesterId,
+      "Swap Request Rejected",
+      "Your accepted swap request has been rejected by the COE.",
+    );
 
     // 7. Notify receiver
-    await notificationService.create({
-      employeeId: updatedSwapRequest.receiverId,
-
-      title: "Swap Request Rejected",
-
-      message: "The swap request you accepted has been rejected by the COE.",
-    });
+    await notificationHelperService.notify(
+      updatedSwapRequest.receiverId,
+      "Swap Request Rejected",
+      "The swap request you accepted has been rejected by the COE.",
+    );
 
     return updatedSwapRequest;
   }
