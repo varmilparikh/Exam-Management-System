@@ -20,6 +20,7 @@ import type {
   CreateSwapRequestDto,
   ApproveSwapRequestDto,
   RejectSwapRequestDto,
+  CancelSwapRequestDto,
 } from "../types/swapRequest.types.js";
 import {
   swapRequestSelect,
@@ -427,6 +428,65 @@ class SwapRequestService {
       title: "Swap Request Rejected",
 
       message: `${updatedSwapRequest.receiver.name} rejected your swap request.`,
+    });
+
+    return updatedSwapRequest;
+  }
+
+  /**
+   * Requester cancels swap request
+   */
+  async cancelSwap(
+    id: string,
+    requesterId: string,
+    data: CancelSwapRequestDto,
+  ): Promise<SwapRequestResponse> {
+    // 1. Find swap request
+    const swapRequest = await swapRequestRepository.findById(id);
+
+    if (!swapRequest) {
+      throw new ApiError(404, "Swap request not found");
+    }
+
+    // 2. Only requester can cancel
+    if (swapRequest.requesterId !== requesterId) {
+      throw new ApiError(
+        403,
+        "Only the requester can cancel this swap request.",
+      );
+    }
+
+    // 3. Only pending requests can be cancelled
+    if (swapRequest.status !== SwapStatus.PENDING) {
+      throw new ApiError(400, "Only pending swap requests can be cancelled.");
+    }
+
+    // 4. Update request
+    const updatedSwapRequest = await swapRequestRepository.update(id, {
+      status: SwapStatus.CANCELLED,
+      reason: data.reason ?? swapRequest.reason,
+    });
+
+    // 5. Activity Log
+    await activityLogService.log({
+      employeeId: requesterId,
+
+      action: ActivityAction.CANCEL_SWAP_REQUEST,
+
+      description: `${updatedSwapRequest.requester.name} cancelled the swap request sent to ${updatedSwapRequest.receiver.name}.`,
+
+      entityType: EntityType.SWAP_REQUEST,
+
+      entityId: updatedSwapRequest.id,
+    });
+
+    // 6. Notify receiver
+    await notificationService.create({
+      employeeId: updatedSwapRequest.receiverId,
+
+      title: "Swap Request Cancelled",
+
+      message: `${updatedSwapRequest.requester.name} cancelled the swap request.`,
     });
 
     return updatedSwapRequest;

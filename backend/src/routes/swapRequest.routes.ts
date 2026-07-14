@@ -3,15 +3,17 @@ import { Router } from "express";
 import {
   createSwapRequest,
   acceptSwapRequest,
-  approveSwapRequest,
   rejectSwapRequest,
+  cancelSwapRequest,
+  approveSwapRequest,
 } from "../controllers/swapRequest.controller.js";
 
 import {
   createSwapRequestSchema,
   acceptSwapRequestSchema,
-  approveSwapRequestSchema,
   rejectSwapRequestSchema,
+  cancelSwapRequestSchema,
+  approveSwapRequestSchema,
 } from "../validators/swapRequest.validator.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -32,6 +34,7 @@ router.patch(
   "/:id/accept",
   verifyJWT,
   authorizeRoles("FACULTY"),
+  validate(acceptSwapRequestSchema),
   acceptSwapRequest,
 );
 
@@ -41,6 +44,14 @@ router.patch(
   authorizeRoles("FACULTY"),
   validate(rejectSwapRequestSchema),
   rejectSwapRequest,
+);
+
+router.patch(
+  "/:id/cancel",
+  verifyJWT,
+  authorizeRoles("FACULTY"),
+  validate(cancelSwapRequestSchema),
+  cancelSwapRequest,
 );
 
 router.patch(

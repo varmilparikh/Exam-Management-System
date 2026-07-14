@@ -32,6 +32,13 @@ export interface RejectSwapRequestDto {
 }
 
 /**
+ * Cancel Swap Request DTO
+ */
+export interface CancelSwapRequestDto {
+  reason?: string;
+}
+
+/**
  * Update Swap Request DTO
  */
 export interface UpdateSwapRequestDto {

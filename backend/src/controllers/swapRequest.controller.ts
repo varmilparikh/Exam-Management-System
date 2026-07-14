@@ -27,13 +27,11 @@ export const acceptSwapRequest = asyncHandler(
       req.user!.id,
     );
 
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        swapRequest,
-        "Swap request accepted successfully",
-      ),
-    );
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, swapRequest, "Swap request accepted successfully"),
+      );
   },
 );
 
@@ -55,19 +53,36 @@ export const approveSwapRequest = asyncHandler(
 
 export const rejectSwapRequest = asyncHandler(
   async (req: Request, res: Response) => {
-    const swapRequest =
-      await swapRequestService.rejectSwap(
-        req.params.id as string,
-        req.user!.id,
-        req.body,
-      );
-
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        swapRequest,
-        "Swap request rejected successfully",
-      ),
+    const swapRequest = await swapRequestService.rejectSwap(
+      req.params.id as string,
+      req.user!.id,
+      req.body,
     );
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, swapRequest, "Swap request rejected successfully"),
+      );
+  },
+);
+
+export const cancelSwapRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const swapRequest = await swapRequestService.cancelSwap(
+      req.params.id as string,
+      req.user!.id,
+      req.body,
+    );
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          swapRequest,
+          "Swap request cancelled successfully",
+        ),
+      );
   },
 );

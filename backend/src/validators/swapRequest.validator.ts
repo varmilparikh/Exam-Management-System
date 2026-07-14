@@ -26,17 +26,25 @@ export const acceptSwapRequestSchema = z.object({
 });
 
 export const approveSwapRequestSchema = z.object({
-  approvalRemark: z
-    .string()
-    .trim()
-    .min(3)
-    .max(500),
+  approvalRemark: z.string().trim().min(3).max(500),
 });
 
 /**
  * Reject Swap Request Schema
  */
 export const rejectSwapRequestSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Reason must be at least 3 characters.")
+    .max(500, "Reason cannot exceed 500 characters.")
+    .optional(),
+});
+
+/**
+ * Cancel Swap Request Schema
+ */
+export const cancelSwapRequestSchema = z.object({
   reason: z
     .string()
     .trim()
