@@ -38,3 +38,10 @@ export interface UpdateSwapRequestDto {
 export interface AcceptSwapRequestDto {
   receiverId: string;
 }
+
+/**
+ * COE approves swap request
+ */
+export interface ApproveSwapRequestDto {
+  approvalRemark: string;
+}

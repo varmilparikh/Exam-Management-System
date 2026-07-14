@@ -27,10 +27,28 @@ export const acceptSwapRequest = asyncHandler(
       req.user!.id,
     );
 
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        swapRequest,
+        "Swap request accepted successfully",
+      ),
+    );
+  },
+);
+
+export const approveSwapRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const swapRequest = await swapRequestService.approveSwap(
+      req.params.id as string,
+      req.user!.id,
+      req.body,
+    );
+
     res
       .status(200)
       .json(
-        new ApiResponse(200, swapRequest, "Swap request accepted successfully"),
+        new ApiResponse(200, swapRequest, "Swap request approved successfully"),
       );
   },
 );

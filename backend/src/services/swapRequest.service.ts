@@ -1,3 +1,4 @@
+import prisma from "../config/prisma.js";
 import swapRequestRepository from "../repositories/swapRequest.repository.js";
 import employeeRepository from "../repositories/employee.repository.js";
 import examDutyRepository from "../repositories/examDuty.repository.js";
@@ -15,9 +16,14 @@ import {
   SwapStatus,
 } from "../generated/prisma/client.js";
 
-import type { CreateSwapRequestDto } from "../types/swapRequest.types.js";
-
-import type { SwapRequestResponse } from "../constants/prismaSelect.js";
+import type {
+  CreateSwapRequestDto,
+  ApproveSwapRequestDto,
+} from "../types/swapRequest.types.js";
+import {
+  swapRequestSelect,
+  type SwapRequestResponse,
+} from "../constants/prismaSelect.js";
 
 class SwapRequestService {
   /**
@@ -209,6 +215,160 @@ class SwapRequestService {
       });
     }
 
+    return updatedSwapRequest;
+  }
+
+  /**
+   * COE approves swap request
+   */
+  async approveSwap(
+    id: string,
+    approvedById: string,
+    data: ApproveSwapRequestDto,
+  ): Promise<SwapRequestResponse> {
+    // 1. Check approver
+    const approver = await employeeRepository.findById(approvedById);
+
+    if (!approver) {
+      throw new ApiError(404, "Approver not found");
+    }
+
+    if (!approver.isActive) {
+      throw new ApiError(400, "Approver account is inactive");
+    }
+
+    // 2. Find swap request
+    const swapRequest = await swapRequestRepository.findById(id);
+
+    if (!swapRequest) {
+      throw new ApiError(404, "Swap request not found");
+    }
+
+    // 3. Request must be accepted
+    if (swapRequest.status !== SwapStatus.ACCEPTED) {
+      throw new ApiError(400, "Only accepted swap requests can be approved.");
+    }
+
+    // 4. Load both duties
+    const requesterDuty = await examDutyRepository.findById(
+      swapRequest.requesterDutyId,
+    );
+
+    const receiverDuty = await examDutyRepository.findById(
+      swapRequest.receiverDutyId,
+    );
+
+    if (!requesterDuty || !receiverDuty) {
+      throw new ApiError(404, "Exam duty not found");
+    }
+
+    // 5. Duties must still be assigned
+    if (
+      requesterDuty.status !== DutyStatus.ASSIGNED ||
+      receiverDuty.status !== DutyStatus.ASSIGNED
+    ) {
+      throw new ApiError(400, "Only assigned duties can be swapped.");
+    }
+
+    // 6. Check if receiver already has a duty for requester's exam
+    const receiverExistingDuty = await examDutyRepository.findByEmployeeAndExam(
+      swapRequest.receiverId,
+      requesterDuty.examId,
+    );
+
+    if (receiverExistingDuty && receiverExistingDuty.id !== requesterDuty.id) {
+      throw new ApiError(
+        400,
+        "Swap cannot be approved because the receiver already has a duty for this examination.",
+      );
+    }
+
+    // 7. Check if requester already has a duty for receiver's exam
+    const requesterExistingDuty =
+      await examDutyRepository.findByEmployeeAndExam(
+        swapRequest.requesterId,
+        receiverDuty.examId,
+      );
+
+    if (requesterExistingDuty && requesterExistingDuty.id !== receiverDuty.id) {
+      throw new ApiError(
+        400,
+        "Swap cannot be approved because the requester already has a duty for this examination.",
+      );
+    }
+
+    // 6. Perform transaction
+    const updatedSwapRequest = await prisma.$transaction(async (tx) => {
+      await tx.examDuty.update({
+        where: { id: requesterDuty.id },
+        data: {
+          employeeId: null,
+        },
+      });
+
+      // Step 2: Move receiver duty to requester
+      await tx.examDuty.update({
+        where: { id: receiverDuty.id },
+        data: {
+          employeeId: swapRequest.requesterId,
+        },
+      });
+
+      // Step 3: Move requester duty to receiver
+      await tx.examDuty.update({
+        where: { id: requesterDuty.id },
+        data: {
+          employeeId: swapRequest.receiverId,
+        },
+      });
+
+      // Update swap request
+      return await tx.swapRequest.update({
+        where: {
+          id,
+        },
+        data: {
+          status: SwapStatus.APPROVED,
+          approvedById,
+          approvedAt: new Date(),
+          approvalRemark: data.approvalRemark,
+        },
+        select: swapRequestSelect,
+      });
+    });
+
+    // 7. Activity log
+    await activityLogService.log({
+      employeeId: approvedById,
+
+      action: ActivityAction.APPROVE_SWAP_REQUEST,
+
+      description: `${approver.name} approved the swap request between ${swapRequest.requester.name} and ${swapRequest.receiver.name}.`,
+
+      entityType: EntityType.SWAP_REQUEST,
+
+      entityId: updatedSwapRequest.id,
+    });
+
+    // 8. Notify requester
+    await notificationService.create({
+      employeeId: swapRequest.requesterId,
+
+      title: "Swap Request Approved",
+
+      message: "Your swap request has been approved by the COE.",
+    });
+
+    // 9. Notify receiver
+    await notificationService.create({
+      employeeId: swapRequest.receiverId,
+
+      title: "Swap Request Approved",
+
+      message: "Your accepted swap request has been approved by the COE.",
+    });
+
+    // 10. Return response
     return updatedSwapRequest;
   }
 }

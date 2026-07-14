@@ -3,10 +3,13 @@ import { Router } from "express";
 import {
   createSwapRequest,
   acceptSwapRequest,
+  approveSwapRequest,
 } from "../controllers/swapRequest.controller.js";
 
 import {
   createSwapRequestSchema,
+  acceptSwapRequestSchema,
+  approveSwapRequestSchema,
 } from "../validators/swapRequest.validator.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -28,6 +31,14 @@ router.patch(
   verifyJWT,
   authorizeRoles("FACULTY"),
   acceptSwapRequest,
+);
+
+router.patch(
+  "/:id/approve",
+  verifyJWT,
+  authorizeRoles("COE"),
+  validate(approveSwapRequestSchema),
+  approveSwapRequest,
 );
 
 export default router;

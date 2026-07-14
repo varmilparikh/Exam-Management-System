@@ -24,3 +24,11 @@ export const createSwapRequestSchema = z.object({
 export const acceptSwapRequestSchema = z.object({
   receiverId: z.uuid("Invalid receiver ID"),
 });
+
+export const approveSwapRequestSchema = z.object({
+  approvalRemark: z
+    .string()
+    .trim()
+    .min(3)
+    .max(500),
+});
