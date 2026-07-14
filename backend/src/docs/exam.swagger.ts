@@ -1,11 +1,11 @@
 /**
  * @swagger
- * /api/departments:
+ * /api/exams:
  *   post:
  *     tags:
- *       - Departments
- *     summary: Create a new department
- *     description: Creates a new department. Only SUPER_ADMIN and COE can perform this operation.
+ *       - Exams
+ *     summary: Create a new exam
+ *     description: Creates a new examination. Only SUPER_ADMIN and COE can perform this operation.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -15,55 +15,62 @@
  *           schema:
  *             type: object
  *             required:
- *               - name
+ *               - examName
+ *               - examDate
+ *               - requiredFaculty
  *             properties:
- *               name:
+ *               examName:
  *                 type: string
- *                 example: Computer Engineering
+ *                 example: Operating Systems Final
+ *               examDate:
+ *                 type: string
+ *                 format: date-time
+ *                 example: 2026-12-15T09:00:00.000Z
+ *               requiredFaculty:
+ *                 type: integer
+ *                 example: 10
  *     responses:
  *       201:
- *         description: Department created successfully.
+ *         description: Exam created successfully.
  *       400:
  *         description: Validation error.
  *       401:
  *         description: Unauthorized.
  *       403:
  *         description: Forbidden.
- *       409:
- *         description: Department already exists.
  *       500:
  *         description: Internal server error.
  */
 
-
 /**
  * @swagger
- * /api/departments:
+ * /api/exams:
  *   get:
  *     tags:
- *       - Departments
- *     summary: Get all departments
- *     description: Returns a list of all departments.
+ *       - Exams
+ *     summary: Get all exams
+ *     description: Returns all examinations.
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Departments retrieved successfully.
+ *         description: Exams retrieved successfully.
  *       401:
  *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
  *       500:
  *         description: Internal server error.
  */
 
-
 /**
  * @swagger
- * /api/departments/{id}:
+ * /api/exams/{id}:
  *   get:
  *     tags:
- *       - Departments
- *     summary: Get department by ID
- *     description: Returns a department by its ID.
+ *       - Exams
+ *     summary: Get exam by ID
+ *     description: Returns an examination by its unique ID.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -75,24 +82,25 @@
  *           format: uuid
  *     responses:
  *       200:
- *         description: Department retrieved successfully.
- *       404:
- *         description: Department not found.
+ *         description: Exam retrieved successfully.
  *       401:
  *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ *       404:
+ *         description: Exam not found.
  *       500:
  *         description: Internal server error.
  */
 
-
 /**
  * @swagger
- * /api/departments/{id}:
+ * /api/exams/{id}:
  *   put:
  *     tags:
- *       - Departments
- *     summary: Update department
- *     description: Updates an existing department. Only SUPER_ADMIN and COE can perform this operation.
+ *       - Exams
+ *     summary: Update exam
+ *     description: Updates an existing examination. Only SUPER_ADMIN and COE can perform this operation.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -109,12 +117,18 @@
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               examName:
  *                 type: string
- *                 example: Information Technology
+ *                 example: Operating Systems Final
+ *               examDate:
+ *                 type: string
+ *                 format: date-time
+ *               requiredFaculty:
+ *                 type: integer
+ *                 example: 15
  *     responses:
  *       200:
- *         description: Department updated successfully.
+ *         description: Exam updated successfully.
  *       400:
  *         description: Validation error.
  *       401:
@@ -122,20 +136,19 @@
  *       403:
  *         description: Forbidden.
  *       404:
- *         description: Department not found.
+ *         description: Exam not found.
  *       500:
  *         description: Internal server error.
  */
 
-
 /**
  * @swagger
- * /api/departments/{id}:
+ * /api/exams/{id}:
  *   delete:
  *     tags:
- *       - Departments
- *     summary: Delete department
- *     description: Soft deletes a department. Only SUPER_ADMIN can perform this operation.
+ *       - Exams
+ *     summary: Delete exam
+ *     description: Soft deletes an examination. Only SUPER_ADMIN and COE can perform this operation.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -147,13 +160,13 @@
  *           format: uuid
  *     responses:
  *       200:
- *         description: Department deleted successfully.
+ *         description: Exam deleted successfully.
  *       401:
  *         description: Unauthorized.
  *       403:
  *         description: Forbidden.
  *       404:
- *         description: Department not found.
+ *         description: Exam not found.
  *       500:
  *         description: Internal server error.
  */
