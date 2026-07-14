@@ -13,10 +13,17 @@ import activityLogRoutes from "./routes/activityLog.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import transferRequestRoutes from "./routes/transferRequest.routes.js";
 import swapRequestRoutes from "./routes/swapRequest.routes.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./config/swagger.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
 app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
+
+app.use(cookieParser());
 
 app.use(cors());
 
@@ -24,6 +31,9 @@ app.use(helmet());
 
 app.use(morgan("dev"));
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// API Routes
 app.use("/api/auth", authRoutes);
 
 app.use("/api/departments", departmentRoutes);
