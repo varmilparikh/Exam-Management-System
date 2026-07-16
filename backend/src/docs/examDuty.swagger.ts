@@ -123,7 +123,7 @@
  *           schema:
  *             type: object
  *             properties:
- *               employeeId:S
+ *               employeeId:
  *                 type: string
  *                 format: uuid
  *                 nullable: true

@@ -5,19 +5,13 @@
  *     description: |
  *       Workflow for transferring examination duties.
  *
- *       Transfer Lifecycle:
- *
- *       Faculty creates request
- *            ↓
- *         PENDING
- *            ↓
- *       COE reviews
- *        ↙        ↘
- *   APPROVED   REJECTED
- *        ↓
- *   Duty transferred
+ *       Transfer lifecycle:
+ *       1. Faculty creates a transfer request.
+ *       2. Status becomes PENDING.
+ *       3. COE reviews the request.
+ *       4. COE either APPROVES or REJECTS the request.
+ *       5. If approved, the examination duty is transferred.
  */
-
 /**
  * @swagger
  * /api/transfer-requests:
