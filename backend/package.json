@@ -10,6 +10,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
+    "verify": "npm run typecheck && npm run build",
 
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
@@ -17,21 +18,20 @@
     "seed": "prisma db seed",
     "reset-db": "prisma migrate reset",
 
-     "setup": "npm run generate && npm run migrate && npm run seed",
+    "setup": "npm run generate && npm run migrate && npm run seed",
+    "postinstall": "prisma generate",
 
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
 
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "format:check": "prettier --check ."
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "keywords": [
     "express",
