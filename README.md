@@ -124,3 +124,50 @@ The system also maintains detailed activity logs and notifications to ensure acc
 - ESLint
 - Prettier
 - Nodemon
+
+# Backend Setup
+
+## Clone
+
+```bash
+git clone <repository-url>
+cd backend
+```
+
+## Install Dependencies
+
+```bash
+npm install
+```
+
+## Configure Environment
+
+```bash
+cp .env.example .env
+```
+
+Update the values in `.env`.
+
+## Generate Prisma Client
+
+```bash
+npm run generate
+```
+
+## Run Database Migrations
+
+```bash
+npm run migrate
+```
+
+## Seed the Database
+
+```bash
+npm run seed
+```
+
+## Start the Development Server
+
+```bash
+npm run dev
+```
