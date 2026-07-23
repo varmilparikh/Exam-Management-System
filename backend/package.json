@@ -10,10 +10,21 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
+
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "deploy": "prisma migrate deploy",
+    "seed": "prisma db seed",
+    "reset-db": "prisma migrate reset",
+
+     "setup": "npm run generate && npm run migrate && npm run seed",
+
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
