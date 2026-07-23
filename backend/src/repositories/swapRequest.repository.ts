@@ -1,9 +1,9 @@
 import prisma from "../config/prisma.js";
 
 import type { Prisma } from "../generated/prisma/client.js";
-
+import { ApiError } from "../utils/apiError.js";
 import { SwapStatus } from "../generated/prisma/client.js";
-
+import type { ApproveSwapTransactionData } from "../types/swapRequest.types.js";
 import {
   swapRequestSelect,
   type SwapRequestResponse,
@@ -79,10 +79,18 @@ class SwapRequestRepository {
   ): Promise<SwapRequestResponse | null> {
     return prisma.swapRequest.findFirst({
       where: {
-        requesterDutyId,
-        receiverDutyId,
         status: SwapStatus.PENDING,
         isDeleted: false,
+        OR: [
+          {
+            requesterDutyId,
+            receiverDutyId,
+          },
+          {
+            requesterDutyId: receiverDutyId,
+            receiverDutyId: requesterDutyId,
+          },
+        ],
       },
       select: swapRequestSelect,
     });
@@ -160,6 +168,52 @@ class SwapRequestRepository {
         isDeleted: true,
       },
       select: swapRequestSelect,
+    });
+  }
+
+  async approveSwapTransaction(
+    data: ApproveSwapTransactionData,
+  ): Promise<SwapRequestResponse> {
+    return prisma.$transaction(async (tx) => {
+      await tx.examDuty.update({
+        where: { id: data.requesterDutyId },
+        data: { employeeId: null },
+      });
+
+      await tx.examDuty.update({
+        where: { id: data.receiverDutyId },
+        data: { employeeId: data.requesterId },
+      });
+
+      await tx.examDuty.update({
+        where: { id: data.requesterDutyId },
+        data: { employeeId: data.receiverId },
+      });
+
+      const result = await tx.swapRequest.updateMany({
+        where: {
+          id: data.id,
+          status: SwapStatus.ACCEPTED,
+        },
+        data: {
+          status: SwapStatus.APPROVED,
+          approvedById: data.approvedById,
+          approvedAt: new Date(),
+          approvalRemark: data.approvalRemark,
+        },
+      });
+
+      if (result.count === 0) {
+        throw new ApiError(
+          409,
+          "This swap request has already been processed.",
+        );
+      }
+
+      return tx.swapRequest.findUniqueOrThrow({
+        where: { id: data.id },
+        select: swapRequestSelect,
+      });
     });
   }
 }

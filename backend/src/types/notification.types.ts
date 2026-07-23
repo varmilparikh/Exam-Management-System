@@ -15,3 +15,10 @@ export interface UpdateNotificationDto {
   message?: string;
   isRead?: boolean;
 }
+
+/**
+ * Get Notifications Query
+ */
+export interface NotificationQueryDto {
+  unreadOnly?: boolean;
+}

@@ -16,15 +16,14 @@ export const createTransferRequestSchema = z.object({
     .string()
     .trim()
     .min(5)
-    .max(500)
-    .optional(),
-});
+    .max(500),
+}).strict();
 
 /**
  * Approve Transfer Request Validation
  */
 export const approveTransferRequestSchema = z.object({
-  approvedById: z.uuid("Invalid approver ID"),
+
 
   toEmployeeId: z
     .uuid("Invalid replacement employee ID")
@@ -35,20 +34,18 @@ export const approveTransferRequestSchema = z.object({
     .trim()
     .max(500, "Approval remark cannot exceed 500 characters")
     .optional(),
-});
+}).strict();
 
 /**
  * Reject Transfer Request Validation
  */
 export const rejectTransferRequestSchema = z.object({
-  approvedById: z.uuid("Invalid approver ID"),
-
   approvalRemark: z
     .string()
     .trim()
     .min(5, "Approval remark must be at least 5 characters")
     .max(500, "Approval remark cannot exceed 500 characters"),
-});
+}).strict();
 
 /**
  * Cancel Transfer Request Validation
@@ -59,7 +56,7 @@ export const cancelTransferRequestSchema = z.object({
     .trim()
     .max(500, "Reason cannot exceed 500 characters")
     .optional(),
-});
+}).strict();
 
 /**
  * Update Transfer Request Validation
@@ -74,4 +71,4 @@ export const updateTransferRequestSchema = z.object({
     .trim()
     .max(500, "Approval remark cannot exceed 500 characters")
     .optional(),
-});
+}).strict();

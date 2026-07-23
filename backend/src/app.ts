@@ -16,20 +16,37 @@ import swapRequestRoutes from "./routes/swapRequest.routes.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./config/swagger.js";
 import cookieParser from "cookie-parser";
+import { APP_NAME, APP_VERSION } from "./constants/app.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
+import reportsRoutes from "./routes/reports.routes.js";
 
 const app = express();
 
-app.use(express.json());
-
-app.use(express.urlencoded({ extended: true }));
-
-app.use(cookieParser());
-
-app.use(cors());
-
+// Security headers
 app.use(helmet());
 
+// CORS
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  }),
+);
+
+// Request logging
 app.use(morgan("dev"));
+
+// Parse JSON
+app.use(express.json());
+
+// Parse form data
+app.use(express.urlencoded({ extended: true }));
+
+// Parse cookies
+app.use(cookieParser());
+
+
+
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -52,15 +69,24 @@ app.use("/api/transfer-requests", transferRequestRoutes);
 
 app.use("/api/swap-requests", swapRequestRoutes);
 
-console.log("App initialized");
+app.use("/api/dashboard", dashboardRoutes);
+
+app.use("/api/reports", reportsRoutes);
 
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "Exam Management API",
+    name: APP_NAME,
+    version: APP_VERSION,
   });
 });
 
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Route not found"
+    });
+});
 app.use(errorHandler);
 
 export default app;

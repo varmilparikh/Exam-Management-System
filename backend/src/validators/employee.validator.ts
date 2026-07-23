@@ -4,85 +4,51 @@ import { z } from "zod";
  * Create Employee Validation
  */
 export const createEmployeeSchema = z.object({
-  employeeCode: z
-    .string()
-    .trim()
-    .min(2)
-    .max(20),
+  employeeCode: z.string().trim().min(2).max(20),
 
-  name: z
-    .string()
-    .trim()
-    .min(2)
-    .max(100),
+  name: z.string().trim().min(2).max(100),
 
-  email: z
-    .email(),
+  email: z.string().email(),
 
   password: z
     .string()
     .min(8)
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
     .max(100),
 
-  designation: z
-    .string()
-    .trim()
-    .min(2)
-    .max(100),
+  designation: z.string().trim().min(2).max(100),
 
-  departmentId: z
-    .uuid(),
+  departmentId: z.uuid(),
 
-  role: z.enum([
-    "SUPER_ADMIN",
-    "COE",
-    "HOD",
-    "FACULTY",
-  ]),
+  role: z.enum(["SUPER_ADMIN", "COE", "HOD", "FACULTY"]),
 
   phone: z
     .string()
-    .trim()
+    .regex(/^[0-9]{10}$/)
     .optional(),
-});
+}).strict();
 
 /**
  * Update Employee Validation
  */
-export const updateEmployeeSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2)
-    .max(100)
-    .optional(),
+export const updateEmployeeSchema = z
+  .object({
+    employeeCode: z.string().trim().min(2).max(20).optional(),
 
-  designation: z
-    .string()
-    .trim()
-    .min(2)
-    .max(100)
-    .optional(),
+    name: z.string().trim().min(2).max(100).optional(),
 
-  departmentId: z
-    .uuid()
-    .optional(),
+    email: z.string().email().optional(),
 
-  role: z
-    .enum([
-      "SUPER_ADMIN",
-      "COE",
-      "HOD",
-      "FACULTY",
-    ])
-    .optional(),
+    designation: z.string().trim().min(2).max(100).optional(),
 
-  phone: z
-    .string()
-    .trim()
-    .optional(),
+    departmentId: z.uuid().optional(),
 
-  isActive: z
-    .boolean()
-    .optional(),
-});
+    role: z.enum(["SUPER_ADMIN", "COE", "HOD", "FACULTY"]).optional(),
+
+    phone: z
+      .string()
+      .regex(/^[0-9]{10}$/)
+      .optional(),
+
+    isActive: z.boolean().optional(),
+  }).strict();

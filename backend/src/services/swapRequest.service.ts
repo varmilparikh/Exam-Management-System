@@ -1,9 +1,7 @@
-import prisma from "../config/prisma.js";
 import swapRequestRepository from "../repositories/swapRequest.repository.js";
 import employeeRepository from "../repositories/employee.repository.js";
 import examDutyRepository from "../repositories/examDuty.repository.js";
 import activityLogService from "./activityLog.service.js";
-import notificationService from "./notification.service.js";
 import employeeValidationService from "./employeeValidation.service.js";
 import notificationHelperService from "./notificationHelper.service.js";
 
@@ -26,10 +24,7 @@ import type {
   RejectSwapByCoeDto,
 } from "../types/swapRequest.types.js";
 
-import {
-  swapRequestSelect,
-  type SwapRequestResponse,
-} from "../constants/prismaSelect.js";
+import { type SwapRequestResponse } from "../constants/prismaSelect.js";
 
 class SwapRequestService {
   /**
@@ -167,10 +162,12 @@ class SwapRequestService {
       throw new ApiError(404, "Swap request not found");
     }
 
-    const receiver = await employeeValidationService.validateEmployee(
-      receiverId,
-      "Receiver",
-    );
+    if (swapRequest.receiverId !== receiverId) {
+      throw new ApiError(
+        403,
+        "Only the receiver can accept this swap request.",
+      );
+    }
 
     if (swapRequest.status !== SwapStatus.PENDING) {
       throw new ApiError(400, "Only pending swap requests can be accepted.");
@@ -277,45 +274,24 @@ class SwapRequestService {
       );
     }
 
+    if (
+      requesterDuty.exam.status !== ExamStatus.UPCOMING ||
+      receiverDuty.exam.status !== ExamStatus.UPCOMING
+    ) {
+      throw new ApiError(400, "Only upcoming examinations can be swapped.");
+    }
+
     // 6. Perform transaction
-    const updatedSwapRequest = await prisma.$transaction(async (tx) => {
-      await tx.examDuty.update({
-        where: { id: requesterDuty.id },
-        data: {
-          employeeId: null,
-        },
+    const updatedSwapRequest =
+      await swapRequestRepository.approveSwapTransaction({
+        id,
+        approvedById,
+        approvalRemark: data.approvalRemark ?? null,
+        requesterDutyId: requesterDuty.id,
+        receiverDutyId: receiverDuty.id,
+        requesterId: swapRequest.requesterId,
+        receiverId: swapRequest.receiverId,
       });
-
-      // Step 2: Move receiver duty to requester
-      await tx.examDuty.update({
-        where: { id: receiverDuty.id },
-        data: {
-          employeeId: swapRequest.requesterId,
-        },
-      });
-
-      // Step 3: Move requester duty to receiver
-      await tx.examDuty.update({
-        where: { id: requesterDuty.id },
-        data: {
-          employeeId: swapRequest.receiverId,
-        },
-      });
-
-      // Update swap request
-      return await tx.swapRequest.update({
-        where: {
-          id,
-        },
-        data: {
-          status: SwapStatus.APPROVED,
-          approvedById,
-          approvedAt: new Date(),
-          approvalRemark: data.approvalRemark,
-        },
-        select: swapRequestSelect,
-      });
-    });
 
     // 7. Activity log
     await activityLogService.log({
@@ -323,7 +299,7 @@ class SwapRequestService {
 
       action: ActivityAction.APPROVE_SWAP_REQUEST,
 
-      description: `${approver.name} approved the swap request between ${swapRequest.requester.name} and ${swapRequest.receiver.name}.`,
+      description: `${approver.name} approved swap request (${updatedSwapRequest.id}) between ${swapRequest.requester.name} and ${swapRequest.receiver.name}.`,
 
       entityType: EntityType.SWAP_REQUEST,
 
@@ -331,17 +307,9 @@ class SwapRequestService {
     });
 
     // 8. Notify requester
-    await notificationHelperService.notify(
+    await notificationHelperService.notifySwapApproved(
       swapRequest.requesterId,
-      "Swap Request Approved",
-      "Your swap request has been approved by the COE.",
-    );
-
-    // 9. Notify receiver
-    await notificationHelperService.notify(
       swapRequest.receiverId,
-      "Swap Request Approved",
-      "Your accepted swap request has been approved by the COE.",
     );
 
     // 10. Return response
@@ -379,7 +347,7 @@ class SwapRequestService {
     // 4. Update request
     const updatedSwapRequest = await swapRequestRepository.update(id, {
       status: SwapStatus.REJECTED,
-      reason: data.reason ?? swapRequest.reason,
+      reason: data.reason,
     });
 
     // 5. Activity Log

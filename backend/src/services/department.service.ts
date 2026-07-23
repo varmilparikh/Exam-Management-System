@@ -1,5 +1,5 @@
 import departmentRepository from "../repositories/department.repository.js";
-
+import type { DepartmentResponse } from "../constants/prismaSelect.js";
 import { ApiError } from "../utils/apiError.js";
 
 import type {
@@ -11,15 +11,11 @@ class DepartmentService {
   /**
    * Create Department
    */
-  async create(data: CreateDepartmentDto) {
-    const existingDepartment =
-      await departmentRepository.findByName(data.name);
+  async create(data: CreateDepartmentDto): Promise<DepartmentResponse> {
+    const exists = await departmentRepository.existsByName(data.name);
 
-    if (existingDepartment) {
-      throw new ApiError(
-        409,
-        "Department already exists"
-      );
+    if (exists) {
+      throw new ApiError(409, "Department already exists");
     }
 
     return departmentRepository.create({
@@ -30,22 +26,18 @@ class DepartmentService {
   /**
    * Get All Departments
    */
-  async getAll() {
+  async getAll(): Promise<DepartmentResponse[]> {
     return departmentRepository.findAll();
   }
 
   /**
    * Get Department By ID
    */
-  async getById(id: string) {
-    const department =
-      await departmentRepository.findById(id);
+  async getById(id: string): Promise<DepartmentResponse> {
+    const department = await departmentRepository.findById(id);
 
     if (!department) {
-      throw new ApiError(
-        404,
-        "Department not found"
-      );
+      throw new ApiError(404, "Department not found");
     }
 
     return department;
@@ -56,32 +48,21 @@ class DepartmentService {
    */
   async update(
     id: string,
-    data: UpdateDepartmentDto
-  ) {
-    const department =
-      await departmentRepository.findById(id);
+    data: UpdateDepartmentDto,
+  ): Promise<DepartmentResponse> {
+    const department = await departmentRepository.findById(id);
 
     if (!department) {
-      throw new ApiError(
-        404,
-        "Department not found"
-      );
+      throw new ApiError(404, "Department not found");
     }
 
     if (data.name) {
-      const existingDepartment =
-        await departmentRepository.findByName(
-          data.name
-        );
+      const existingDepartment = await departmentRepository.findByName(
+        data.name,
+      );
 
-      if (
-        existingDepartment &&
-        existingDepartment.id !== id
-      ) {
-        throw new ApiError(
-          409,
-          "Department already exists"
-        );
+      if (existingDepartment && existingDepartment.id !== id) {
+        throw new ApiError(409, "Department already exists");
       }
     }
 
@@ -91,14 +72,19 @@ class DepartmentService {
   /**
    * Soft Delete Department
    */
-  async delete(id: string) {
-    const department =
-      await departmentRepository.findById(id);
+  async delete(id: string): Promise<DepartmentResponse> {
+    const department = await departmentRepository.findById(id);
 
     if (!department) {
+      throw new ApiError(404, "Department not found");
+    }
+
+    const hasEmployees = await departmentRepository.hasEmployees(id);
+
+    if (hasEmployees) {
       throw new ApiError(
-        404,
-        "Department not found"
+        409,
+        "Cannot delete department because employees are assigned to it.",
       );
     }
 

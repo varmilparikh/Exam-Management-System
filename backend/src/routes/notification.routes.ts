@@ -2,9 +2,11 @@ import { Router } from "express";
 
 import {
   createNotification,
-  getNotifications,
+  getMyNotifications,
   getNotificationById,
-  updateNotification,
+  getUnreadNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
   deleteNotification,
 } from "../controllers/notification.controller.js";
 
@@ -12,10 +14,9 @@ import { verifyJWT } from "../middleware/auth.middleware.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 
-import {
-  createNotificationSchema,
-  updateNotificationSchema,
-} from "../validators/notification.validator.js";
+import { createNotificationSchema } from "../validators/notification.validator.js";
+
+import { uuidParamSchema } from "../validators/common.validator.js";
 
 const router = Router();
 
@@ -33,12 +34,7 @@ router.post(
 /**
  * Get All Notifications
  */
-router.get(
-  "/",
-  verifyJWT,
-  authorizeRoles("SUPER_ADMIN", "COE"),
-  getNotifications,
-);
+router.get("/", verifyJWT, getMyNotifications);
 
 /**
  * Get Notification By ID
@@ -46,20 +42,23 @@ router.get(
 router.get(
   "/:id",
   verifyJWT,
-  authorizeRoles("SUPER_ADMIN", "COE"),
+  validate(uuidParamSchema, "params"),
   getNotificationById,
 );
 
 /**
  * Update Notification
  */
-router.put(
-  "/:id",
+router.patch(
+  "/:id/read",
   verifyJWT,
-  authorizeRoles("SUPER_ADMIN", "COE"),
-  validate(updateNotificationSchema),
-  updateNotification,
+  validate(uuidParamSchema, "params"),
+  markNotificationAsRead,
 );
+
+router.get("/unread", verifyJWT, getUnreadNotifications);
+
+router.patch("/read-all", verifyJWT, markAllNotificationsAsRead);
 
 /**
  * Delete Notification
@@ -67,7 +66,7 @@ router.put(
 router.delete(
   "/:id",
   verifyJWT,
-  authorizeRoles("SUPER_ADMIN", "COE"),
+  validate(uuidParamSchema, "params"),
   deleteNotification,
 );
 

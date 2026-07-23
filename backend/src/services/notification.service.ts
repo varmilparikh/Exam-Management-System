@@ -8,26 +8,17 @@ import type {
   UpdateNotificationDto,
 } from "../types/notification.types.js";
 
-import type {
-  NotificationResponse,
-} from "../constants/prismaSelect.js";
+import type { NotificationResponse } from "../constants/prismaSelect.js";
 
 class NotificationService {
   /**
    * Create Notification
    */
-  async create(
-    data: CreateNotificationDto,
-  ): Promise<NotificationResponse> {
-    const employee = await employeeRepository.findById(
-      data.employeeId,
-    );
+  async create(data: CreateNotificationDto): Promise<NotificationResponse> {
+    const employee = await employeeRepository.findById(data.employeeId);
 
     if (!employee) {
-      throw new ApiError(
-        404,
-        "Employee not found",
-      );
+      throw new ApiError(404, "Employee not found");
     }
 
     return notificationRepository.create({
@@ -54,25 +45,26 @@ class NotificationService {
    */
   async getByEmployee(
     employeeId: string,
+    page: number,
+    limit: number,
   ): Promise<NotificationResponse[]> {
-    return notificationRepository.findByEmployeeId(
-      employeeId,
-    );
+    return notificationRepository.findByEmployee(employeeId, page, limit);
   }
 
   /**
    * Get Notification By ID
    */
-  async getById(
-    id: string,
-  ): Promise<NotificationResponse> {
-    const notification =
-      await notificationRepository.findById(id);
+  async getById(employeeId: string, id: string): Promise<NotificationResponse> {
+    const notification = await notificationRepository.findById(id);
 
     if (!notification) {
+      throw new ApiError(404, "Notification not found");
+    }
+
+    if (notification.employeeId !== employeeId) {
       throw new ApiError(
-        404,
-        "Notification not found",
+        403,
+        "You are not authorized to access this notification",
       );
     }
 
@@ -83,16 +75,20 @@ class NotificationService {
    * Mark Notification As Read
    */
   async update(
+    employeeId: string,
     id: string,
     data: UpdateNotificationDto,
   ): Promise<NotificationResponse> {
-    const notification =
-      await notificationRepository.findById(id);
+    const notification = await notificationRepository.findById(id);
 
     if (!notification) {
+      throw new ApiError(404, "Notification not found");
+    }
+
+    if (notification.employeeId !== employeeId) {
       throw new ApiError(
-        404,
-        "Notification not found",
+        403,
+        "You are not authorized to access this notification",
       );
     }
 
@@ -102,18 +98,62 @@ class NotificationService {
   }
 
   /**
-   * Soft Delete Notification
+   * Mark Notification As Read
    */
-  async delete(
+  async markAsRead(
+    employeeId: string,
     id: string,
   ): Promise<NotificationResponse> {
-    const notification =
-      await notificationRepository.findById(id);
+    const notification = await notificationRepository.findById(id);
 
     if (!notification) {
+      throw new ApiError(404, "Notification not found");
+    }
+
+    if (notification.employeeId !== employeeId) {
       throw new ApiError(
-        404,
-        "Notification not found",
+        403,
+        "You are not authorized to access this notification",
+      );
+    }
+
+    return notificationRepository.update(id, {
+      isRead: true,
+    });
+  }
+
+  /**
+   * Mark All Notifications As Read
+   */
+  async markAllAsRead(employeeId: string): Promise<number> {
+    return notificationRepository.markAllAsRead(employeeId);
+  }
+
+  /**
+   * Get Unread Notifications
+   */
+  async getUnread(employeeId: string): Promise<NotificationResponse[]> {
+    return notificationRepository.findUnreadByEmployee(employeeId);
+  }
+
+  async countUnread(employeeId: string): Promise<number> {
+    return notificationRepository.countUnread(employeeId);
+  }
+
+  /**
+   * Soft Delete Notification
+   */
+  async delete(employeeId: string, id: string): Promise<NotificationResponse> {
+    const notification = await notificationRepository.findById(id);
+
+    if (!notification) {
+      throw new ApiError(404, "Notification not found");
+    }
+
+    if (notification.employeeId !== employeeId) {
+      throw new ApiError(
+        403,
+        "You are not authorized to delete this notification",
       );
     }
 

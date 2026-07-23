@@ -11,9 +11,7 @@ class ActivityLogRepository {
   /**
    * Find activity log by ID
    */
-  async findById(
-    id: string,
-  ): Promise<ActivityLogResponse | null> {
+  async findById(id: string): Promise<ActivityLogResponse | null> {
     return prisma.activityLog.findFirst({
       where: {
         id,
@@ -26,14 +24,43 @@ class ActivityLogRepository {
   /**
    * Get all activity logs
    */
-  async findAll(): Promise<ActivityLogResponse[]> {
+  async findAll(page: number, limit: number): Promise<ActivityLogResponse[]> {
     return prisma.activityLog.findMany({
       where: {
         isDeleted: false,
       },
+
+      skip: (page - 1) * limit,
+
+      take: limit,
+
       orderBy: {
         createdAt: "desc",
       },
+
+      select: activityLogSelect,
+    });
+  }
+
+  async findByEmployee(
+    employeeId: string,
+    page: number,
+    limit: number,
+  ): Promise<ActivityLogResponse[]> {
+    return prisma.activityLog.findMany({
+      where: {
+        employeeId,
+        isDeleted: false,
+      },
+
+      skip: (page - 1) * limit,
+
+      take: limit,
+
+      orderBy: {
+        createdAt: "desc",
+      },
+
       select: activityLogSelect,
     });
   }
@@ -51,19 +78,13 @@ class ActivityLogRepository {
   }
 
   /**
-   * Soft delete activity log
+   * Count all activity logs
    */
-  async softDelete(
-    id: string,
-  ): Promise<ActivityLogResponse> {
-    return prisma.activityLog.update({
+  async count(): Promise<number> {
+    return prisma.activityLog.count({
       where: {
-        id,
+        isDeleted: false,
       },
-      data: {
-        isDeleted: true,
-      },
-      select: activityLogSelect,
     });
   }
 }

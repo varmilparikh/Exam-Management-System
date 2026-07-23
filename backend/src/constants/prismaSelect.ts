@@ -1,5 +1,38 @@
 import type { Prisma } from "../generated/prisma/client.js";
 
+export const employeeLoginSelect = {
+  id: true,
+  employeeCode: true,
+  name: true,
+  email: true,
+  password: true,
+  phone: true,
+  profileImage: true,
+  designation: true,
+  role: true,
+  loginProvider: true,
+  isEmailVerified: true,
+  lastLogin: true,
+  isActive: true,
+  departmentId: true,
+  averageDuty: true,
+  attendedCount: true,
+  transferCount: true,
+  isDeleted: true,
+  createdAt: true,
+  updatedAt: true,
+  department: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+} satisfies Prisma.EmployeeSelect;
+
+export type EmployeeLogin = Prisma.EmployeeGetPayload<{
+  select: typeof employeeLoginSelect;
+}>;
+
 export const employeeSelect = {
   id: true,
   employeeCode: true,
@@ -33,6 +66,17 @@ export type EmployeeResponse = Prisma.EmployeeGetPayload<{
   select: typeof employeeSelect;
 }>;
 
+export const departmentSelect = {
+  id: true,
+  name: true,
+  isDeleted: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.DepartmentSelect;
+
+export type DepartmentResponse = Prisma.DepartmentGetPayload<{
+  select: typeof departmentSelect;
+}>;
 
 export const examSelect = {
   id: true,
@@ -48,7 +92,6 @@ export const examSelect = {
 export type ExamResponse = Prisma.ExamGetPayload<{
   select: typeof examSelect;
 }>;
-
 
 export const examDutySelect = {
   id: true,
@@ -90,11 +133,9 @@ export const examDutySelect = {
   },
 } satisfies Prisma.ExamDutySelect;
 
-export type ExamDutyResponse =
-  Prisma.ExamDutyGetPayload<{
-    select: typeof examDutySelect;
-  }>;
-
+export type ExamDutyResponse = Prisma.ExamDutyGetPayload<{
+  select: typeof examDutySelect;
+}>;
 
 export const activityLogSelect = {
   id: true,
@@ -129,11 +170,9 @@ export const activityLogSelect = {
   },
 } satisfies Prisma.ActivityLogSelect;
 
-export type ActivityLogResponse =
-  Prisma.ActivityLogGetPayload<{
-    select: typeof activityLogSelect;
-  }>;
-
+export type ActivityLogResponse = Prisma.ActivityLogGetPayload<{
+  select: typeof activityLogSelect;
+}>;
 
 export const notificationSelect = {
   id: true,
@@ -162,11 +201,9 @@ export const notificationSelect = {
   },
 } satisfies Prisma.NotificationSelect;
 
-export type NotificationResponse =
-  Prisma.NotificationGetPayload<{
-    select: typeof notificationSelect;
-  }>;
-
+export type NotificationResponse = Prisma.NotificationGetPayload<{
+  select: typeof notificationSelect;
+}>;
 
 export const transferRequestSelect = {
   id: true,
@@ -233,11 +270,9 @@ export const transferRequestSelect = {
   },
 } satisfies Prisma.TransferRequestSelect;
 
-export type TransferRequestResponse =
-  Prisma.TransferRequestGetPayload<{
-    select: typeof transferRequestSelect;
-  }>;
-
+export type TransferRequestResponse = Prisma.TransferRequestGetPayload<{
+  select: typeof transferRequestSelect;
+}>;
 
 export const swapRequestSelect = {
   id: true,
@@ -306,7 +341,6 @@ export const swapRequestSelect = {
   },
 } satisfies Prisma.SwapRequestSelect;
 
-export type SwapRequestResponse =
-  Prisma.SwapRequestGetPayload<{
-    select: typeof swapRequestSelect;
-  }>;
+export type SwapRequestResponse = Prisma.SwapRequestGetPayload<{
+  select: typeof swapRequestSelect;
+}>;

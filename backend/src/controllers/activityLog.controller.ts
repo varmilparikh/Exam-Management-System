@@ -9,16 +9,15 @@ import { ApiResponse } from "../utils/apiResponse.js";
  * Get All Activity Logs
  */
 export const getActivityLogs = asyncHandler(
-  async (_req: Request, res: Response) => {
-    const logs = await activityLogService.getAll();
+  async (req: Request, res: Response) => {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
 
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        logs,
-        "Activity logs fetched successfully",
-      ),
-    );
+    const logs = await activityLogService.getAll(page, limit);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, logs, "Activity logs fetched successfully"));
   },
 );
 
@@ -31,31 +30,24 @@ export const getActivityLogById = asyncHandler(
 
     const log = await activityLogService.getById(id);
 
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        log,
-        "Activity log fetched successfully",
-      ),
-    );
+    res
+      .status(200)
+      .json(new ApiResponse(200, log, "Activity log fetched successfully"));
   },
 );
 
 /**
- * Delete Activity Log
+ * Get My Activity Logs
  */
-export const deleteActivityLog = asyncHandler(
+export const getMyActivityLogs = asyncHandler(
   async (req: Request, res: Response) => {
-    const id = req.params.id as string;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
 
-    await activityLogService.delete(id);
+    const logs = await activityLogService.getMyLogs(req.user!.id, page, limit);
 
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        null,
-        "Activity log deleted successfully",
-      ),
-    );
+    res
+      .status(200)
+      .json(new ApiResponse(200, logs, "Activity logs fetched successfully"));
   },
 );

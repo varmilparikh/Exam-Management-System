@@ -2,7 +2,8 @@ import transferRequestRepository from "../repositories/transferRequest.repositor
 import employeeRepository from "../repositories/employee.repository.js";
 import examDutyRepository from "../repositories/examDuty.repository.js";
 import activityLogService from "./activityLog.service.js";
-import notificationService from "./notification.service.js";
+import { ExamStatus } from "../generated/prisma/client.js";
+import { Role } from "../generated/prisma/client.js";
 
 import { ApiError } from "../utils/apiError.js";
 
@@ -39,6 +40,13 @@ class TransferRequestService {
 
     if (!examDuty) {
       throw new ApiError(404, "Exam duty not found");
+    }
+
+    if (examDuty.exam.status !== ExamStatus.UPCOMING) {
+      throw new ApiError(
+        409,
+        "Transfer requests are only allowed for upcoming exams.",
+      );
     }
 
     if (examDuty.employeeId !== employeeId) {
@@ -140,11 +148,28 @@ class TransferRequestService {
   /**
    * Get transfer request by ID
    */
-  async getById(id: string): Promise<TransferRequestResponse> {
+  async getById(
+    id: string,
+    userId: string,
+    role: Role,
+  ): Promise<TransferRequestResponse> {
     const transferRequest = await transferRequestRepository.findById(id);
 
     if (!transferRequest) {
       throw new ApiError(404, "Transfer request not found");
+    }
+
+    const isOwner = transferRequest.fromEmployeeId === userId;
+
+    const isReplacement = transferRequest.toEmployeeId === userId;
+
+    const isAdmin = role === Role.COE || role === Role.SUPER_ADMIN;
+
+    if (!isOwner && !isReplacement && !isAdmin) {
+      throw new ApiError(
+        403,
+        "You are not authorized to view this transfer request.",
+      );
     }
 
     return transferRequest;
@@ -169,19 +194,13 @@ class TransferRequestService {
    */
   async approveTransfer(
     id: string,
+    approvedById: string,
     data: ApproveTransferRequestDto,
   ): Promise<TransferRequestResponse> {
     const transferRequest = await transferRequestRepository.findById(id);
 
     if (!transferRequest) {
       throw new ApiError(404, "Transfer request not found");
-    }
-
-    if (transferRequest.status !== TransferStatus.PENDING) {
-      throw new ApiError(
-        409,
-        `Transfer request is already ${transferRequest.status.toLowerCase()}.`,
-      );
     }
 
     const replacementEmployeeId =
@@ -207,10 +226,40 @@ class TransferRequestService {
       throw new ApiError(400, "Replacement employee cannot be the requester");
     }
 
+    if (replacementEmployee.role !== Role.FACULTY) {
+      throw new ApiError(400, "Replacement employee must be a faculty member.");
+    }
+
     const dutyStatus = transferRequest.examDuty.status;
 
     if (dutyStatus !== DutyStatus.ASSIGNED) {
       throw new ApiError(400, "Only assigned duties can be transferred.");
+    }
+
+    const existingDuty = await examDutyRepository.findByEmployeeAndExam(
+      replacementEmployeeId,
+      transferRequest.examDuty.exam.id,
+    );
+
+    if (transferRequest.examDuty.exam.status !== ExamStatus.UPCOMING) {
+      throw new ApiError(
+        409,
+        "Transfer request cannot be approved because the exam has already started or ended.",
+      );
+    }
+
+    if (transferRequest.status !== TransferStatus.PENDING) {
+      throw new ApiError(
+        409,
+        `Transfer request is already ${transferRequest.status}.`,
+      );
+    }
+
+    if (existingDuty && existingDuty.id !== transferRequest.examDutyId) {
+      throw new ApiError(
+        409,
+        "Replacement employee already has a duty for this exam.",
+      );
     }
 
     return prisma.$transaction(async (tx) => {
@@ -223,7 +272,7 @@ class TransferRequestService {
           status: TransferStatus.APPROVED,
           approvedBy: {
             connect: {
-              id: data.approvedById,
+              id: approvedById,
             },
           },
           approvedAt: new Date(),
@@ -254,7 +303,7 @@ class TransferRequestService {
         data: {
           employee: {
             connect: {
-              id: data.approvedById,
+              id: approvedById,
             },
           },
           action: ActivityAction.APPROVE_TRANSFER_REQUEST,
@@ -309,6 +358,7 @@ class TransferRequestService {
    */
   async rejectTransfer(
     id: string,
+    approvedById: string,
     data: RejectTransferRequestDto,
   ): Promise<TransferRequestResponse> {
     const transferRequest = await transferRequestRepository.findById(id);
@@ -320,11 +370,11 @@ class TransferRequestService {
     if (transferRequest.status !== TransferStatus.PENDING) {
       throw new ApiError(
         409,
-        `Transfer request is already ${transferRequest.status.toLowerCase()}.`,
+        `Transfer request is already ${transferRequest.status}.`,
       );
     }
 
-    const approver = await employeeRepository.findById(data.approvedById);
+    const approver = await employeeRepository.findById(approvedById);
 
     if (!approver) {
       throw new ApiError(404, "Approver not found");
@@ -341,7 +391,7 @@ class TransferRequestService {
           approvalRemark: data.approvalRemark,
           approvedBy: {
             connect: {
-              id: data.approvedById,
+              id: approvedById,
             },
           },
         },
@@ -351,7 +401,7 @@ class TransferRequestService {
         data: {
           employee: {
             connect: {
-              id: data.approvedById,
+              id: approvedById,
             },
           },
           action: ActivityAction.REJECT_TRANSFER_REQUEST,
@@ -399,7 +449,7 @@ class TransferRequestService {
     if (transferRequest.status !== TransferStatus.PENDING) {
       throw new ApiError(
         409,
-        `Transfer request is already ${transferRequest.status.toLowerCase()}.`,
+        `Transfer request is already ${transferRequest.status}.`,
       );
     }
 

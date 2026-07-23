@@ -1,3 +1,7 @@
+import type { ExamResponse } from "../constants/prismaSelect.js";
+
+export type ExamResponseDto = ExamResponse;
+
 /**
  * Create Exam DTO
  */

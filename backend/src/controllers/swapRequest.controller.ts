@@ -3,12 +3,33 @@ import type { Request, Response } from "express";
 import swapRequestService from "../services/swapRequest.service.js";
 
 import { ApiResponse } from "../utils/apiResponse.js";
+import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
+import type {
+  CreateSwapRequestDto,
+  ApproveSwapRequestDto,
+  RejectSwapRequestDto,
+  CancelSwapRequestDto,
+  RejectSwapByCoeDto,
+} from "../types/swapRequest.types.js";
+
+/**
+ * Create Swap Request
+ */
 export const createSwapRequest = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (
+    req: Request<Record<string, never>, unknown, CreateSwapRequestDto>,
+    res: Response,
+  ): Promise<void> => {
+    if (!req.user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { id: employeeId } = req.user;
+
     const swapRequest = await swapRequestService.requestSwap(
-      req.user!.id,
+      employeeId,
       req.body,
     );
 
@@ -20,12 +41,19 @@ export const createSwapRequest = asyncHandler(
   },
 );
 
+/**
+ * Accept Swap Request
+ */
 export const acceptSwapRequest = asyncHandler(
-  async (req: Request, res: Response) => {
-    const swapRequest = await swapRequestService.acceptSwap(
-      req.params.id as string,
-      req.user!.id,
-    );
+  async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+    const { id } = req.params;
+    if (!req.user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { id: employeeId } = req.user;
+
+    const swapRequest = await swapRequestService.acceptSwap(id, employeeId);
 
     res
       .status(200)
@@ -35,11 +63,24 @@ export const acceptSwapRequest = asyncHandler(
   },
 );
 
+/**
+ * Approve Swap Request
+ */
 export const approveSwapRequest = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (
+    req: Request<{ id: string }, unknown, ApproveSwapRequestDto>,
+    res: Response,
+  ): Promise<void> => {
+    const { id } = req.params;
+    if (!req.user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { id: employeeId } = req.user;
+
     const swapRequest = await swapRequestService.approveSwap(
-      req.params.id as string,
-      req.user!.id,
+      id,
+      employeeId,
       req.body,
     );
 
@@ -51,11 +92,24 @@ export const approveSwapRequest = asyncHandler(
   },
 );
 
+/**
+ * Reject Swap Request
+ */
 export const rejectSwapRequest = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (
+    req: Request<{ id: string }, unknown, RejectSwapRequestDto>,
+    res: Response,
+  ): Promise<void> => {
+    const { id } = req.params;
+    if (!req.user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { id: employeeId } = req.user;
+
     const swapRequest = await swapRequestService.rejectSwap(
-      req.params.id as string,
-      req.user!.id,
+      id,
+      employeeId,
       req.body,
     );
 
@@ -67,11 +121,24 @@ export const rejectSwapRequest = asyncHandler(
   },
 );
 
+/**
+ * Cancel Swap Request
+ */
 export const cancelSwapRequest = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (
+    req: Request<{ id: string }, unknown, CancelSwapRequestDto>,
+    res: Response,
+  ): Promise<void> => {
+    const { id } = req.params;
+    if (!req.user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { id: employeeId } = req.user;
+
     const swapRequest = await swapRequestService.cancelSwap(
-      req.params.id as string,
-      req.user!.id,
+      id,
+      employeeId,
       req.body,
     );
 
@@ -87,21 +154,31 @@ export const cancelSwapRequest = asyncHandler(
   },
 );
 
+/**
+ * Reject Swap Request By COE
+ */
 export const rejectSwapByCoe = asyncHandler(
-  async (req: Request, res: Response) => {
-    const swapRequest =
-      await swapRequestService.rejectSwapByCoe(
-        req.params.id as string,
-        req.user!.id,
-        req.body,
-      );
+  async (
+    req: Request<{ id: string }, unknown, RejectSwapByCoeDto>,
+    res: Response,
+  ): Promise<void> => {
+    const { id } = req.params;
+    if (!req.user) {
+      throw new ApiError(401, "Unauthorized");
+    }
 
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        swapRequest,
-        "Swap request rejected successfully",
-      ),
+    const { id: employeeId } = req.user;
+
+    const swapRequest = await swapRequestService.rejectSwapByCoe(
+      id,
+      employeeId,
+      req.body,
     );
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, swapRequest, "Swap request rejected successfully"),
+      );
   },
 );

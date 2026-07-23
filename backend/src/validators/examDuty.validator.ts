@@ -9,21 +9,13 @@ export const createExamDutySchema = z.object({
   employeeId: z.uuid("Invalid employee ID"),
 
   examId: z.uuid("Invalid exam ID"),
-});
+}).strict();
 
 /**
  * Update Exam Duty Validation
  */
 export const updateExamDutySchema = z.object({
-  employeeId: z
-    .uuid("Invalid employee ID")
-    .optional(),
-
-  examId: z
-    .uuid("Invalid exam ID")
-    .optional(),
-
   status: z
     .nativeEnum(DutyStatus)
     .optional(),
-});
+}).strict();

@@ -1,23 +1,27 @@
+import { env } from "../config/env.js";
 import activityLogService from "./activityLog.service.js";
 
-import {
-  ActivityAction,
-  EntityType,
-} from "../generated/prisma/client.js";
+import { ActivityAction, EntityType } from "../generated/prisma/client.js";
 import bcrypt from "bcryptjs";
 
 import authRepository from "../repositories/auth.repository.js";
 
 import { ApiError } from "../utils/apiError.js";
 
-import type { RegisterUserDto } from "../types/auth.types.js";
+import type {
+  RegisterUserDto,
+  LoginUserDto,
+  LoginResponseDto,
+} from "../types/auth.types.js";
 
+import type { EmployeeResponseDto } from "../types/employee.types.js";
+
+import type { JwtPayload } from "../types/jwt.types.js";
 import { generateToken } from "../utils/generateToken.js";
-import type { LoginUserDto } from "../types/auth.types.js";
 import { toEmployeeResponse } from "../mappers/employee.mapper.js";
 
 class AuthService {
-  async register(data: RegisterUserDto) {
+  async register(data: RegisterUserDto): Promise<EmployeeResponseDto> {
     // Check email
     const existingEmail = await authRepository.findByEmail(data.email);
 
@@ -44,7 +48,10 @@ class AuthService {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const hashedPassword = await bcrypt.hash(
+      data.password,
+      env.bcryptSaltRounds,
+    );
 
     // Create employee
     const employee = await authRepository.create({
@@ -65,7 +72,7 @@ class AuthService {
     return toEmployeeResponse(employee);
   }
 
-  async login(data: LoginUserDto) {
+  async login(data: LoginUserDto): Promise<LoginResponseDto> {
     // Find employee
     const employee = await authRepository.findByEmail(data.email);
 
@@ -92,13 +99,17 @@ class AuthService {
     const updatedEmployee = await authRepository.updateLastLogin(employee.id);
 
     // Create activity log
-    await activityLogService.log({
-      employeeId: updatedEmployee.id,
-      action: ActivityAction.LOGIN,
-      description: `${updatedEmployee.name} logged in`,
-      entityType: EntityType.EMPLOYEE,
-      entityId: updatedEmployee.id,
-    });
+    try {
+      await activityLogService.log({
+        employeeId: updatedEmployee.id,
+        action: ActivityAction.LOGIN,
+        description: `${updatedEmployee.name} logged in`,
+        entityType: EntityType.EMPLOYEE,
+        entityId: updatedEmployee.id,
+      });
+    } catch (error) {
+      console.error("Failed to create login log", error);
+    }
 
     const token = generateToken({
       id: updatedEmployee.id,
@@ -110,6 +121,20 @@ class AuthService {
       employee: toEmployeeResponse(updatedEmployee),
       token,
     };
+  }
+
+  async logout(user: JwtPayload): Promise<void> {
+    try {
+      await activityLogService.log({
+        employeeId: user.id,
+        action: ActivityAction.LOGOUT,
+        description: `${user.email} logged out`,
+        entityType: EntityType.EMPLOYEE,
+        entityId: user.id,
+      });
+    } catch (error) {
+      console.error("Failed to create logout log", error);
+    }
   }
 }
 

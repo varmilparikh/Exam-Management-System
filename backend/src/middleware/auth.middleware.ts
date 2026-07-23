@@ -1,8 +1,4 @@
-import type {
-  NextFunction,
-  Request,
-  Response,
-} from "express";
+import type { NextFunction, Request, Response } from "express";
 
 import { ApiError } from "../utils/apiError.js";
 import { verifyToken } from "../utils/verifyToken.js";
@@ -10,25 +6,15 @@ import { verifyToken } from "../utils/verifyToken.js";
 export function verifyJWT(
   req: Request,
   _res: Response,
-  next: NextFunction
-) {
+  next: NextFunction,
+): void {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
-    throw new ApiError(
-      401,
-      "Authorization header is missing"
-    );
+  if (!authHeader?.startsWith("Bearer ")) {
+    throw new ApiError(401, "Authorization header is missing or invalid");
   }
 
-  if (!authHeader.startsWith("Bearer ")) {
-    throw new ApiError(
-      401,
-      "Invalid authorization header"
-    );
-  }
-
-  const token = authHeader.split(" ")[1];
+  const token = authHeader.substring(7);
 
   const decoded = verifyToken(token);
 

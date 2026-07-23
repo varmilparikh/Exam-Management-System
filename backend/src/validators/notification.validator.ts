@@ -17,7 +17,7 @@ export const createNotificationSchema = z.object({
     .trim()
     .min(5, "Message must be at least 5 characters")
     .max(500, "Message cannot exceed 500 characters"),
-});
+}).strict();
 
 /**
  * Update Notification Validation
@@ -38,4 +38,4 @@ export const updateNotificationSchema = z.object({
     .optional(),
 
   isRead: z.boolean().optional(),
-});
+}).strict();

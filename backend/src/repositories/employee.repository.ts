@@ -36,13 +36,18 @@ class EmployeeRepository {
     });
   }
 
-  async findAuthByEmail(email: string): Promise<Employee | null> {
-    return prisma.employee.findFirst({
+  /**
+   * Check whether an email already exists
+   */
+  async existsByEmail(email: string): Promise<boolean> {
+    const count = await prisma.employee.count({
       where: {
         email,
         isDeleted: false,
       },
     });
+
+    return count > 0;
   }
 
   /**

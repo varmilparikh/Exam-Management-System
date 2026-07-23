@@ -51,3 +51,13 @@ export interface RejectSwapByCoeDto {
 export interface UpdateSwapRequestDto {
   status?: SwapStatus;
 }
+
+export interface ApproveSwapTransactionData {
+  id: string;
+  approvedById: string;
+  approvalRemark: string | null;
+  requesterDutyId: string;
+  receiverDutyId: string;
+  requesterId: string;
+  receiverId: string;
+}

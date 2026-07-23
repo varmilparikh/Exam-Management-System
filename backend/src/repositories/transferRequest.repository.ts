@@ -3,10 +3,7 @@ import prisma from "../config/prisma.js";
 import type { Prisma } from "../generated/prisma/client.js";
 
 import {
-  ActivityAction,
-  EntityType,
   TransferStatus,
-  DutyStatus,
 } from "../generated/prisma/client.js";
 
 import {
@@ -149,19 +146,6 @@ class TransferRequestRepository {
       },
       select: transferRequestSelect,
     });
-  }
-
-  /**
-   * Find approved request by ID
-   */
-  async findByIdOrFail(id: string): Promise<TransferRequestResponse> {
-    const transferRequest = await this.findById(id);
-
-    if (!transferRequest) {
-      throw new Error("Transfer request not found");
-    }
-
-    return transferRequest;
   }
 
   /**

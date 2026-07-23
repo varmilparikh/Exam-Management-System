@@ -2,21 +2,15 @@ import activityLogRepository from "../repositories/activityLog.repository.js";
 
 import { ApiError } from "../utils/apiError.js";
 
-import type {
-  CreateActivityLogDto,
-} from "../types/activityLog.types.js";
+import type { CreateActivityLogDto } from "../types/activityLog.types.js";
 
-import {
-  ActivityLogResponse,
-} from "../constants/prismaSelect.js";
+import { ActivityLogResponse } from "../constants/prismaSelect.js";
 
 class ActivityLogService {
   /**
    * Create Activity Log
    */
-  async log(
-    data: CreateActivityLogDto,
-  ): Promise<ActivityLogResponse> {
+  async log(data: CreateActivityLogDto): Promise<ActivityLogResponse> {
     return activityLogRepository.create({
       action: data.action,
       description: data.description,
@@ -36,46 +30,43 @@ class ActivityLogService {
   /**
    * Get All Activity Logs
    */
-  async getAll(): Promise<ActivityLogResponse[]> {
-    return activityLogRepository.findAll();
+  async getAll(page: number, limit: number) {
+    const [logs, total] = await Promise.all([
+      activityLogRepository.findAll(page, limit),
+      activityLogRepository.count(),
+    ]);
+
+    return {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      logs,
+    };
   }
 
   /**
    * Get Activity Log By ID
    */
-  async getById(
-    id: string,
-  ): Promise<ActivityLogResponse> {
-    const activityLog =
-      await activityLogRepository.findById(id);
+  async getById(id: string): Promise<ActivityLogResponse> {
+    const activityLog = await activityLogRepository.findById(id);
 
     if (!activityLog) {
-      throw new ApiError(
-        404,
-        "Activity log not found",
-      );
+      throw new ApiError(404, "Activity log not found");
     }
 
     return activityLog;
   }
 
   /**
-   * Soft Delete Activity Log
+   * Get My Activity Logs
    */
-  async delete(
-    id: string,
-  ): Promise<ActivityLogResponse> {
-    const activityLog =
-      await activityLogRepository.findById(id);
-
-    if (!activityLog) {
-      throw new ApiError(
-        404,
-        "Activity log not found",
-      );
-    }
-
-    return activityLogRepository.softDelete(id);
+  async getMyLogs(
+    employeeId: string,
+    page: number,
+    limit: number,
+  ): Promise<ActivityLogResponse[]> {
+    return activityLogRepository.findByEmployee(employeeId, page, limit);
   }
 }
 

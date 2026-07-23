@@ -5,11 +5,19 @@ import departmentService from "../services/department.service.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 
+import type {
+  CreateDepartmentDto,
+  UpdateDepartmentDto,
+} from "../types/department.types.js";
+
 /**
  * Create Department
  */
 export const createDepartment = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (
+    req: Request<Record<string, never>, unknown, CreateDepartmentDto>,
+    res: Response,
+  ): Promise<void> => {
     const department = await departmentService.create(req.body);
 
     res
@@ -24,7 +32,7 @@ export const createDepartment = asyncHandler(
  * Get All Departments
  */
 export const getDepartments = asyncHandler(
-  async (_req: Request, res: Response) => {
+  async (_req: Request, res: Response): Promise<void> => {
     const departments = await departmentService.getAll();
 
     res
@@ -39,8 +47,8 @@ export const getDepartments = asyncHandler(
  * Get Department By ID
  */
 export const getDepartmentById = asyncHandler(
-  async (req: Request, res: Response) => {
-    const id = req.params.id as string;
+  async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+    const { id } = req.params;
 
     const department = await departmentService.getById(id);
 
@@ -56,8 +64,12 @@ export const getDepartmentById = asyncHandler(
  * Update Department
  */
 export const updateDepartment = asyncHandler(
-  async (req: Request, res: Response) => {
-    const id = req.params.id as string;
+  async (
+    req: Request<{ id: string }, unknown, UpdateDepartmentDto>,
+    res: Response,
+  ): Promise<void> => {
+    const { id } = req.params;
+
     const department = await departmentService.update(id, req.body);
 
     res
@@ -72,8 +84,9 @@ export const updateDepartment = asyncHandler(
  * Delete Department
  */
 export const deleteDepartment = asyncHandler(
-  async (req: Request, res: Response) => {
-    const id = req.params.id as string;
+  async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+    const { id } = req.params;
+
     await departmentService.delete(id);
 
     res

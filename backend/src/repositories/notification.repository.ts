@@ -11,9 +11,7 @@ class NotificationRepository {
   /**
    * Find notification by ID
    */
-  async findById(
-    id: string,
-  ): Promise<NotificationResponse | null> {
+  async findById(id: string): Promise<NotificationResponse | null> {
     return prisma.notification.findFirst({
       where: {
         id,
@@ -41,19 +39,76 @@ class NotificationRepository {
   /**
    * Get notifications by employee
    */
-  async findByEmployeeId(
+  async findByEmployee(
+    employeeId: string,
+    page: number,
+    limit: number,
+  ): Promise<NotificationResponse[]> {
+    const skip = (page - 1) * limit;
+
+    return prisma.notification.findMany({
+      where: {
+        employeeId,
+        isDeleted: false,
+      },
+
+      skip,
+
+      take: limit,
+
+      orderBy: {
+        createdAt: "desc",
+      },
+
+      select: notificationSelect,
+    });
+  }
+
+  /**
+   * Get unread notifications by employee
+   */
+  async findUnreadByEmployee(
     employeeId: string,
   ): Promise<NotificationResponse[]> {
     return prisma.notification.findMany({
       where: {
         employeeId,
         isDeleted: false,
+        isRead: false,
       },
       orderBy: {
         createdAt: "desc",
       },
       select: notificationSelect,
     });
+  }
+
+  async countUnread(employeeId: string) {
+    return prisma.notification.count({
+      where: {
+        employeeId,
+        isDeleted: false,
+        isRead: false,
+      },
+    });
+  }
+
+  /**
+   * Mark all notifications as read
+   */
+  async markAllAsRead(employeeId: string): Promise<number> {
+    const result = await prisma.notification.updateMany({
+      where: {
+        employeeId,
+        isDeleted: false,
+        isRead: false,
+      },
+      data: {
+        isRead: true,
+      },
+    });
+
+    return result.count;
   }
 
   /**
@@ -87,9 +142,7 @@ class NotificationRepository {
   /**
    * Soft delete notification
    */
-  async softDelete(
-    id: string,
-  ): Promise<NotificationResponse> {
+  async softDelete(id: string): Promise<NotificationResponse> {
     return prisma.notification.update({
       where: {
         id,

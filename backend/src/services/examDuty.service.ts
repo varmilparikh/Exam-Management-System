@@ -80,11 +80,18 @@ class ExamDutyService {
   /**
    * Get All Exam Duties
    */
-  async getAll(): Promise<ExamDutyResponse[]> {
-    return examDutyRepository.findAll();
+  async getAll(
+    page: number,
+    limit: number,
+    filters: {
+      examId?: string;
+      employeeId?: string;
+      status?: DutyStatus;
+    },
+  ) {
+    return examDutyRepository.findAll(page, limit, filters);
   }
 
-  
   /**
    * Get Exam Duty By ID
    */
@@ -108,9 +115,51 @@ class ExamDutyService {
       throw new ApiError(404, "Exam duty not found");
     }
 
+    if (
+      examDuty.exam.status === ExamStatus.COMPLETED ||
+      examDuty.exam.status === ExamStatus.CANCELLED
+    ) {
+      throw new ApiError(
+        409,
+        "Exam duties cannot be modified after the exam is completed or cancelled.",
+      );
+    }
+
+    if (data.status) {
+      if (
+        examDuty.status === DutyStatus.ATTENDED ||
+        examDuty.status === DutyStatus.ABSENT
+      ) {
+        throw new ApiError(409, "Final duty status cannot be changed.");
+      }
+    }
+
     return examDutyRepository.update(id, {
       ...data,
     });
+  }
+
+  /**
+   * Delete Exam Duty
+   */
+  async delete(id: string): Promise<ExamDutyResponse> {
+    const examDuty = await examDutyRepository.findById(id);
+
+    if (!examDuty) {
+      throw new ApiError(404, "Exam duty not found");
+    }
+
+    if (
+      examDuty.exam.status === ExamStatus.COMPLETED ||
+      examDuty.exam.status === ExamStatus.CANCELLED
+    ) {
+      throw new ApiError(
+        409,
+        "Completed or cancelled exam duties cannot be deleted.",
+      );
+    }
+
+    return examDutyRepository.softDelete(id);
   }
 }
 

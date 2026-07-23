@@ -8,27 +8,23 @@
     "outDir": "./dist",
 
     "strict": true,
+    
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
 
     "esModuleInterop": true,
-
-    "forceConsistentCasingInFileNames": true,
-
-    "skipLibCheck": true,
-
-    "resolveJsonModule": true,
-
-    "isolatedModules": true,
-
     "allowSyntheticDefaultImports": true,
 
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
     "sourceMap": true,
-
-    "types": ["node"]
   },
 
   "include": [
     "src",
-    "prisma"
   ],
 
   "exclude": [

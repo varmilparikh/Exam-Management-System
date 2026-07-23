@@ -15,8 +15,6 @@ export interface CreateTransferRequestDto {
  * Approve Transfer Request DTO
  */
 export interface ApproveTransferRequestDto {
-  approvedById: string;
-
   /**
    * Optional.
    * COE can choose or change the replacement.
@@ -30,8 +28,6 @@ export interface ApproveTransferRequestDto {
  * Reject Transfer Request DTO
  */
 export interface RejectTransferRequestDto {
-  approvedById: string;
-
   approvalRemark: string;
 }
 

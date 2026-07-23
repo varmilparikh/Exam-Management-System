@@ -1,3 +1,7 @@
+import type { DepartmentResponse } from "../constants/prismaSelect.js";
+
+export type DepartmentResponseDto = DepartmentResponse;
+
 /**
  * Create Department DTO
  */

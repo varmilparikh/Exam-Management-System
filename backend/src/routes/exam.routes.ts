@@ -17,6 +17,8 @@ import {
   updateExamSchema,
 } from "../validators/exam.validator.js";
 
+import { uuidParamSchema } from "../validators/common.validator.js";
+
 const router = Router();
 
 /**
@@ -47,6 +49,7 @@ router.get(
   "/:id",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE", "HOD", "FACULTY"),
+  validate(uuidParamSchema, "params"),
   getExamById,
 );
 
@@ -57,6 +60,7 @@ router.put(
   "/:id",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE"),
+  validate(uuidParamSchema, "params"),
   validate(updateExamSchema),
   updateExam,
 );
@@ -68,6 +72,7 @@ router.delete(
   "/:id",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE"),
+  validate(uuidParamSchema, "params"),
   deleteExam,
 );
 

@@ -15,10 +15,3 @@ export interface CreateActivityLogDto {
   ipAddress?: string;
   userAgent?: string;
 }
-
-/**
- * Update Activity Log DTO
- */
-export interface UpdateActivityLogDto {
-  description?: string;
-}

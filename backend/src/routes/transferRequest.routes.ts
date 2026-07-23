@@ -22,6 +22,9 @@ import {
   cancelTransferRequestSchema,
 } from "../validators/transferRequest.validator.js";
 
+import { uuidParamSchema } from "../validators/common.validator.js";
+
+
 const router = Router();
 
 /**
@@ -80,6 +83,7 @@ router.get(
 router.get(
   "/:id",
   verifyJWT,
+  validate(uuidParamSchema, "params"),
   getTransferRequestById,
 );
 
@@ -87,6 +91,7 @@ router.patch(
   "/:id/approve",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE"),
+  validate(uuidParamSchema, "params"),
   validate(approveTransferRequestSchema),
   approveTransferRequest,
 );
@@ -95,6 +100,7 @@ router.patch(
   "/:id/reject",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE"),
+  validate(uuidParamSchema, "params"),
   validate(rejectTransferRequestSchema),
   rejectTransferRequest,
 );
@@ -103,6 +109,7 @@ router.patch(
   "/:id/cancel",
   verifyJWT,
   authorizeRoles("FACULTY"),
+  validate(uuidParamSchema, "params"),
   validate(cancelTransferRequestSchema),
   cancelTransferRequest,
 );

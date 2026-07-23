@@ -1,0 +1,147 @@
+import { Role } from "../../../src/generated/prisma/enums.js";
+
+export const employees = [
+  // SUPER ADMIN
+  {
+    employeeCode: "EMP001",
+    name: "System Administrator",
+    email: "admin@exam.com",
+    role: Role.SUPER_ADMIN,
+    designation: "System Administrator",
+    department: "Computer Engineering",
+  },
+
+  // COE
+  {
+    employeeCode: "EMP002",
+    name: "Dr. Rakesh Sharma",
+    email: "coe@exam.com",
+    role: Role.COE,
+    designation: "Controller of Examinations",
+    department: "Computer Engineering",
+  },
+
+  // HODs
+  {
+    employeeCode: "EMP003",
+    name: "Dr. Mehul Patel",
+    email: "hod.ce@exam.com",
+    role: Role.HOD,
+    designation: "Head of Department",
+    department: "Computer Engineering",
+  },
+  {
+    employeeCode: "EMP004",
+    name: "Dr. Priya Shah",
+    email: "hod.it@exam.com",
+    role: Role.HOD,
+    designation: "Head of Department",
+    department: "Information Technology",
+  },
+  {
+    employeeCode: "EMP005",
+    name: "Dr. Nikhil Joshi",
+    email: "hod.ai@exam.com",
+    role: Role.HOD,
+    designation: "Head of Department",
+    department: "Artificial Intelligence",
+  },
+
+  // Faculty
+  {
+    employeeCode: "EMP006",
+    name: "John Doe",
+    email: "john.doe@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Computer Engineering",
+  },
+  {
+    employeeCode: "EMP007",
+    name: "Manav Bachani",
+    email: "manav.bachani@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Computer Engineering",
+  },
+  {
+    employeeCode: "EMP008",
+    name: "Tejas Modi",
+    email: "tejas.modi@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Computer Engineering",
+  },
+  {
+    employeeCode: "EMP009",
+    name: "Riya Patel",
+    email: "riya.patel@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Information Technology",
+  },
+  {
+    employeeCode: "EMP010",
+    name: "Karan Shah",
+    email: "karan.shah@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Information Technology",
+  },
+  {
+    employeeCode: "EMP011",
+    name: "Amit Kumar",
+    email: "amit.kumar@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Information Technology",
+  },
+  {
+    employeeCode: "EMP012",
+    name: "Sneha Mehta",
+    email: "sneha.mehta@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Artificial Intelligence",
+  },
+  {
+    employeeCode: "EMP013",
+    name: "Rahul Verma",
+    email: "rahul.verma@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Artificial Intelligence",
+  },
+  {
+    employeeCode: "EMP014",
+    name: "Anjali Desai",
+    email: "anjali.desai@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Artificial Intelligence",
+  },
+  {
+    employeeCode: "EMP015",
+    name: "Vivek Singh",
+    email: "vivek.singh@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Electronics & Communication",
+  },
+  {
+    employeeCode: "EMP016",
+    name: "Neha Gupta",
+    email: "neha.gupta@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Mechanical Engineering",
+  },
+  {
+    employeeCode: "EMP017",
+    name: "Arjun Rao",
+    email: "arjun.rao@exam.com",
+    role: Role.FACULTY,
+    designation: "Assistant Professor",
+    department: "Civil Engineering",
+  },
+];
