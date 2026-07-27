@@ -1,24 +1,26 @@
 import type { NextFunction, Request, Response } from "express";
 
 import { ApiError } from "../utils/apiError.js";
-import { verifyToken } from "../utils/verifyToken.js";
+import { AUTH_COOKIES } from "../auth/constants.js";
+import { verifyAccessToken } from "../auth/tokens/verifyAccessToken.js";
 
-export function verifyJWT(
+export function authenticate(
   req: Request,
   _res: Response,
   next: NextFunction,
 ): void {
-  const authHeader = req.headers.authorization;
+  const token = req.cookies?.[AUTH_COOKIES.ACCESS_TOKEN];
 
-  if (!authHeader?.startsWith("Bearer ")) {
-    throw new ApiError(401, "Authorization header is missing or invalid");
+  if (!token) {
+    throw new ApiError(401, "Authentication required");
   }
 
-  const token = authHeader.substring(7);
-
-  const decoded = verifyToken(token);
+  const decoded = verifyAccessToken(token);
 
   req.user = decoded;
 
   next();
 }
+
+// Temporary backward compatibility
+export const verifyJWT = authenticate;

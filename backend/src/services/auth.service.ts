@@ -9,15 +9,16 @@ import authRepository from "../repositories/auth.repository.js";
 import { ApiError } from "../utils/apiError.js";
 
 import type {
+  LoginResult,
   RegisterUserDto,
   LoginUserDto,
-  LoginResponseDto,
 } from "../types/auth.types.js";
 
 import type { EmployeeResponseDto } from "../types/employee.types.js";
 
 import type { JwtPayload } from "../types/jwt.types.js";
-import { generateToken } from "../utils/generateToken.js";
+import { generateAccessToken } from "../auth/tokens/generateAccessToken.js";
+import { generateRefreshToken } from "../auth/tokens/generateRefreshToken.js";
 import { toEmployeeResponse } from "../mappers/employee.mapper.js";
 
 class AuthService {
@@ -72,7 +73,7 @@ class AuthService {
     return toEmployeeResponse(employee);
   }
 
-  async login(data: LoginUserDto): Promise<LoginResponseDto> {
+  async login(data: LoginUserDto): Promise<LoginResult> {
     // Find employee
     const employee = await authRepository.findByEmail(data.email);
 
@@ -111,15 +112,19 @@ class AuthService {
       console.error("Failed to create login log", error);
     }
 
-    const token = generateToken({
+    const payload: JwtPayload = {
       id: updatedEmployee.id,
       email: updatedEmployee.email,
       role: updatedEmployee.role,
-    });
+    };
+
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
 
     return {
       employee: toEmployeeResponse(updatedEmployee),
-      token,
+      accessToken,
+      refreshToken,
     };
   }
 

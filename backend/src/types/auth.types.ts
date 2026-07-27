@@ -1,10 +1,10 @@
 import type { EmployeeResponseDto } from "./employee.types.js";
 
-export interface LoginResponseDto {
+export interface LoginResult {
   employee: EmployeeResponseDto;
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }
-
 export interface RegisterUserDto {
   employeeCode: string;
   name: string;
