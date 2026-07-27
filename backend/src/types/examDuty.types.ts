@@ -12,7 +12,5 @@ export interface CreateExamDutyDto {
  * Update Exam Duty DTO
  */
 export interface UpdateExamDutyDto {
-  employeeId?: string;
-  examId?: string;
   status?: DutyStatus;
 }

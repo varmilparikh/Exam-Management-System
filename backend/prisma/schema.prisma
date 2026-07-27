@@ -80,7 +80,7 @@ model Employee {
   // Department Relation
   departmentId String
 
-  department Department @relation(fields: [departmentId], references: [id])
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   // Exam Duties
   duties ExamDuty[]
@@ -97,14 +97,18 @@ model Employee {
   approvedRequests ApprovalRequest[] @relation("RequestApprover")
 
   // Transfers
-  transfersGiven TransferLog[] @relation("TransferFrom")
+  transfersGiven TransferRequest[] @relation("TransferFrom")
 
-  transfersReceived TransferLog[] @relation("TransferTo")
+  transfersReceived TransferRequest[] @relation("TransferTo")
+
+  approvedTransfers TransferRequest[] @relation("TransferApprovedBy")
 
   // Swap Requests
   swapRequestsSent SwapRequest[] @relation("SwapRequester")
 
   swapRequestsReceived SwapRequest[] @relation("SwapReceiver")
+
+  approvedSwapRequests SwapRequest[] @relation("SwapApprover")
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -116,6 +120,7 @@ model Employee {
   @@index([employeeCode])
   @@index([departmentId])
   @@index([role])
+  @@index([isDeleted, isActive])
   @@map("employees")
 }
 
@@ -137,6 +142,7 @@ enum TransferStatus {
   PENDING
   APPROVED
   REJECTED
+  CANCELLED
 }
 
 enum LoginProvider {
@@ -146,9 +152,11 @@ enum LoginProvider {
 }
 
 enum SwapStatus {
-  PENDING
-  APPROVED
-  REJECTED
+  PENDING // Waiting for receiver
+  ACCEPTED // Receiver accepted, waiting for COE
+  APPROVED // COE approved and duties swapped
+  REJECTED // Receiver or COE rejected
+  CANCELLED // Requester cancelled
 }
 
 enum ApprovalStatus {
@@ -166,7 +174,7 @@ enum RequestType {
 model Exam {
   id String @id @default(uuid())
 
-  examName String
+  examName String   @unique
   examDate DateTime
 
   requiredFaculty Int
@@ -182,67 +190,76 @@ model Exam {
   updatedAt DateTime @updatedAt
 
   @@index([examDate])
+  @@index([status, examDate])
   @@map("exams")
 }
 
 model ExamDuty {
   id String @id @default(uuid())
 
-  employeeId String
-  examId     String
+  employeeId String?
 
-  employee Employee @relation(fields: [employeeId], references: [id])
+  examId String
 
-  exam Exam @relation(fields: [examId], references: [id])
+  employee Employee? @relation(fields: [employeeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  isDeleted Boolean @default(false)
 
   status DutyStatus
 
-  transfers TransferLog[]
+  transfers TransferRequest[]
 
   swapRequestsAsRequester SwapRequest[] @relation("RequesterDuty")
 
   swapRequestsAsReceiver SwapRequest[] @relation("ReceiverDuty")
-
-  isDeleted Boolean @default(false)
 
   createdAt DateTime @default(now())
 
   updatedAt DateTime @updatedAt
 
   @@unique([employeeId, examId])
+  @@index([isDeleted])
   @@index([employeeId])
   @@index([examId])
   @@map("exam_duties")
 }
 
-model TransferLog {
+model TransferRequest {
   id String @id @default(uuid())
 
   fromEmployeeId String
-  toEmployeeId   String
-
-  examDutyId String
+  toEmployeeId   String?
+  examDutyId     String
 
   status TransferStatus
 
   reason String?
 
-  fromEmployee Employee @relation("TransferFrom", fields: [fromEmployeeId], references: [id])
+  approvedById   String?
+  approvedAt     DateTime?
+  approvalRemark String?
 
-  toEmployee Employee @relation("TransferTo", fields: [toEmployeeId], references: [id])
+  fromEmployee Employee @relation("TransferFrom", fields: [fromEmployeeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  examDuty ExamDuty @relation(fields: [examDutyId], references: [id])
+  toEmployee Employee? @relation("TransferTo", fields: [toEmployeeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  approvedBy Employee? @relation("TransferApprovedBy", fields: [approvedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  examDuty ExamDuty @relation(fields: [examDutyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   isDeleted Boolean @default(false)
 
   createdAt DateTime @default(now())
-
   updatedAt DateTime @updatedAt
 
   @@index([fromEmployeeId])
   @@index([toEmployeeId])
   @@index([examDutyId])
-  @@map("transfer_logs")
+  @@index([status])
+  @@index([status, createdAt])
+  @@map("transfer_requests")
 }
 
 model SwapRequest {
@@ -260,22 +277,34 @@ model SwapRequest {
 
   reason String?
 
-  requester Employee @relation("SwapRequester", fields: [requesterId], references: [id])
+  approvedById String?
+  approvedBy   Employee? @relation("SwapApprover", fields: [approvedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  receiver Employee @relation("SwapReceiver", fields: [receiverId], references: [id])
+  approvedAt DateTime?
 
-  requesterDuty ExamDuty @relation("RequesterDuty", fields: [requesterDutyId], references: [id])
+  approvalRemark String?
 
-  receiverDuty ExamDuty @relation("ReceiverDuty", fields: [receiverDutyId], references: [id])
+  requester Employee @relation("SwapRequester", fields: [requesterId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  isDeleted Boolean @default(false)
+  receiver Employee @relation("SwapReceiver", fields: [receiverId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  requesterDuty ExamDuty @relation("RequesterDuty", fields: [requesterDutyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  receiverDuty ExamDuty @relation("ReceiverDuty", fields: [receiverDutyId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  isDeleted    Boolean  @default(false)
 
   createdAt DateTime @default(now())
 
   updatedAt DateTime @updatedAt
 
+  @@index([isDeleted])
   @@index([requesterId])
   @@index([receiverId])
+  @@index([requesterDutyId])
+  @@index([receiverDutyId])
+  @@index([status])
+  @@index([status, createdAt])
+  @@index([approvedById])
   @@map("swap_requests")
 }
 
@@ -290,7 +319,9 @@ model Notification {
 
   isRead Boolean @default(false)
 
-  employee Employee @relation(fields: [employeeId], references: [id])
+  readAt      DateTime?
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   isDeleted Boolean @default(false)
 
@@ -298,9 +329,52 @@ model Notification {
 
   updatedAt DateTime @updatedAt
 
+  @@index([isDeleted])
   @@index([employeeId])
   @@index([employeeId, isRead])
   @@map("notifications")
+}
+
+enum ActivityAction {
+  LOGIN
+  LOGOUT
+
+  CREATE_DEPARTMENT
+  UPDATE_DEPARTMENT
+  DELETE_DEPARTMENT
+
+  CREATE_EMPLOYEE
+  UPDATE_EMPLOYEE
+  DELETE_EMPLOYEE
+
+  CREATE_EXAM
+  UPDATE_EXAM
+  DELETE_EXAM
+
+  ASSIGN_EXAM_DUTY
+  UPDATE_EXAM_DUTY
+  DELETE_EXAM_DUTY
+
+  CREATE_TRANSFER_REQUEST
+  APPROVE_TRANSFER_REQUEST
+  REJECT_TRANSFER_REQUEST
+  CANCEL_TRANSFER_REQUEST
+
+  CREATE_SWAP_REQUEST
+  ACCEPT_SWAP_REQUEST
+  APPROVE_SWAP_REQUEST
+  CANCEL_SWAP_REQUEST
+  REJECT_SWAP_REQUEST_BY_RECEIVER
+  REJECT_SWAP_REQUEST_BY_COE
+}
+
+enum EntityType {
+  EMPLOYEE
+  DEPARTMENT
+  EXAM
+  EXAM_DUTY
+  TRANSFER_REQUEST
+  SWAP_REQUEST
 }
 
 model ActivityLog {
@@ -308,11 +382,19 @@ model ActivityLog {
 
   employeeId String
 
-  action String
+  action ActivityAction
 
   description String
 
-  employee Employee @relation(fields: [employeeId], references: [id])
+  entityType EntityType?
+
+  entityId String?
+
+  ipAddress String?
+
+  userAgent String?
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   isDeleted Boolean @default(false)
 
@@ -320,7 +402,10 @@ model ActivityLog {
 
   updatedAt DateTime @updatedAt
 
+  @@index([isDeleted])
   @@index([employeeId])
+  @@index([action])
+  @@index([entityType])
   @@map("activity_logs")
 }
 
@@ -341,9 +426,9 @@ model ApprovalRequest {
 
   reason String?
 
-  employee Employee @relation("RequestOwner", fields: [employeeId], references: [id])
+  employee Employee @relation("RequestOwner", fields: [employeeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  approvedBy Employee? @relation("RequestApprover", fields: [approvedById], references: [id])
+  approvedBy Employee? @relation("RequestApprover", fields: [approvedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   isDeleted Boolean @default(false)
 
@@ -351,6 +436,7 @@ model ApprovalRequest {
 
   updatedAt DateTime @updatedAt
 
+  @@index([isDeleted])
   @@index([employeeId])
   @@index([employeeId, status])
   @@index([approvedById])

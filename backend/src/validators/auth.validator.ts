@@ -7,10 +7,15 @@ export const registerSchema = z.object({
 
   email: z.email(),
 
+  role: z.enum(["SUPER_ADMIN", "COE", "HOD", "FACULTY"]),
+
   password: z
     .string()
     .min(8)
-    .max(30),
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/,
+      "Password must contain uppercase, lowercase, number and special character",
+    ),
 
   designation: z.string(),
 
@@ -18,10 +23,7 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z
-    .email("Please enter a valid email"),
+  email: z.email("Please enter a valid email"),
 
-  password: z
-    .string()
-    .min(1, "Password is required"),
+  password: z.string().min(1, "Password is required"),
 });

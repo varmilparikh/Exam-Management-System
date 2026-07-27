@@ -6,4 +6,15 @@ node_modules
 
 node_modules/
 dist/
-.env
+
+coverage
+
+*.log
+
+generated/
+
+uploads/
+
+.vscode/settings.json
+
+.DS_Store

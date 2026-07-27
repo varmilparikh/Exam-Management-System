@@ -1,6 +1,6 @@
 import prisma from "../config/prisma.js";
 
-import type { Prisma } from "../generated/prisma/client.js";
+import type { Prisma, Role } from "../generated/prisma/client.js";
 
 import {
   employeeSelect,
@@ -36,13 +36,18 @@ class EmployeeRepository {
     });
   }
 
-  async findAuthByEmail(email: string): Promise<Employee | null> {
-    return prisma.employee.findFirst({
+  /**
+   * Check whether an email already exists
+   */
+  async existsByEmail(email: string): Promise<boolean> {
+    const count = await prisma.employee.count({
       where: {
         email,
         isDeleted: false,
       },
     });
+
+    return count > 0;
   }
 
   /**
@@ -54,6 +59,20 @@ class EmployeeRepository {
     return prisma.employee.findFirst({
       where: {
         employeeCode,
+        isDeleted: false,
+      },
+      select: employeeSelect,
+    });
+  }
+
+  /**
+   * Find employees by role
+   */
+  async findByRole(role: Role): Promise<EmployeeResponse[]> {
+    return prisma.employee.findMany({
+      where: {
+        role,
+        isActive: true,
         isDeleted: false,
       },
       select: employeeSelect,

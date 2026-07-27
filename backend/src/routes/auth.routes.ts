@@ -1,49 +1,32 @@
 import { Router } from "express";
 
 import {
-  register,
   login,
+  logout,
   me,
+  refresh,
+  register,
 } from "../controllers/auth.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
-
 import { validate } from "../middleware/validate.middleware.js";
 
-import { authorizeRoles } from "../middleware/role.middleware.js";
-
-import { ApiResponse } from "../utils/apiResponse.js";
-
-import {
-  registerSchema,
-  loginSchema,
-} from "../validators/auth.validator.js";
+import { registerSchema, loginSchema } from "../validators/auth.validator.js";
 
 const router = Router();
 
-/**
- * Register
- */
-router.post(
-  "/register",
-  validate(registerSchema),
-  register
-);
+/* ---------- Local Authentication ---------- */
 
-/**
- * Login
- */
-router.post(
-  "/login",
-  validate(loginSchema),
-  login
-);
+router.post("/register", validate(registerSchema), register);
 
-router.get(
-  "/me",
-  verifyJWT,
-  me
-);
+router.post("/login", validate(loginSchema), login);
 
+router.post("/logout", verifyJWT, logout);
+
+/* ---------- Current User ---------- */
+
+router.get("/me", verifyJWT, me);
+
+router.post("/refresh", refresh);
 
 export default router;

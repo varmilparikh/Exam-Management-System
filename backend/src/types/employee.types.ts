@@ -1,3 +1,8 @@
+import type { EmployeeResponse } from "../constants/prismaSelect.js";
+import type { Role } from "../generated/prisma/client.js";
+
+export type EmployeeResponseDto = EmployeeResponse;
+
 /**
  * Create Employee DTO
  */
@@ -8,7 +13,7 @@ export interface CreateEmployeeDto {
   password: string;
   designation: string;
   departmentId: string;
-  role: "SUPER_ADMIN" | "COE" | "HOD" | "FACULTY";
+  role: Role;
   phone?: string;
 }
 
@@ -17,9 +22,11 @@ export interface CreateEmployeeDto {
  */
 export interface UpdateEmployeeDto {
   name?: string;
+  email?: string;
+  employeeCode?: string;
   designation?: string;
   departmentId?: string;
-  role?: "SUPER_ADMIN" | "COE" | "HOD" | "FACULTY";
+  role?: Role;
   phone?: string;
   isActive?: boolean;
 }

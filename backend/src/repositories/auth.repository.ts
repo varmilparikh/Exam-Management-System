@@ -5,15 +5,24 @@ import type {
   Prisma,
 } from "../generated/prisma/client.js";
 
+import {
+  employeeLoginSelect,
+  employeeSelect,
+  type EmployeeLogin,
+  type EmployeeResponse,
+} from "../constants/prismaSelect.js";
+
 class AuthRepository {
   /**
    * Find employee using email
    */
-  async findByEmail(email: string): Promise<Employee | null> {
-    return prisma.employee.findUnique({
+  async findByEmail(email: string): Promise<EmployeeLogin | null> {
+    return prisma.employee.findFirst({
       where: {
         email,
+        isDeleted: false,
       },
+      select: employeeLoginSelect,
     });
   }
 
@@ -24,6 +33,7 @@ class AuthRepository {
     return prisma.employee.findUnique({
       where: {
         employeeCode,
+        isDeleted: false,
       },
     });
   }
@@ -32,26 +42,47 @@ class AuthRepository {
    * Check department exists
    */
   async findDepartmentById(id: string): Promise<Department | null> {
-    return prisma.department.findUnique({
+    return prisma.department.findFirst({
       where: {
         id,
+        isDeleted: false,
       },
+    });
+  }
+
+  async findById(id: string): Promise<Employee | null> {
+    return prisma.employee.findFirst({
+      where: {
+        id,
+        isDeleted: false,
+      },
+    });
+  }
+
+  async findProfileById(id: string): Promise<EmployeeResponse | null> {
+    return prisma.employee.findFirst({
+      where: {
+        id,
+        isDeleted: false,
+      },
+      select: employeeSelect,
     });
   }
 
   /**
    * Create employee
    */
-  async create(data: Prisma.EmployeeCreateInput): Promise<Employee> {
+  async create(data: Prisma.EmployeeCreateInput): Promise<EmployeeResponse> {
     return prisma.employee.create({
       data,
+      select: employeeSelect,
     });
   }
 
   /**
    * Update employee last login time
    */
-  async updateLastLogin(id: string): Promise<Employee> {
+  async updateLastLogin(id: string): Promise<EmployeeResponse> {
     return prisma.employee.update({
       where: {
         id,
@@ -59,6 +90,7 @@ class AuthRepository {
       data: {
         lastLogin: new Date(),
       },
+      select: employeeSelect,
     });
   }
 }

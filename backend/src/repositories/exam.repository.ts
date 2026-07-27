@@ -2,18 +2,13 @@ import prisma from "../config/prisma.js";
 
 import type { Prisma } from "../generated/prisma/client.js";
 
-import {
-  examSelect,
-  type ExamResponse,
-} from "../constants/prismaSelect.js";
+import { examSelect, type ExamResponse } from "../constants/prismaSelect.js";
 
 class ExamRepository {
   /**
    * Find exam by ID
    */
-  async findById(
-    id: string,
-  ): Promise<ExamResponse | null> {
+  async findById(id: string): Promise<ExamResponse | null> {
     return prisma.exam.findFirst({
       where: {
         id,
@@ -38,12 +33,42 @@ class ExamRepository {
     });
   }
 
+  async findDuplicate(
+    examName: string,
+    examDate: Date,
+  ): Promise<ExamResponse | null> {
+    return prisma.exam.findFirst({
+      where: {
+        examName,
+        examDate,
+        isDeleted: false,
+      },
+      select: examSelect,
+    });
+  }
+
+  async findDuplicateExceptId(
+    id: string,
+    examName: string,
+    examDate: Date,
+  ): Promise<ExamResponse | null> {
+    return prisma.exam.findFirst({
+      where: {
+        examName,
+        examDate,
+        isDeleted: false,
+        NOT: {
+          id,
+        },
+      },
+      select: examSelect,
+    });
+  }
+
   /**
    * Create exam
    */
-  async create(
-    data: Prisma.ExamCreateInput,
-  ): Promise<ExamResponse> {
+  async create(data: Prisma.ExamCreateInput): Promise<ExamResponse> {
     return prisma.exam.create({
       data,
       select: examSelect,
@@ -69,9 +94,7 @@ class ExamRepository {
   /**
    * Soft delete exam
    */
-  async softDelete(
-    id: string,
-  ): Promise<ExamResponse> {
+  async softDelete(id: string): Promise<ExamResponse> {
     return prisma.exam.update({
       where: {
         id,

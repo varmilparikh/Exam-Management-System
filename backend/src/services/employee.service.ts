@@ -1,9 +1,14 @@
+import { env } from "../config/env.js";
+
 import bcrypt from "bcryptjs";
 
+import activityLogService from "./activityLog.service.js";
 import employeeRepository from "../repositories/employee.repository.js";
 import departmentRepository from "../repositories/department.repository.js";
 
 import { ApiError } from "../utils/apiError.js";
+
+import { ActivityAction, EntityType } from "../generated/prisma/client.js";
 
 import type {
   CreateEmployeeDto,
@@ -17,9 +22,9 @@ class EmployeeService {
    */
   async create(data: CreateEmployeeDto): Promise<EmployeeResponse> {
     // Check email
-    const existingEmail = await employeeRepository.findAuthByEmail(data.email);
+    const emailExists = await employeeRepository.existsByEmail(data.email);
 
-    if (existingEmail) {
+    if (emailExists) {
       throw new ApiError(409, "Email already exists");
     }
 
@@ -40,9 +45,12 @@ class EmployeeService {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const hashedPassword = await bcrypt.hash(
+      data.password,
+      env.bcryptSaltRounds,
+    );
 
-    return employeeRepository.create({
+    const employee = await employeeRepository.create({
       employeeCode: data.employeeCode,
       name: data.name,
       email: data.email,
@@ -56,6 +64,22 @@ class EmployeeService {
         },
       },
     });
+
+    // Activity log here
+
+    try {
+      await activityLogService.log({
+        employeeId: employee.id,
+        action: ActivityAction.CREATE_EMPLOYEE,
+        description: `${employee.name} was created`,
+        entityType: EntityType.EMPLOYEE,
+        entityId: employee.id,
+      });
+    } catch (error) {
+      console.error("Failed to create employee log", error);
+    }
+
+    return employee;
   }
 
   /**
@@ -88,6 +112,24 @@ class EmployeeService {
       throw new ApiError(404, "Employee not found");
     }
 
+    if (data.email) {
+      const existingEmail = await employeeRepository.findByEmail(data.email);
+
+      if (existingEmail && existingEmail.id !== id) {
+        throw new ApiError(409, "Email already exists");
+      }
+    }
+
+    if (data.employeeCode) {
+      const existingEmployee = await employeeRepository.findByEmployeeCode(
+        data.employeeCode,
+      );
+
+      if (existingEmployee && existingEmployee.id !== id) {
+        throw new ApiError(409, "Employee code already exists");
+      }
+    }
+
     if (data.departmentId) {
       const department = await departmentRepository.findById(data.departmentId);
 
@@ -96,7 +138,7 @@ class EmployeeService {
       }
     }
 
-    return employeeRepository.update(id, {
+    const updatedEmployee = await employeeRepository.update(id, {
       ...data,
       department: data.departmentId
         ? {
@@ -106,6 +148,20 @@ class EmployeeService {
           }
         : undefined,
     });
+
+    try {
+      await activityLogService.log({
+        employeeId: updatedEmployee.id,
+        action: ActivityAction.UPDATE_EMPLOYEE, // or your enum value
+        description: `${updatedEmployee.name} was updated`,
+        entityType: EntityType.EMPLOYEE,
+        entityId: updatedEmployee.id,
+      });
+    } catch (error) {
+      console.error("Failed to update employee log", error);
+    }
+
+    return updatedEmployee;
   }
 
   /**
@@ -118,7 +174,25 @@ class EmployeeService {
       throw new ApiError(404, "Employee not found");
     }
 
-    return employeeRepository.softDelete(id);
+    if (employee.role === "SUPER_ADMIN") {
+      throw new ApiError(409, "Cannot delete a SUPER_ADMIN");
+    }
+
+    const deletedEmployee = await employeeRepository.softDelete(id);
+
+    try {
+      await activityLogService.log({
+        employeeId: deletedEmployee.id,
+        action: ActivityAction.DELETE_EMPLOYEE, // or your enum value
+        description: `${deletedEmployee.name} was deleted`,
+        entityType: EntityType.EMPLOYEE,
+        entityId: deletedEmployee.id,
+      });
+    } catch (error) {
+      console.error("Failed to delete employee log", error);
+    }
+
+    return deletedEmployee;
   }
 }
 

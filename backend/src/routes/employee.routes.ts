@@ -17,6 +17,8 @@ import {
   updateEmployeeSchema,
 } from "../validators/employee.validator.js";
 
+import { uuidParamSchema } from "../validators/common.validator.js";
+
 const router = Router();
 
 /**
@@ -27,17 +29,13 @@ router.post(
   verifyJWT,
   authorizeRoles("SUPER_ADMIN"),
   validate(createEmployeeSchema),
-  createEmployee
+  createEmployee,
 );
 
 /**
  * Get All Employees
  */
-router.get(
-  "/",
-  verifyJWT,
-  getEmployees
-);
+router.get("/", verifyJWT, getEmployees);
 
 /**
  * Get Employee By ID
@@ -45,7 +43,8 @@ router.get(
 router.get(
   "/:id",
   verifyJWT,
-  getEmployeeById
+  validate(uuidParamSchema, "params"),
+  getEmployeeById,
 );
 
 /**
@@ -55,8 +54,9 @@ router.put(
   "/:id",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN"),
+  validate(uuidParamSchema, "params"),
   validate(updateEmployeeSchema),
-  updateEmployee
+  updateEmployee,
 );
 
 /**
@@ -66,7 +66,8 @@ router.delete(
   "/:id",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN"),
-  deleteEmployee
+  validate(uuidParamSchema, "params"),
+  deleteEmployee,
 );
 
 export default router;

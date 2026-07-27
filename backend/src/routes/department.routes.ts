@@ -17,6 +17,8 @@ import {
   updateDepartmentSchema,
 } from "../validators/department.validator.js";
 
+import { uuidParamSchema } from "../validators/common.validator.js";
+
 const router = Router();
 
 /**
@@ -27,17 +29,13 @@ router.post(
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE"),
   validate(createDepartmentSchema),
-  createDepartment
+  createDepartment,
 );
 
 /**
  * Get All Departments
  */
-router.get(
-  "/",
-  verifyJWT,
-  getDepartments
-);
+router.get("/", verifyJWT, getDepartments);
 
 /**
  * Get Department By ID
@@ -45,7 +43,8 @@ router.get(
 router.get(
   "/:id",
   verifyJWT,
-  getDepartmentById
+  validate(uuidParamSchema, "params"),
+  getDepartmentById,
 );
 
 /**
@@ -55,8 +54,9 @@ router.put(
   "/:id",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE"),
+  validate(uuidParamSchema, "params"),
   validate(updateDepartmentSchema),
-  updateDepartment
+  updateDepartment,
 );
 
 /**
@@ -66,7 +66,8 @@ router.delete(
   "/:id",
   verifyJWT,
   authorizeRoles("SUPER_ADMIN"),
-  deleteDepartment
+  validate(uuidParamSchema, "params"),
+  deleteDepartment,
 );
 
 export default router;

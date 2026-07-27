@@ -17,9 +17,13 @@ export const env = {
 
   DATABASE_URL: getEnv("DATABASE_URL"),
 
-  JWT_SECRET: getEnv("JWT_SECRET"),
+  ACCESS_TOKEN_SECRET: getEnv("ACCESS_TOKEN_SECRET"),
+  ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m",
 
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "15m",
+  REFRESH_TOKEN_SECRET: getEnv("REFRESH_TOKEN_SECRET"),
+  REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
 
   NODE_ENV: process.env.NODE_ENV || "development",
+
+  bcryptSaltRounds: Number(process.env.BCRYPT_SALT_ROUNDS) || 10,
 };
