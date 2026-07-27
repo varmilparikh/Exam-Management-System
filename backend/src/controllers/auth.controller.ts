@@ -5,6 +5,7 @@ import authService from "../services/auth.service.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { loginSchema, registerSchema } from "../validators/auth.validator.js";
+import { clearAuthCookies, setAuthCookies } from "../auth/cookies.js";
 
 type RegisterInput = z.infer<typeof registerSchema>;
 type LoginInput = z.infer<typeof loginSchema>;
@@ -26,7 +27,17 @@ export async function login(
 ): Promise<void> {
   const result = await authService.login(req.body);
 
-  res.status(200).json(new ApiResponse(200, result, "Login successful"));
+  setAuthCookies(res, result.accessToken, result.refreshToken);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        employee: result.employee,
+      },
+      "Login successful",
+    ),
+  );
 }
 
 export function me(req: Request, res: Response): void {
@@ -39,6 +50,8 @@ export async function logout(req: Request, res: Response): Promise<void> {
   if (!req.user) {
     throw new ApiError(401, "Unauthorized");
   }
+
+  clearAuthCookies(res);
 
   await authService.logout(req.user);
 
