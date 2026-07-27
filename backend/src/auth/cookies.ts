@@ -25,6 +25,13 @@ export function setAuthCookies(
   });
 }
 
+export function setAccessTokenCookie(res: Response, accessToken: string): void {
+  res.cookie(AUTH_COOKIES.ACCESS_TOKEN, accessToken, {
+    ...commonCookieOptions,
+    maxAge: COOKIE_MAX_AGE.ACCESS_TOKEN,
+  });
+}
+
 export function clearAuthCookies(res: Response): void {
   res.clearCookie(AUTH_COOKIES.ACCESS_TOKEN, commonCookieOptions);
 

@@ -1,6 +1,12 @@
 import { Router } from "express";
 
-import { register, login, logout, me } from "../controllers/auth.controller.js";
+import {
+  login,
+  logout,
+  me,
+  refresh,
+  register,
+} from "../controllers/auth.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
@@ -20,5 +26,7 @@ router.post("/logout", verifyJWT, logout);
 /* ---------- Current User ---------- */
 
 router.get("/me", verifyJWT, me);
+
+router.post("/refresh", refresh);
 
 export default router;

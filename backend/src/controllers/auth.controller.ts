@@ -5,7 +5,12 @@ import authService from "../services/auth.service.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { loginSchema, registerSchema } from "../validators/auth.validator.js";
-import { clearAuthCookies, setAuthCookies } from "../auth/cookies.js";
+import {
+  clearAuthCookies,
+  setAccessTokenCookie,
+  setAuthCookies,
+} from "../auth/cookies.js";
+import { AUTH_COOKIES } from "../auth/constants.js";
 
 type RegisterInput = z.infer<typeof registerSchema>;
 type LoginInput = z.infer<typeof loginSchema>;
@@ -40,10 +45,16 @@ export async function login(
   );
 }
 
-export function me(req: Request, res: Response): void {
+export async function me(req: Request, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new ApiError(401, "Unauthorized");
+  }
+
+  const employee = await authService.me(req.user);
+
   res
     .status(200)
-    .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+    .json(new ApiResponse(200, employee, "Current user fetched successfully"));
 }
 
 export async function logout(req: Request, res: Response): Promise<void> {
@@ -56,4 +67,18 @@ export async function logout(req: Request, res: Response): Promise<void> {
   await authService.logout(req.user);
 
   res.status(200).json(new ApiResponse(200, null, "Logout successful"));
+}
+
+export async function refresh(req: Request, res: Response): Promise<void> {
+  const refreshToken = req.cookies?.[AUTH_COOKIES.REFRESH_TOKEN];
+
+  if (!refreshToken) {
+    throw new ApiError(401, "Refresh token is missing");
+  }
+
+  const accessToken = await authService.refresh(refreshToken);
+
+  setAccessTokenCookie(res, accessToken);
+
+  res.sendStatus(204);
 }

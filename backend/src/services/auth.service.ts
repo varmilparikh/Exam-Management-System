@@ -19,6 +19,7 @@ import type { EmployeeResponseDto } from "../types/employee.types.js";
 import type { JwtPayload } from "../types/jwt.types.js";
 import { generateAccessToken } from "../auth/tokens/generateAccessToken.js";
 import { generateRefreshToken } from "../auth/tokens/generateRefreshToken.js";
+import { verifyRefreshToken } from "../auth/tokens/verifyRefreshToken.js";
 import { toEmployeeResponse } from "../mappers/employee.mapper.js";
 
 class AuthService {
@@ -128,6 +129,16 @@ class AuthService {
     };
   }
 
+  async me(user: JwtPayload): Promise<EmployeeResponseDto> {
+    const employee = await authRepository.findProfileById(user.id);
+
+    if (!employee || !employee.isActive) {
+      throw new ApiError(404, "Employee not found");
+    }
+
+    return toEmployeeResponse(employee);
+  }
+
   async logout(user: JwtPayload): Promise<void> {
     try {
       await activityLogService.log({
@@ -140,6 +151,22 @@ class AuthService {
     } catch (error) {
       console.error("Failed to create logout log", error);
     }
+  }
+
+  async refresh(refreshToken: string): Promise<string> {
+    const payload = verifyRefreshToken(refreshToken);
+
+    const employee = await authRepository.findById(payload.id);
+
+    if (!employee || !employee.isActive) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    return generateAccessToken({
+      id: employee.id,
+      email: employee.email,
+      role: employee.role,
+    });
   }
 }
 

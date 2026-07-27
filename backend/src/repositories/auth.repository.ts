@@ -50,6 +50,25 @@ class AuthRepository {
     });
   }
 
+  async findById(id: string): Promise<Employee | null> {
+    return prisma.employee.findFirst({
+      where: {
+        id,
+        isDeleted: false,
+      },
+    });
+  }
+
+  async findProfileById(id: string): Promise<EmployeeResponse | null> {
+    return prisma.employee.findFirst({
+      where: {
+        id,
+        isDeleted: false,
+      },
+      select: employeeSelect,
+    });
+  }
+
   /**
    * Create employee
    */
