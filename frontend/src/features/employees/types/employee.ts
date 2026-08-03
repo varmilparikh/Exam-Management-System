@@ -1,9 +1,4 @@
-export interface DepartmentSummary {
-  id: string;
-  name: string;
-}
-
-export interface EmployeeResponseDto {
+export interface Employee {
   id: string;
 
   employeeCode: string;
@@ -12,35 +7,24 @@ export interface EmployeeResponseDto {
 
   email: string;
 
-  phone: string | null;
-
-  loginProvider: string;
-
-  isEmailVerified: boolean;
-
-  lastLogin: string | null;
-
-  profileImage: string;
-
   designation: string;
 
-  role: string;
+  role: "SUPER_ADMIN" | "COE" | "HOD" | "FACULTY";
 
-  averageDuty: number;
-
-  attendedCount: number;
-
-  transferCount: number;
+  phone?: string;
 
   isActive: boolean;
 
-  isDeleted: boolean;
-
   departmentId: string;
+
+  department: {
+    id: string;
+    name: string;
+  };
 
   createdAt: string;
 
   updatedAt: string;
-
-  department: DepartmentSummary;
 }
+
+export type EmployeeResponseDto = Employee;
