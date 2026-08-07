@@ -18,7 +18,7 @@ export const createExamSchema = z
     requiredFaculty: z
       .number()
       .int()
-      .positive("Required faculty must be greater than zero"),
+      .min(1, "Required faculty must be at least 1"),
   })
   .strict();
 

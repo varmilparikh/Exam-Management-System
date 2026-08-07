@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+import axios from "axios";
 
 import type {
   ApiResponse,
@@ -16,10 +17,19 @@ export async function login(payload: LoginRequest): Promise<LoginResponse> {
   return response.data.data;
 }
 
-export async function me(): Promise<EmployeeResponseDto> {
-  const response = await api.get<ApiResponse<EmployeeResponseDto>>("/auth/me");
+export async function me(): Promise<EmployeeResponseDto | null> {
+  try {
+    const response =
+      await api.get<ApiResponse<EmployeeResponseDto>>("/auth/me");
 
-  return response.data.data;
+    return response.data.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 export async function logout(): Promise<void> {

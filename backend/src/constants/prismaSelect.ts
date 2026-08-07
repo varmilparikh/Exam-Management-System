@@ -1,4 +1,5 @@
 import type { Prisma } from "../generated/prisma/client.js";
+import { TransferStatus } from "../generated/prisma/client.js";
 
 export const employeeLoginSelect = {
   id: true,
@@ -128,6 +129,17 @@ export const examDutySelect = {
       examName: true,
       examDate: true,
       requiredFaculty: true,
+      status: true,
+    },
+  },
+
+  transfers: {
+    where: {
+      isDeleted: false,
+      status: TransferStatus.PENDING,
+    },
+    select: {
+      id: true,
       status: true,
     },
   },
@@ -335,6 +347,7 @@ export const swapRequestSelect = {
           id: true,
           examName: true,
           examDate: true,
+          status: true,
         },
       },
     },

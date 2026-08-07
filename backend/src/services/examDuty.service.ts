@@ -93,6 +93,27 @@ class ExamDutyService {
   }
 
   /**
+   * Duties of an employee
+   */
+  async getByEmployee(employeeId: string): Promise<ExamDutyResponse[]> {
+    return examDutyRepository.findByEmployee(employeeId);
+  }
+
+  /**
+   * Upcoming duties of an employee
+   */
+  async getUpcomingByEmployee(employeeId: string): Promise<ExamDutyResponse[]> {
+    return examDutyRepository.findUpcomingByEmployee(employeeId);
+  }
+
+  /**
+   * Duties of an exam
+   */
+  async getByExam(examId: string): Promise<ExamDutyResponse[]> {
+    return examDutyRepository.findByExam(examId);
+  }
+
+  /**
    * Get Exam Duty By ID
    */
   async getById(id: string): Promise<ExamDutyResponse> {

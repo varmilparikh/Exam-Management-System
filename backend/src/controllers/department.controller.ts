@@ -10,6 +10,8 @@ import type {
   UpdateDepartmentDto,
 } from "../types/department.types.js";
 
+import type { DepartmentFilters } from "../types/departmentFilter.types.js";
+
 /**
  * Create Department
  */
@@ -32,8 +34,13 @@ export const createDepartment = asyncHandler(
  * Get All Departments
  */
 export const getDepartments = asyncHandler(
-  async (_req: Request, res: Response): Promise<void> => {
-    const departments = await departmentService.getAll();
+  async (req: Request, res: Response): Promise<void> => {
+    const filters: DepartmentFilters = {
+      search:
+        typeof req.query.search === "string" ? req.query.search : undefined,
+    };
+
+    const departments = await departmentService.getAll(filters);
 
     res
       .status(200)

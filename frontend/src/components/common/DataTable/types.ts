@@ -2,10 +2,15 @@ import type { ReactNode } from "react";
 
 export interface Column<T> {
   /**
+   * Unique identifier for the column.
+   */
+  id: string;
+
+  /**
    * Property name from the row object.
    * Example: "name", "email", "role"
    */
-  key: keyof T;
+  key?: keyof T;
 
   /**
    * Column title displayed in the header.

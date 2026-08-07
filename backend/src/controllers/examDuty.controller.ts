@@ -12,6 +12,7 @@ import type {
 
 import { DutyStatus } from "../generated/prisma/client.js";
 
+import { ApiError } from "../utils/apiError.js";
 /**
  * Create Exam Duty
  */
@@ -33,7 +34,6 @@ export const createExamDuty = asyncHandler(
  */
 export const getExamDuties = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
 
@@ -41,6 +41,9 @@ export const getExamDuties = asyncHandler(
       examId: req.query.examId as string | undefined,
       employeeId: req.query.employeeId as string | undefined,
       status: req.query.status as DutyStatus | undefined,
+
+      search:
+        typeof req.query.search === "string" ? req.query.search : undefined,
     };
 
     const examDuties = await examDutyService.getAll(page, limit, filters);
@@ -50,6 +53,61 @@ export const getExamDuties = asyncHandler(
       .json(
         new ApiResponse(200, examDuties, "Exam duties fetched successfully"),
       );
+  },
+);
+
+export const getEmployeeDuties = asyncHandler(
+  async (
+    req: Request<{ employeeId: string }>,
+    res: Response,
+  ): Promise<void> => {
+    const duties = await examDutyService.getByEmployee(req.params.employeeId);
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, duties, "Employee duties fetched successfully"),
+      );
+  },
+);
+
+export const getMyUpcomingDuties = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new ApiError(401, "Authentication required");
+    }
+
+    const duties = await examDutyService.getUpcomingByEmployee(req.user.id);
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, duties, "My upcoming duties fetched successfully"),
+      );
+  },
+);
+
+export const getMyDuties = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new ApiError(401, "Authentication required");
+    }
+
+    const duties = await examDutyService.getByEmployee(req.user.id);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, duties, "My duties fetched successfully"));
+  },
+);
+
+export const getExamDutiesByExam = asyncHandler(
+  async (req: Request<{ examId: string }>, res: Response): Promise<void> => {
+    const duties = await examDutyService.getByExam(req.params.examId);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, duties, "Exam duties fetched successfully"));
   },
 );
 

@@ -1,17 +1,69 @@
 import prisma from "../config/prisma.js";
 
 import type { Prisma } from "../generated/prisma/client.js";
-
-import {
-  TransferStatus,
-} from "../generated/prisma/client.js";
+import { TransferStatus, DutyStatus } from "../generated/prisma/client.js";
 
 import {
   transferRequestSelect,
   type TransferRequestResponse,
 } from "../constants/prismaSelect.js";
 
+import type {
+  ApproveTransferTransactionData,
+  RejectTransferTransactionData,
+} from "../types/transferRequest.types.js";
+
+import type { TransferRequestFilters } from "../types/transferRequestFilter.types.js";
+
 class TransferRequestRepository {
+  /**
+   * Build dynamic filters
+   */
+  private buildFilters(
+    filters: TransferRequestFilters,
+  ): Prisma.TransferRequestWhereInput {
+    const where: Prisma.TransferRequestWhereInput = {
+      isDeleted: false,
+    };
+
+    if (filters.status) {
+      where.status = filters.status as TransferStatus;
+    }
+
+    if (filters.search) {
+      where.OR = [
+        {
+          examDuty: {
+            exam: {
+              examName: {
+                contains: filters.search,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+        {
+          fromEmployee: {
+            name: {
+              contains: filters.search,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          toEmployee: {
+            name: {
+              contains: filters.search,
+              mode: "insensitive",
+            },
+          },
+        },
+      ];
+    }
+
+    return where;
+  }
+
   /**
    * Find by ID
    */
@@ -26,13 +78,15 @@ class TransferRequestRepository {
   }
 
   /**
-   * Get all transfer requests
+   * Find all
    */
-  async findAll(): Promise<TransferRequestResponse[]> {
+  async findAll(
+    filters: TransferRequestFilters,
+  ): Promise<TransferRequestResponse[]> {
+    const where = this.buildFilters(filters);
+
     return prisma.transferRequest.findMany({
-      where: {
-        isDeleted: false,
-      },
+      where,
       orderBy: {
         createdAt: "desc",
       },
@@ -41,12 +95,12 @@ class TransferRequestRepository {
   }
 
   /**
-   * Get pending requests
+   * Pending requests
    */
   async findPending(): Promise<TransferRequestResponse[]> {
     return prisma.transferRequest.findMany({
       where: {
-        status: "PENDING",
+        status: TransferStatus.PENDING,
         isDeleted: false,
       },
       orderBy: {
@@ -57,7 +111,7 @@ class TransferRequestRepository {
   }
 
   /**
-   * Find pending transfer request by exam duty
+   * Pending request for a duty
    */
   async findPendingByExamDuty(
     examDutyId: string,
@@ -65,20 +119,6 @@ class TransferRequestRepository {
     return prisma.transferRequest.findFirst({
       where: {
         examDutyId,
-        status: "PENDING",
-        isDeleted: false,
-      },
-      select: transferRequestSelect,
-    });
-  }
-
-  /**
-   * Find pending request by ID
-   */
-  async findPendingById(id: string): Promise<TransferRequestResponse | null> {
-    return prisma.transferRequest.findFirst({
-      where: {
-        id,
         status: TransferStatus.PENDING,
         isDeleted: false,
       },
@@ -87,29 +127,25 @@ class TransferRequestRepository {
   }
 
   /**
-   * Find transfer request by ID including deleted check
+   * Requests for a faculty
+   * (Created by OR Assigned to)
    */
-  async findByIdOrThrow(id: string): Promise<TransferRequestResponse> {
-    const transferRequest = await this.findById(id);
-
-    if (!transferRequest) {
-      throw new Error("Transfer request not found");
-    }
-
-    return transferRequest;
-  }
-
-  /**
-   * Find requests created by an employee
-   */
-  async findByFromEmployee(
+  async findForFaculty(
     employeeId: string,
+    filters: TransferRequestFilters,
   ): Promise<TransferRequestResponse[]> {
+    const where: Prisma.TransferRequestWhereInput = {
+      ...this.buildFilters(filters),
+
+      AND: [
+        {
+          OR: [{ fromEmployeeId: employeeId }, { toEmployeeId: employeeId }],
+        },
+      ],
+    };
+
     return prisma.transferRequest.findMany({
-      where: {
-        fromEmployeeId: employeeId,
-        isDeleted: false,
-      },
+      where,
       orderBy: {
         createdAt: "desc",
       },
@@ -117,22 +153,8 @@ class TransferRequestRepository {
     });
   }
 
-  /**
-   * Find requests assigned to a replacement employee
-   */
-  async findByToEmployee(
-    employeeId: string,
-  ): Promise<TransferRequestResponse[]> {
-    return prisma.transferRequest.findMany({
-      where: {
-        toEmployeeId: employeeId,
-        isDeleted: false,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: transferRequestSelect,
-    });
+  async getAll(filters: TransferRequestFilters) {
+    return this.findAll(filters);
   }
 
   /**
@@ -177,7 +199,7 @@ class TransferRequestRepository {
   }
 
   /**
-   * Soft Delete
+   * Soft delete
    */
   async softDelete(id: string): Promise<TransferRequestResponse> {
     return prisma.transferRequest.update({
@@ -188,6 +210,112 @@ class TransferRequestRepository {
         isDeleted: true,
       },
       select: transferRequestSelect,
+    });
+  }
+
+  /**
+   * Approve transfer transaction
+   *
+   * Repository should ONLY perform database operations.
+   */
+  async approveTransferTransaction({
+    id,
+    approvedById,
+    replacementEmployeeId,
+    examDutyId,
+    approvalRemark,
+  }: ApproveTransferTransactionData): Promise<TransferRequestResponse> {
+    return prisma.$transaction(async (tx) => {
+      await tx.transferRequest.update({
+        where: {
+          id,
+        },
+
+        data: {
+          status: TransferStatus.APPROVED,
+
+          approvedBy: {
+            connect: {
+              id: approvedById,
+            },
+          },
+
+          approvedAt: new Date(),
+
+          approvalRemark,
+
+          toEmployee: {
+            connect: {
+              id: replacementEmployeeId,
+            },
+          },
+        },
+      });
+
+      await tx.examDuty.update({
+        where: {
+          id: examDutyId,
+        },
+
+        data: {
+          employee: {
+            connect: {
+              id: replacementEmployeeId,
+            },
+          },
+
+          status: DutyStatus.ASSIGNED,
+        },
+      });
+
+      return tx.transferRequest.findUniqueOrThrow({
+        where: {
+          id,
+        },
+
+        select: transferRequestSelect,
+      });
+    });
+  }
+
+  /**
+   * Reject transfer transaction
+   *
+   * Repository should ONLY perform database operations.
+   */
+  async rejectTransferTransaction({
+    id,
+    approvedById,
+    approvalRemark,
+  }: RejectTransferTransactionData): Promise<TransferRequestResponse> {
+    return prisma.$transaction(async (tx) => {
+      await tx.transferRequest.update({
+        where: {
+          id,
+        },
+
+        data: {
+          status: TransferStatus.REJECTED,
+
+          approvedBy: {
+            connect: {
+              id: approvedById,
+            },
+          },
+
+          approvedAt: new Date(),
+
+          approvalRemark,
+        },
+      });
+
+      return tx.transferRequest.findUniqueOrThrow({
+        where: {
+          id,
+        },
+
+        select: transferRequestSelect,
+      });
     });
   }
 }

@@ -13,6 +13,20 @@ export interface Employee {
 
   phone?: string;
 
+  profileImage: string;
+
+  loginProvider: "LOCAL" | "GOOGLE" | "MICROSOFT";
+
+  isEmailVerified: boolean;
+
+  lastLogin: string | null;
+
+  averageDuty: number;
+
+  attendedCount: number;
+
+  transferCount: number;
+
   isActive: boolean;
 
   departmentId: string;

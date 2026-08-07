@@ -9,7 +9,64 @@ import {
   type SwapRequestResponse,
 } from "../constants/prismaSelect.js";
 
+import type { SwapRequestFilters } from "../types/swapRequestFilter.types.js";
+
 class SwapRequestRepository {
+  private buildFilters(
+    filters: SwapRequestFilters,
+  ): Prisma.SwapRequestWhereInput {
+    const where: Prisma.SwapRequestWhereInput = {
+      isDeleted: false,
+    };
+
+    if (filters.status) {
+      where.status = filters.status as SwapStatus;
+    }
+
+    if (filters.search) {
+      where.OR = [
+        {
+          requester: {
+            name: {
+              contains: filters.search,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          receiver: {
+            name: {
+              contains: filters.search,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          requesterDuty: {
+            exam: {
+              examName: {
+                contains: filters.search,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+        {
+          receiverDuty: {
+            exam: {
+              examName: {
+                contains: filters.search,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      ];
+    }
+
+    return where;
+  }
+
   /**
    * Find by ID
    */
@@ -26,11 +83,17 @@ class SwapRequestRepository {
   /**
    * Find all
    */
-  async findAll(): Promise<SwapRequestResponse[]> {
+  async findAll(
+    page: number,
+    limit: number,
+    filters: SwapRequestFilters,
+  ): Promise<SwapRequestResponse[]> {
+    const where = this.buildFilters(filters);
+
     return prisma.swapRequest.findMany({
-      where: {
-        isDeleted: false,
-      },
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: {
         createdAt: "desc",
       },
@@ -45,22 +108,6 @@ class SwapRequestRepository {
     return prisma.swapRequest.findMany({
       where: {
         status: SwapStatus.PENDING,
-        isDeleted: false,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: swapRequestSelect,
-    });
-  }
-
-  /**
-   * Accepted requests waiting for COE
-   */
-  async findAccepted(): Promise<SwapRequestResponse[]> {
-    return prisma.swapRequest.findMany({
-      where: {
-        status: SwapStatus.ACCEPTED,
         isDeleted: false,
       },
       orderBy: {
@@ -99,28 +146,29 @@ class SwapRequestRepository {
   /**
    * Requests created by requester
    */
-  async findByRequester(requesterId: string): Promise<SwapRequestResponse[]> {
-    return prisma.swapRequest.findMany({
-      where: {
-        requesterId,
-        isDeleted: false,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: swapRequestSelect,
-    });
-  }
-
   /**
-   * Requests received by receiver
+   * Requests for a faculty (sent or received)
    */
-  async findByReceiver(receiverId: string): Promise<SwapRequestResponse[]> {
+  async findForFaculty(
+    employeeId: string,
+    page: number,
+    limit: number,
+    filters: SwapRequestFilters,
+  ): Promise<SwapRequestResponse[]> {
+    const where: Prisma.SwapRequestWhereInput = {
+      ...this.buildFilters(filters),
+
+      AND: [
+        {
+          OR: [{ requesterId: employeeId }, { receiverId: employeeId }],
+        },
+      ],
+    };
+
     return prisma.swapRequest.findMany({
-      where: {
-        receiverId,
-        isDeleted: false,
-      },
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: {
         createdAt: "desc",
       },

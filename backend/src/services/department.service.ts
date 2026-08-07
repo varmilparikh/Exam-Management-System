@@ -7,6 +7,8 @@ import type {
   UpdateDepartmentDto,
 } from "../types/department.types.js";
 
+import type { DepartmentFilters } from "../types/departmentFilter.types.js";
+
 class DepartmentService {
   /**
    * Create Department
@@ -26,8 +28,8 @@ class DepartmentService {
   /**
    * Get All Departments
    */
-  async getAll(): Promise<DepartmentResponse[]> {
-    return departmentRepository.findAll();
+  async getAll(filters: DepartmentFilters) {
+    return departmentRepository.findAll(filters);
   }
 
   /**

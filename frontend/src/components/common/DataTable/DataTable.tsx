@@ -67,7 +67,9 @@ export default function DataTable<T extends { id: string }>({
                   >
                     {column.render
                       ? column.render(row)
-                      : (row[column.key] as React.ReactNode)}
+                      : column.key
+                        ? (row[column.key] as React.ReactNode)
+                        : null}
                   </td>
                 ))}
               </tr>

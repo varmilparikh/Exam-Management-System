@@ -12,6 +12,7 @@ export default function ConfirmDialog({
   loading = false,
   onConfirm,
   onCancel,
+  confirmVariant,
 }: ConfirmDialogProps) {
   return (
     <Dialog.Root
@@ -28,7 +29,11 @@ export default function ConfirmDialog({
             {cancelText}
           </Button>
 
-          <Button variant="danger" loading={loading} onClick={onConfirm}>
+          <Button
+            variant={confirmVariant ?? "danger"}
+            loading={loading}
+            onClick={onConfirm}
+          >
             {confirmText}
           </Button>
         </Dialog.Footer>

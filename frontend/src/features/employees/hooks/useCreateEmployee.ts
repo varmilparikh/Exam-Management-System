@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { employeeService } from "../api/employee.service";
 import { getErrorMessage } from "@/lib/getErrorMessage";
+import { employeeKeys } from "../queryKeys";
 
 export function useCreateEmployee() {
   const queryClient = useQueryClient();
@@ -14,7 +15,7 @@ export function useCreateEmployee() {
       toast.success("Employee created successfully.");
 
       queryClient.invalidateQueries({
-        queryKey: ["employees"],
+        queryKey: employeeKeys.all,
       });
     },
 

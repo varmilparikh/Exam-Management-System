@@ -3,6 +3,8 @@ import api from "@/lib/api";
 import type { ApiResponse } from "@/types/api";
 import type { Department } from "../types/department";
 
+import type { DepartmentFilters } from "../types/departmentFilters";
+
 export interface CreateDepartmentDto {
   name: string;
 }
@@ -11,8 +13,16 @@ export interface UpdateDepartmentDto {
   name: string;
 }
 
-async function getAll() {
-  const response = await api.get<ApiResponse<Department[]>>("/departments");
+const DEFAULT_FILTERS: DepartmentFilters = {
+  search: "",
+};
+
+async function getAll(filters: DepartmentFilters = DEFAULT_FILTERS) {
+  const response = await api.get<ApiResponse<Department[]>>("/departments", {
+    params: {
+      search: filters.search || undefined,
+    },
+  });
 
   return response.data.data;
 }

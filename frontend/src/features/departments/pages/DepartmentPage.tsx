@@ -1,43 +1,33 @@
 import { useState } from "react";
 
 import PageHeader from "@/components/common/PageHeader";
-import SearchInput from "@/components/common/SearchInput";
 
 import CreateDepartmentDialog from "../dialogs/CreateDepartmentDialog";
 import DepartmentTable from "../components/DepartmentTable";
-import Select from "@/components/ui/Select/Select";
+import DepartmentToolbar from "../components/DepartmentToolbar";
+import PermissionGate from "@/permissions/PermissionGate";
+import type { DepartmentFilters } from "../types/departmentFilters";
 
 export default function DepartmentsPage() {
-  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<DepartmentFilters>({
+    search: "",
+  });
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Departments"
         description="Manage university departments."
-        action={<CreateDepartmentDialog />}
+        actions={
+          <PermissionGate permission="department:create">
+            <CreateDepartmentDialog />
+          </PermissionGate>
+        }
       />
 
-      <SearchInput
-        value={search}
-        onChange={setSearch}
-        placeholder="Search departments..."
-      />
-      <Select
-        placeholder="Choose Department"
-        options={[
-          {
-            label: "Computer Science",
-            value: "cs",
-          },
-          {
-            label: "Mechanical",
-            value: "me",
-          },
-        ]}
-      />
+      <DepartmentToolbar filters={filters} onFiltersChange={setFilters} />
 
-      <DepartmentTable search={search} />
+      <DepartmentTable filters={filters} />
     </div>
   );
 }

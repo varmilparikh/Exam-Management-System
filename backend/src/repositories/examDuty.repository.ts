@@ -1,6 +1,10 @@
 import prisma from "../config/prisma.js";
 
-import { DutyStatus, type Prisma } from "../generated/prisma/client.js";
+import {
+  DutyStatus,
+  ExamStatus,
+  type Prisma,
+} from "../generated/prisma/client.js";
 
 import {
   examDutySelect,
@@ -31,6 +35,7 @@ class ExamDutyRepository {
       examId?: string;
       employeeId?: string;
       status?: DutyStatus;
+      search?: string;
     },
   ): Promise<ExamDutyResponse[]> {
     return prisma.examDuty.findMany({
@@ -48,6 +53,27 @@ class ExamDutyRepository {
         ...(filters.status && {
           status: filters.status,
         }),
+
+        ...(filters.search && {
+          OR: [
+            {
+              employee: {
+                name: {
+                  contains: filters.search,
+                  mode: "insensitive",
+                },
+              },
+            },
+            {
+              exam: {
+                examName: {
+                  contains: filters.search,
+                  mode: "insensitive",
+                },
+              },
+            },
+          ],
+        }),
       },
 
       skip: (page - 1) * limit,
@@ -57,6 +83,71 @@ class ExamDutyRepository {
         createdAt: "desc",
       },
 
+      select: examDutySelect,
+    });
+  }
+
+  /**
+   * Duties of one employee
+   */
+  async findByEmployee(employeeId: string): Promise<ExamDutyResponse[]> {
+    return prisma.examDuty.findMany({
+      where: {
+        employeeId,
+        isDeleted: false,
+      },
+      orderBy: {
+        exam: {
+          examDate: "asc",
+        },
+      },
+      select: examDutySelect,
+    });
+  }
+
+  /**
+   * Upcoming duties of one employee
+   */
+  async findUpcomingByEmployee(
+    employeeId: string,
+    limit = 5,
+  ): Promise<ExamDutyResponse[]> {
+    return prisma.examDuty.findMany({
+      where: {
+        employeeId,
+        isDeleted: false,
+        status: DutyStatus.ASSIGNED,
+
+        exam: {
+          status: ExamStatus.UPCOMING,
+          isDeleted: false,
+        },
+      },
+
+      orderBy: {
+        exam: {
+          examDate: "asc",
+        },
+      },
+
+      take: limit,
+
+      select: examDutySelect,
+    });
+  }
+
+  /**
+   * Duties of one exam
+   */
+  async findByExam(examId: string): Promise<ExamDutyResponse[]> {
+    return prisma.examDuty.findMany({
+      where: {
+        examId,
+        isDeleted: false,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
       select: examDutySelect,
     });
   }

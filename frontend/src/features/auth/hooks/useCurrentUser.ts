@@ -6,5 +6,8 @@ export function useCurrentUser() {
   return useQuery({
     queryKey: QUERY_KEYS.CURRENT_USER,
     queryFn: me,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }

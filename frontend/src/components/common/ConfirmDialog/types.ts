@@ -1,3 +1,5 @@
+import type { ButtonProps } from "@/components/ui/Button";
+
 export interface ConfirmDialogProps {
   open: boolean;
 
@@ -10,6 +12,8 @@ export interface ConfirmDialogProps {
   cancelText?: string;
 
   loading?: boolean;
+
+  confirmVariant?: ButtonProps["variant"];
 
   onConfirm: () => void;
 

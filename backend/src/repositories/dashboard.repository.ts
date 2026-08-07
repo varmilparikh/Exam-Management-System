@@ -1,5 +1,7 @@
 import prisma from "../config/prisma.js";
 
+import { Role } from "../generated/prisma/client.js";
+
 import {
   DutyStatus,
   ExamStatus,
@@ -39,7 +41,7 @@ class DashboardRepository {
       where: {
         departmentId,
         isDeleted: false,
-        role: "FACULTY",
+        role: Role.FACULTY,
       },
     });
   }
@@ -410,7 +412,7 @@ class DashboardRepository {
   async getFacultyWorkload(limit: number = 10) {
     return prisma.employee.findMany({
       where: {
-        role: "FACULTY",
+        role: Role.FACULTY,
         isDeleted: false,
         isActive: true,
       },

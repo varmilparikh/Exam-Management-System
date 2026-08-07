@@ -7,6 +7,8 @@ import {
   type DepartmentResponse,
 } from "../constants/prismaSelect.js";
 
+import type { DepartmentFilters } from "../types/departmentFilter.types.js";
+
 class DepartmentRepository {
   /**
    * Find department by ID
@@ -51,14 +53,25 @@ class DepartmentRepository {
   /**
    * Get all departments
    */
-  async findAll(): Promise<DepartmentResponse[]> {
+  async findAll(filters: DepartmentFilters): Promise<DepartmentResponse[]> {
+    const where: Prisma.DepartmentWhereInput = {
+      isDeleted: false,
+    };
+
+    if (filters.search) {
+      where.name = {
+        contains: filters.search,
+        mode: "insensitive",
+      };
+    }
+
     return prisma.department.findMany({
-      where: {
-        isDeleted: false,
-      },
+      where,
+
       orderBy: {
         name: "asc",
       },
+
       select: departmentSelect,
     });
   }

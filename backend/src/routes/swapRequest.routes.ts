@@ -6,7 +6,8 @@ import {
   rejectSwapRequest,
   cancelSwapRequest,
   approveSwapRequest,
-  rejectSwapByCoe
+  rejectSwapByCoe,
+  getSwapRequests,
 } from "../controllers/swapRequest.controller.js";
 
 import {
@@ -14,7 +15,7 @@ import {
   rejectSwapRequestSchema,
   cancelSwapRequestSchema,
   approveSwapRequestSchema,
-  rejectSwapByCoeSchema
+  rejectSwapByCoeSchema,
 } from "../validators/swapRequest.validator.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -23,8 +24,9 @@ import { validate } from "../middleware/validate.middleware.js";
 
 import { uuidParamSchema } from "../validators/common.validator.js";
 
-
 const router = Router();
+
+router.get("/", verifyJWT, getSwapRequests);
 
 router.post(
   "/",

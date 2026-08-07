@@ -5,6 +5,7 @@ import {
   getMyNotifications,
   getNotificationById,
   getUnreadNotifications,
+  getUnreadCount,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
@@ -36,15 +37,11 @@ router.post(
  */
 router.get("/", verifyJWT, getMyNotifications);
 
-/**
- * Get Notification By ID
- */
-router.get(
-  "/:id",
-  verifyJWT,
-  validate(uuidParamSchema, "params"),
-  getNotificationById,
-);
+router.get("/unread", verifyJWT, getUnreadNotifications);
+
+router.get("/unread-count", verifyJWT, getUnreadCount);
+
+router.patch("/read-all", verifyJWT, markAllNotificationsAsRead);
 
 /**
  * Update Notification
@@ -56,9 +53,15 @@ router.patch(
   markNotificationAsRead,
 );
 
-router.get("/unread", verifyJWT, getUnreadNotifications);
-
-router.patch("/read-all", verifyJWT, markAllNotificationsAsRead);
+/**
+ * Get Notification By ID
+ */
+router.get(
+  "/:id",
+  verifyJWT,
+  validate(uuidParamSchema, "params"),
+  getNotificationById,
+);
 
 /**
  * Delete Notification

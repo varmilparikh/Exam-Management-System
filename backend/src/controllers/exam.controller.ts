@@ -7,6 +7,8 @@ import { ApiResponse } from "../utils/apiResponse.js";
 
 import type { CreateExamDto, UpdateExamDto } from "../types/exam.types.js";
 
+import type { ExamFilters } from "../types/examFilter.types.js";
+
 /**
  * Create Exam
  */
@@ -27,8 +29,16 @@ export const createExam = asyncHandler(
  * Get All Exams
  */
 export const getExams = asyncHandler(
-  async (_req: Request, res: Response): Promise<void> => {
-    const exams = await examService.getAll();
+  async (req: Request, res: Response): Promise<void> => {
+    const filters: ExamFilters = {
+      search:
+        typeof req.query.search === "string" ? req.query.search : undefined,
+
+      status:
+        typeof req.query.status === "string" ? req.query.status : undefined,
+    };
+
+    const exams = await examService.getAll(filters);
 
     res
       .status(200)

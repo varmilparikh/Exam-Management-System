@@ -139,9 +139,10 @@ enum DutyStatus {
 }
 
 enum TransferStatus {
-  PENDING
-  APPROVED
-  REJECTED
+  PENDING       // waiting for replacement faculty
+  ACCEPTED      // waiting for COE
+  APPROVED      // completed
+  REJECTED      // rejected by faculty or COE
   CANCELLED
 }
 

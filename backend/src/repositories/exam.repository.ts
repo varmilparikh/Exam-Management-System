@@ -1,8 +1,10 @@
 import prisma from "../config/prisma.js";
 
-import type { Prisma } from "../generated/prisma/client.js";
+import type { ExamStatus, Prisma } from "../generated/prisma/client.js";
 
 import { examSelect, type ExamResponse } from "../constants/prismaSelect.js";
+
+import type { ExamFilters } from "../types/examFilter.types.js";
 
 class ExamRepository {
   /**
@@ -21,14 +23,33 @@ class ExamRepository {
   /**
    * Get all exams
    */
-  async findAll(): Promise<ExamResponse[]> {
+  async findAll(filters: ExamFilters): Promise<ExamResponse[]> {
+    const where: Prisma.ExamWhereInput = {
+      isDeleted: false,
+    };
+
+    if (filters.search) {
+      where.OR = [
+        {
+          examName: {
+            contains: filters.search,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
+
+    if (filters.status) {
+      where.status = filters.status as ExamStatus;
+    }
+
     return prisma.exam.findMany({
-      where: {
-        isDeleted: false,
-      },
+      where,
+
       orderBy: {
-        examDate: "asc",
+        examDate: "desc",
       },
+
       select: examSelect,
     });
   }

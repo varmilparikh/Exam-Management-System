@@ -7,7 +7,7 @@ export interface CreateSwapRequestDto {
   receiverId: string;
   requesterDutyId: string;
   receiverDutyId: string;
-  reason?: string;
+  reason: string;
 }
 
 /**
@@ -28,14 +28,14 @@ export interface ApproveSwapRequestDto {
  * Receiver rejects swap request
  */
 export interface RejectSwapRequestDto {
-  reason?: string;
+  reason: string;
 }
 
 /**
  * Cancel Swap Request DTO
  */
 export interface CancelSwapRequestDto {
-  reason?: string;
+  reason: string;
 }
 
 /**

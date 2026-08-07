@@ -1,6 +1,4 @@
-import type {
-  TransferStatus,
-} from "../generated/prisma/client.js";
+import type { TransferStatus } from "../generated/prisma/client.js";
 
 /**
  * Create Transfer Request DTO
@@ -8,20 +6,36 @@ import type {
 export interface CreateTransferRequestDto {
   toEmployeeId?: string;
   examDutyId: string;
-  reason?: string;
+  reason: string;
 }
 
 /**
  * Approve Transfer Request DTO
  */
-export interface ApproveTransferRequestDto {
-  /**
-   * Optional.
-   * COE can choose or change the replacement.
-   */
-  toEmployeeId?: string;
 
+export interface ApproveTransferRequestDto {
+  toEmployeeId?: string;
   approvalRemark?: string;
+}
+
+export interface ApproveTransferTransactionData {
+  id: string;
+
+  approvedById: string;
+
+  replacementEmployeeId: string;
+
+  examDutyId: string;
+
+  approvalRemark: string | null;
+}
+
+export interface RejectTransferTransactionData {
+  id: string;
+
+  approvedById: string;
+
+  approvalRemark: string | null;
 }
 
 /**

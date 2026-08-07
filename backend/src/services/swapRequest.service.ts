@@ -24,9 +24,93 @@ import type {
   RejectSwapByCoeDto,
 } from "../types/swapRequest.types.js";
 
-import { type SwapRequestResponse } from "../constants/prismaSelect.js";
+import {
+  type SwapRequestResponse,
+  type ExamDutyResponse,
+} from "../constants/prismaSelect.js";
+import type { SwapRequestFilters } from "../types/swapRequestFilter.types.js";
 
 class SwapRequestService {
+  private ensurePending(request: SwapRequestResponse): void {
+    if (request.status !== SwapStatus.PENDING) {
+      throw new ApiError(409, `Swap request is already ${request.status}.`);
+    }
+  }
+
+  private ensureAccepted(request: SwapRequestResponse): void {
+    if (request.status !== SwapStatus.ACCEPTED) {
+      throw new ApiError(
+        409,
+        `Swap request is ${request.status}, not ACCEPTED.`,
+      );
+    }
+  }
+
+  private ensureAssigned(...duties: ExamDutyResponse[]): void {
+    for (const duty of duties) {
+      if (duty.status !== DutyStatus.ASSIGNED) {
+        throw new ApiError(400, "Only assigned duties can be swapped.");
+      }
+    }
+  }
+
+  private ensureUpcoming(...duties: ExamDutyResponse[]): void {
+    for (const duty of duties) {
+      if (duty.exam.status !== ExamStatus.UPCOMING) {
+        throw new ApiError(400, "Only upcoming examinations can be swapped.");
+      }
+    }
+  }
+
+  private async getSwapRequestOrThrow(
+    id: string,
+  ): Promise<SwapRequestResponse> {
+    const request = await swapRequestRepository.findById(id);
+
+    if (!request) {
+      throw new ApiError(404, "Swap request not found");
+    }
+
+    return request;
+  }
+
+  /**
+   * Get Swap Requests
+   */
+  async getRequests(
+    user: {
+      id: string;
+      role: Role;
+    },
+    page: number,
+    limit: number,
+    filters: SwapRequestFilters,
+  ): Promise<SwapRequestResponse[]> {
+    switch (user.role) {
+      case Role.SUPER_ADMIN:
+        return swapRequestRepository.findAll(page, limit, filters);
+
+      case Role.COE: {
+        return swapRequestRepository.findAll(page, limit, {
+          ...filters,
+          status: SwapStatus.ACCEPTED,
+        });
+      }
+
+      case Role.FACULTY: {
+        return swapRequestRepository.findForFaculty(
+          user.id,
+          page,
+          limit,
+          filters,
+        );
+      }
+
+      default:
+        return [];
+    }
+  }
+
   /**
    * Faculty requests a duty swap
    */
@@ -70,20 +154,18 @@ class SwapRequestService {
       throw new ApiError(403, "Receiver does not own the selected duty.");
     }
 
-    if (requesterDuty.status !== DutyStatus.ASSIGNED) {
-      throw new ApiError(400, "Requester duty is not assigned.");
+    this.ensureAssigned(requesterDuty, receiverDuty);
+    this.ensureUpcoming(requesterDuty, receiverDuty);
+
+    if (requesterDuty.id === receiverDuty.id) {
+      throw new ApiError(400, "Cannot swap the same duty.");
     }
 
-    if (receiverDuty.status !== DutyStatus.ASSIGNED) {
-      throw new ApiError(400, "Receiver duty is not assigned.");
-    }
-
-    if (requesterDuty.exam.status !== ExamStatus.UPCOMING) {
-      throw new ApiError(400, "Requester exam is not upcoming.");
-    }
-
-    if (receiverDuty.exam.status !== ExamStatus.UPCOMING) {
-      throw new ApiError(400, "Receiver exam is not upcoming.");
+    if (requesterDuty.employeeId === receiverDuty.employeeId) {
+      throw new ApiError(
+        400,
+        "Both duties already belong to the same faculty.",
+      );
     }
 
     const existingRequest = await swapRequestRepository.findPendingByDuties(
@@ -93,10 +175,6 @@ class SwapRequestService {
 
     if (existingRequest) {
       throw new ApiError(409, "A pending swap request already exists.");
-    }
-
-    if (requesterDuty.examId === receiverDuty.examId) {
-      throw new ApiError(400, "Cannot swap duties for the same examination.");
     }
 
     const swapRequest = await swapRequestRepository.create({
@@ -133,7 +211,7 @@ class SwapRequestService {
 
       action: ActivityAction.CREATE_SWAP_REQUEST,
 
-      description: `${requester.name} requested a duty swap with ${receiver.name}.`,
+      description: `${requester.name} requested to swap duties with ${receiver.name}. (${requesterDuty.exam.examName} ↔ ${receiverDuty.exam.examName})`,
 
       entityType: EntityType.SWAP_REQUEST,
 
@@ -156,11 +234,7 @@ class SwapRequestService {
     id: string,
     receiverId: string,
   ): Promise<SwapRequestResponse> {
-    const swapRequest = await swapRequestRepository.findById(id);
-
-    if (!swapRequest) {
-      throw new ApiError(404, "Swap request not found");
-    }
+    const swapRequest = await this.getSwapRequestOrThrow(id);
 
     if (swapRequest.receiverId !== receiverId) {
       throw new ApiError(
@@ -169,9 +243,7 @@ class SwapRequestService {
       );
     }
 
-    if (swapRequest.status !== SwapStatus.PENDING) {
-      throw new ApiError(400, "Only pending swap requests can be accepted.");
-    }
+    this.ensurePending(swapRequest);
 
     const updatedSwapRequest = await swapRequestRepository.update(id, {
       status: SwapStatus.ACCEPTED,
@@ -182,7 +254,7 @@ class SwapRequestService {
 
       action: ActivityAction.ACCEPT_SWAP_REQUEST,
 
-      description: `${updatedSwapRequest.receiver.name} accepted the swap request from ${updatedSwapRequest.requester.name}.`,
+      description: `${updatedSwapRequest.receiver.name} accepted ${updatedSwapRequest.requester.name}'s swap request.`,
 
       entityType: EntityType.SWAP_REQUEST,
 
@@ -215,16 +287,10 @@ class SwapRequestService {
     );
 
     // 2. Find swap request
-    const swapRequest = await swapRequestRepository.findById(id);
-
-    if (!swapRequest) {
-      throw new ApiError(404, "Swap request not found");
-    }
+    const swapRequest = await this.getSwapRequestOrThrow(id);
 
     // 3. Request must be accepted
-    if (swapRequest.status !== SwapStatus.ACCEPTED) {
-      throw new ApiError(400, "Only accepted swap requests can be approved.");
-    }
+    this.ensureAccepted(swapRequest);
 
     // 4. Load both duties
     const requesterDuty = await examDutyRepository.findById(
@@ -240,12 +306,7 @@ class SwapRequestService {
     }
 
     // 5. Duties must still be assigned
-    if (
-      requesterDuty.status !== DutyStatus.ASSIGNED ||
-      receiverDuty.status !== DutyStatus.ASSIGNED
-    ) {
-      throw new ApiError(400, "Only assigned duties can be swapped.");
-    }
+    this.ensureAssigned(requesterDuty, receiverDuty);
 
     // 6. Check if receiver already has a duty for requester's exam
     const receiverExistingDuty = await examDutyRepository.findByEmployeeAndExam(
@@ -274,12 +335,7 @@ class SwapRequestService {
       );
     }
 
-    if (
-      requesterDuty.exam.status !== ExamStatus.UPCOMING ||
-      receiverDuty.exam.status !== ExamStatus.UPCOMING
-    ) {
-      throw new ApiError(400, "Only upcoming examinations can be swapped.");
-    }
+    this.ensureUpcoming(requesterDuty, receiverDuty);
 
     // 6. Perform transaction
     const updatedSwapRequest =
@@ -299,7 +355,9 @@ class SwapRequestService {
 
       action: ActivityAction.APPROVE_SWAP_REQUEST,
 
-      description: `${approver.name} approved swap request (${updatedSwapRequest.id}) between ${swapRequest.requester.name} and ${swapRequest.receiver.name}.`,
+      description:
+        `${approver.name} approved the duty swap between ` +
+        `${swapRequest.requester.name} and ${swapRequest.receiver.name}.`,
 
       entityType: EntityType.SWAP_REQUEST,
 
@@ -325,11 +383,7 @@ class SwapRequestService {
     data: RejectSwapRequestDto,
   ): Promise<SwapRequestResponse> {
     // 1. Find swap request
-    const swapRequest = await swapRequestRepository.findById(id);
-
-    if (!swapRequest) {
-      throw new ApiError(404, "Swap request not found");
-    }
+    const swapRequest = await this.getSwapRequestOrThrow(id);
 
     // 2. Verify receiver
     if (swapRequest.receiverId !== receiverId) {
@@ -340,9 +394,7 @@ class SwapRequestService {
     }
 
     // 3. Only pending requests can be rejected
-    if (swapRequest.status !== SwapStatus.PENDING) {
-      throw new ApiError(400, "Only pending swap requests can be rejected.");
-    }
+    this.ensurePending(swapRequest);
 
     // 4. Update request
     const updatedSwapRequest = await swapRequestRepository.update(id, {
@@ -356,7 +408,9 @@ class SwapRequestService {
 
       action: ActivityAction.REJECT_SWAP_REQUEST_BY_RECEIVER,
 
-      description: `${updatedSwapRequest.receiver.name} rejected the swap request from ${updatedSwapRequest.requester.name}.`,
+      description:
+        `${updatedSwapRequest.receiver.name} rejected ` +
+        `${updatedSwapRequest.requester.name}'s swap request.`,
 
       entityType: EntityType.SWAP_REQUEST,
 
@@ -381,11 +435,7 @@ class SwapRequestService {
     data: CancelSwapRequestDto,
   ): Promise<SwapRequestResponse> {
     // 1. Find swap request
-    const swapRequest = await swapRequestRepository.findById(id);
-
-    if (!swapRequest) {
-      throw new ApiError(404, "Swap request not found");
-    }
+    const swapRequest = await this.getSwapRequestOrThrow(id);
 
     // 2. Only requester can cancel
     if (swapRequest.requesterId !== requesterId) {
@@ -396,9 +446,7 @@ class SwapRequestService {
     }
 
     // 3. Only pending requests can be cancelled
-    if (swapRequest.status !== SwapStatus.PENDING) {
-      throw new ApiError(400, "Only pending swap requests can be cancelled.");
-    }
+    this.ensurePending(swapRequest);
 
     // 4. Update request
     const updatedSwapRequest = await swapRequestRepository.update(id, {
@@ -412,7 +460,9 @@ class SwapRequestService {
 
       action: ActivityAction.CANCEL_SWAP_REQUEST,
 
-      description: `${updatedSwapRequest.requester.name} cancelled the swap request sent to ${updatedSwapRequest.receiver.name}.`,
+      description:
+        `${updatedSwapRequest.requester.name} cancelled the swap request sent to ` +
+        `${updatedSwapRequest.receiver.name}.`,
 
       entityType: EntityType.SWAP_REQUEST,
 
@@ -444,16 +494,10 @@ class SwapRequestService {
     );
 
     // 2. Find swap request
-    const swapRequest = await swapRequestRepository.findById(id);
-
-    if (!swapRequest) {
-      throw new ApiError(404, "Swap request not found");
-    }
+    const swapRequest = await this.getSwapRequestOrThrow(id);
 
     // 3. Must already be accepted
-    if (swapRequest.status !== SwapStatus.ACCEPTED) {
-      throw new ApiError(400, "Only accepted swap requests can be rejected.");
-    }
+    this.ensureAccepted(swapRequest);
 
     // 4. Reject request
     const updatedSwapRequest = await swapRequestRepository.update(id, {

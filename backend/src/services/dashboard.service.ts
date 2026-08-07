@@ -101,7 +101,7 @@ class DashboardService {
   }
 
   async getRecentActivities(limit: number) {
-    return dashboardRepository.getRecentActivities();
+    return dashboardRepository.getRecentActivities(limit);
   }
 
   /**

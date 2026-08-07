@@ -1,33 +1,43 @@
-import DataTable from "@/components/common/DataTable";
 import { useMemo } from "react";
+
+import DataTable from "@/components/common/DataTable";
+
 import { useDepartments } from "../hooks/useDepartments";
 import { getDepartmentColumns } from "../columns";
 
+import { useAuth } from "@/hooks/useAuth";
+import { hasPermission } from "@/permissions/hasPermission";
+
+import type { DepartmentFilters } from "../types/departmentFilters";
+
 interface DepartmentTableProps {
-  search: string;
+  filters: DepartmentFilters;
 }
 
-export default function DepartmentTable({ search }: DepartmentTableProps) {
-  const { data = [], isLoading } = useDepartments();
+export default function DepartmentTable({ filters }: DepartmentTableProps) {
+  const { data = [], isLoading } = useDepartments(filters);
 
-  const filteredDepartments = useMemo(() => {
-    if (!search.trim()) return data;
+  const { user } = useAuth();
 
-    return data.filter((department) =>
-      department.name.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [data, search]);
+  const canEdit = hasPermission(user?.role, "department:edit");
 
-  const columns = useMemo(() => getDepartmentColumns(), []);
+  const canDelete = hasPermission(user?.role, "department:delete");
+
+  const columns = useMemo(
+    () =>
+      getDepartmentColumns({
+        canEdit,
+        canDelete,
+      }),
+    [canEdit, canDelete],
+  );
 
   return (
     <DataTable
       columns={columns}
-      data={filteredDepartments}
+      data={data}
       loading={isLoading}
-      emptyMessage={
-        search ? "No matching departments found." : "No departments found."
-      }
+      emptyMessage="No departments found."
     />
   );
 }

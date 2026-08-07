@@ -1,13 +1,26 @@
+import {
+  transferRequestSelect,
+  type TransferRequestResponse,
+  type ExamDutyResponse,
+} from "../constants/prismaSelect.js";
+
+import type { TransferRequestFilters } from "../types/transferRequestFilter.types.js";
+
+import {
+  TransferStatus,
+  DutyStatus,
+  ActivityAction,
+  EntityType,
+  ExamStatus,
+  Role,
+} from "../generated/prisma/client.js";
 import transferRequestRepository from "../repositories/transferRequest.repository.js";
-import employeeRepository from "../repositories/employee.repository.js";
 import examDutyRepository from "../repositories/examDuty.repository.js";
+import employeeValidationService from "./employeeValidation.service.js";
 import activityLogService from "./activityLog.service.js";
-import { ExamStatus } from "../generated/prisma/client.js";
-import { Role } from "../generated/prisma/client.js";
+import notificationHelperService from "./notificationHelper.service.js";
 
 import { ApiError } from "../utils/apiError.js";
-
-import prisma from "../config/prisma.js";
 
 import type {
   CreateTransferRequestDto,
@@ -16,19 +29,60 @@ import type {
   CancelTransferRequestDto,
 } from "../types/transferRequest.types.js";
 
-import {
-  transferRequestSelect,
-  type TransferRequestResponse,
-} from "../constants/prismaSelect.js";
-
-import {
-  ActivityAction,
-  EntityType,
-  TransferStatus,
-  DutyStatus,
-} from "../generated/prisma/client.js";
-
 class TransferRequestService {
+  private async getTransferRequestOrThrow(
+    id: string,
+  ): Promise<TransferRequestResponse> {
+    const request = await transferRequestRepository.findById(id);
+
+    if (!request) {
+      throw new ApiError(404, "Transfer request not found.");
+    }
+
+    return request;
+  }
+
+  private async getExamDutyOrThrow(id: string): Promise<ExamDutyResponse> {
+    const duty = await examDutyRepository.findById(id);
+
+    if (!duty) {
+      throw new ApiError(404, "Exam duty not found.");
+    }
+
+    return duty;
+  }
+
+  private ensurePending(request: TransferRequestResponse): void {
+    if (request.status !== TransferStatus.PENDING) {
+      throw new ApiError(409, `Transfer request is already ${request.status}.`);
+    }
+  }
+
+  private ensureAssigned(duty: { status: DutyStatus }): void {
+    if (duty.status !== DutyStatus.ASSIGNED) {
+      throw new ApiError(400, "Only assigned duties can be transferred.");
+    }
+  }
+
+  private ensureUpcoming(duty: {
+    exam: {
+      status: ExamStatus;
+    };
+  }): void {
+    if (duty.exam.status !== ExamStatus.UPCOMING) {
+      throw new ApiError(400, "Only upcoming examinations can be transferred.");
+    }
+  }
+
+  private ensureOwnership(duty: ExamDutyResponse, employeeId: string): void {
+    if (duty.employeeId !== employeeId) {
+      throw new ApiError(
+        403,
+        "You can only request transfer for your own examination duty.",
+      );
+    }
+  }
+
   /**
    * Faculty requests transfer
    */
@@ -36,65 +90,27 @@ class TransferRequestService {
     employeeId: string,
     data: CreateTransferRequestDto,
   ): Promise<TransferRequestResponse> {
-    const examDuty = await examDutyRepository.findById(data.examDutyId);
+    const examDuty = await this.getExamDutyOrThrow(data.examDutyId);
 
-    if (!examDuty) {
-      throw new ApiError(404, "Exam duty not found");
-    }
+    this.ensureOwnership(examDuty, employeeId);
 
-    if (examDuty.exam.status !== ExamStatus.UPCOMING) {
-      throw new ApiError(
-        409,
-        "Transfer requests are only allowed for upcoming exams.",
-      );
-    }
+    this.ensureAssigned(examDuty);
 
-    if (examDuty.employeeId !== employeeId) {
-      throw new ApiError(
-        403,
-        "You can only request transfer for your own exam duty",
-      );
-    }
+    this.ensureUpcoming(examDuty);
 
-    if (examDuty.status !== "ASSIGNED") {
-      throw new ApiError(
-        400,
-        "Transfer request can only be made for exam duties that are assigned",
-      );
-    }
+    const existing = await transferRequestRepository.findPendingByExamDuty(
+      data.examDutyId,
+    );
 
-    const existingRequest =
-      await transferRequestRepository.findPendingByExamDuty(data.examDutyId);
-
-    if (existingRequest) {
-      throw new ApiError(
-        409,
-        "A pending transfer request already exists for this exam duty",
-      );
+    if (existing) {
+      throw new ApiError(409, "A pending transfer request already exists.");
     }
 
     if (data.toEmployeeId) {
-      const replacementEmployee = await employeeRepository.findById(
-        data.toEmployeeId,
-      );
-
-      if (!replacementEmployee) {
-        throw new ApiError(404, "Replacement employee not found");
-      }
-
-      if (!replacementEmployee.isActive) {
-        throw new ApiError(400, "Replacement employee is inactive");
-      }
-
-      if (replacementEmployee.id === employeeId) {
-        throw new ApiError(
-          400,
-          "Replacement employee cannot be the same as the requester",
-        );
-      }
+      await employeeValidationService.validateFaculty(data.toEmployeeId);
     }
 
-    const transferRequest = await transferRequestRepository.create({
+    const transfer = await transferRequestRepository.create({
       status: TransferStatus.PENDING,
 
       reason: data.reason,
@@ -107,7 +123,7 @@ class TransferRequestService {
 
       examDuty: {
         connect: {
-          id: data.examDutyId,
+          id: examDuty.id,
         },
       },
 
@@ -120,29 +136,65 @@ class TransferRequestService {
       }),
     });
 
+    const requester = await employeeValidationService.validateEmployee(
+      employeeId,
+      "Employee",
+    );
+
+    if (!requester) {
+      throw new ApiError(404, "Employee not found.");
+    }
+
     await activityLogService.log({
-      employeeId: employeeId,
+      employeeId,
 
       action: ActivityAction.CREATE_TRANSFER_REQUEST,
 
-      description: "Transfer request created",
+      description: `${requester.name} requested a transfer for "${examDuty.exam.examName}".`,
 
       entityType: EntityType.TRANSFER_REQUEST,
 
-      entityId: transferRequest.id,
+      entityId: transfer.id,
     });
 
-    // Notification integration will be added next
-    // await notificationService.create(...);
+    if (data.toEmployeeId) {
+      await notificationHelperService.notify(
+        data.toEmployeeId,
+        "Transfer Request Received",
+        `${requester.name} has requested to transfer an examination duty to you.`,
+      );
+    }
 
-    return transferRequest;
+    return transfer;
   }
 
   /**
    * Get all transfer requests
    */
-  async getAll(): Promise<TransferRequestResponse[]> {
-    return transferRequestRepository.findAll();
+  async getAll(
+    filters: TransferRequestFilters,
+  ): Promise<TransferRequestResponse[]> {
+    return transferRequestRepository.findAll(filters);
+  }
+
+  async getRequests(
+    user: {
+      id: string;
+      role: Role;
+    },
+    filters: TransferRequestFilters,
+  ): Promise<TransferRequestResponse[]> {
+    switch (user.role) {
+      case Role.SUPER_ADMIN:
+      case Role.COE:
+        return transferRequestRepository.findAll(filters);
+
+      case Role.FACULTY:
+        return transferRequestRepository.findForFaculty(user.id, filters);
+
+      default:
+        return [];
+    }
   }
 
   /**
@@ -153,15 +205,11 @@ class TransferRequestService {
     userId: string,
     role: Role,
   ): Promise<TransferRequestResponse> {
-    const transferRequest = await transferRequestRepository.findById(id);
+    const request = await this.getTransferRequestOrThrow(id);
 
-    if (!transferRequest) {
-      throw new ApiError(404, "Transfer request not found");
-    }
+    const isOwner = request.fromEmployeeId === userId;
 
-    const isOwner = transferRequest.fromEmployeeId === userId;
-
-    const isReplacement = transferRequest.toEmployeeId === userId;
+    const isReplacement = request.toEmployeeId === userId;
 
     const isAdmin = role === Role.COE || role === Role.SUPER_ADMIN;
 
@@ -172,9 +220,8 @@ class TransferRequestService {
       );
     }
 
-    return transferRequest;
+    return request;
   }
-
   /**
    * Get pending transfer requests
    */
@@ -186,250 +233,135 @@ class TransferRequestService {
    * Get transfer requests created by an employee
    */
   async getMyRequests(employeeId: string): Promise<TransferRequestResponse[]> {
-    return transferRequestRepository.findByFromEmployee(employeeId);
+    return transferRequestRepository.findForFaculty(employeeId, {});
   }
 
   /**
    * Approve Transfer Request
    */
+
   async approveTransfer(
     id: string,
     approvedById: string,
     data: ApproveTransferRequestDto,
   ): Promise<TransferRequestResponse> {
-    const transferRequest = await transferRequestRepository.findById(id);
+    const approver = await employeeValidationService.validateEmployee(
+      approvedById,
+      "Approver",
+    );
 
-    if (!transferRequest) {
-      throw new ApiError(404, "Transfer request not found");
-    }
+    const transferRequest = await this.getTransferRequestOrThrow(id);
+
+    this.ensurePending(transferRequest);
+
+    this.ensureAssigned(transferRequest.examDuty);
+
+    this.ensureUpcoming(transferRequest.examDuty);
 
     const replacementEmployeeId =
       transferRequest.toEmployeeId ?? data.toEmployeeId;
 
     if (!replacementEmployeeId) {
-      throw new ApiError(400, "Replacement employee is required");
+      throw new ApiError(400, "Replacement employee is required.");
     }
 
-    const replacementEmployee = await employeeRepository.findById(
+    const replacementEmployee = await employeeValidationService.validateFaculty(
       replacementEmployeeId,
+      "Replacement employee",
     );
-
-    if (!replacementEmployee) {
-      throw new ApiError(404, "Replacement employee not found");
-    }
-
-    if (!replacementEmployee.isActive) {
-      throw new ApiError(400, "Replacement employee is inactive");
-    }
-
-    if (replacementEmployee.id === transferRequest.fromEmployeeId) {
-      throw new ApiError(400, "Replacement employee cannot be the requester");
-    }
-
-    if (replacementEmployee.role !== Role.FACULTY) {
-      throw new ApiError(400, "Replacement employee must be a faculty member.");
-    }
-
-    const dutyStatus = transferRequest.examDuty.status;
-
-    if (dutyStatus !== DutyStatus.ASSIGNED) {
-      throw new ApiError(400, "Only assigned duties can be transferred.");
-    }
 
     const existingDuty = await examDutyRepository.findByEmployeeAndExam(
-      replacementEmployeeId,
+      replacementEmployee.id,
       transferRequest.examDuty.exam.id,
     );
-
-    if (transferRequest.examDuty.exam.status !== ExamStatus.UPCOMING) {
-      throw new ApiError(
-        409,
-        "Transfer request cannot be approved because the exam has already started or ended.",
-      );
-    }
-
-    if (transferRequest.status !== TransferStatus.PENDING) {
-      throw new ApiError(
-        409,
-        `Transfer request is already ${transferRequest.status}.`,
-      );
-    }
 
     if (existingDuty && existingDuty.id !== transferRequest.examDutyId) {
       throw new ApiError(
         409,
-        "Replacement employee already has a duty for this exam.",
+        "Replacement employee already has a duty for this examination.",
       );
     }
 
-    return prisma.$transaction(async (tx) => {
-      // 1. Update Transfer Request
-      await tx.transferRequest.update({
-        where: {
-          id: transferRequest.id,
-        },
-        data: {
-          status: TransferStatus.APPROVED,
-          approvedBy: {
-            connect: {
-              id: approvedById,
-            },
-          },
-          approvedAt: new Date(),
-          approvalRemark: data.approvalRemark,
-          toEmployee: {
-            connect: {
-              id: replacementEmployeeId,
-            },
-          },
-        },
+    const updatedTransfer =
+      await transferRequestRepository.approveTransferTransaction({
+        id,
+        approvedById,
+        replacementEmployeeId: replacementEmployee.id,
+        examDutyId: transferRequest.examDutyId,
+        approvalRemark: data.approvalRemark ?? null,
       });
 
-      // 2. Reassign Exam Duty
-      await tx.examDuty.update({
-        where: {
-          id: transferRequest.examDutyId,
-        },
-        data: {
-          employee: {
-            connect: {
-              id: replacementEmployeeId,
-            },
-          },
-        },
-      });
-      // 3. Activity Log
-      await tx.activityLog.create({
-        data: {
-          employee: {
-            connect: {
-              id: approvedById,
-            },
-          },
-          action: ActivityAction.APPROVE_TRANSFER_REQUEST,
-          description: `Transfer request approved`,
-          entityType: EntityType.TRANSFER_REQUEST,
-          entityId: transferRequest.id,
-        },
-      });
+    await activityLogService.log({
+      employeeId: approvedById,
 
-      // 4. Notify Requester
-      await tx.notification.create({
-        data: {
-          employee: {
-            connect: {
-              id: transferRequest.fromEmployeeId,
-            },
-          },
-          title: "Transfer Request Approved",
-          message: "Your transfer request has been approved.",
-        },
-      });
+      action: ActivityAction.APPROVE_TRANSFER_REQUEST,
 
-      // 5. Notify Replacement Faculty
-      await tx.notification.create({
-        data: {
-          employee: {
-            connect: {
-              id: replacementEmployeeId,
-            },
-          },
-          title: "New Examination Duty",
-          message: "A new examination duty has been assigned to you.",
-        },
-      });
+      description: `${approver.name} approved ${transferRequest.fromEmployee.name}'s transfer request for "${transferRequest.examDuty.exam.examName}".`,
 
-      // 6. Return Updated Transfer Request
-      const updatedTransferRequest = await tx.transferRequest.findUniqueOrThrow(
-        {
-          where: {
-            id: transferRequest.id,
-          },
-          select: transferRequestSelect,
-        },
-      );
+      entityType: EntityType.TRANSFER_REQUEST,
 
-      return updatedTransferRequest;
+      entityId: updatedTransfer.id,
     });
+
+    await notificationHelperService.notify(
+      transferRequest.fromEmployeeId,
+      "Transfer Request Approved",
+      "Your transfer request has been approved.",
+    );
+
+    await notificationHelperService.notify(
+      replacementEmployee.id,
+      "New Examination Duty",
+      `You have been assigned "${transferRequest.examDuty.exam.examName}".`,
+    );
+
+    return updatedTransfer;
   }
 
   /**
    * Reject Transfer Request
    */
+
   async rejectTransfer(
     id: string,
     approvedById: string,
     data: RejectTransferRequestDto,
   ): Promise<TransferRequestResponse> {
-    const transferRequest = await transferRequestRepository.findById(id);
+    const approver = await employeeValidationService.validateEmployee(
+      approvedById,
+      "Approver",
+    );
 
-    if (!transferRequest) {
-      throw new ApiError(404, "Transfer request not found");
-    }
+    const transferRequest = await this.getTransferRequestOrThrow(id);
 
-    if (transferRequest.status !== TransferStatus.PENDING) {
-      throw new ApiError(
-        409,
-        `Transfer request is already ${transferRequest.status}.`,
-      );
-    }
+    this.ensurePending(transferRequest);
 
-    const approver = await employeeRepository.findById(approvedById);
-
-    if (!approver) {
-      throw new ApiError(404, "Approver not found");
-    }
-
-    return prisma.$transaction(async (tx) => {
-      await tx.transferRequest.update({
-        where: {
-          id,
-        },
-        data: {
-          status: TransferStatus.REJECTED,
-          approvedAt: new Date(),
-          approvalRemark: data.approvalRemark,
-          approvedBy: {
-            connect: {
-              id: approvedById,
-            },
-          },
-        },
+    const updatedTransfer =
+      await transferRequestRepository.rejectTransferTransaction({
+        id,
+        approvedById,
+        approvalRemark: data.approvalRemark ?? null,
       });
 
-      await tx.activityLog.create({
-        data: {
-          employee: {
-            connect: {
-              id: approvedById,
-            },
-          },
-          action: ActivityAction.REJECT_TRANSFER_REQUEST,
-          description: `${approver.name} rejected transfer request of ${transferRequest.fromEmployee.name}.`,
-          entityType: EntityType.TRANSFER_REQUEST,
-          entityId: transferRequest.id,
-        },
-      });
+    await activityLogService.log({
+      employeeId: approvedById,
 
-      await tx.notification.create({
-        data: {
-          employee: {
-            connect: {
-              id: transferRequest.fromEmployeeId,
-            },
-          },
-          title: "Transfer Request Rejected",
-          message: `Your transfer request for ${transferRequest.examDuty.exam.examName} has been rejected.`,
-        },
-      });
+      action: ActivityAction.REJECT_TRANSFER_REQUEST,
 
-      return tx.transferRequest.findUniqueOrThrow({
-        where: {
-          id,
-        },
-        select: transferRequestSelect,
-      });
+      description: `${approver.name} rejected ${transferRequest.fromEmployee.name}'s transfer request.`,
+
+      entityType: EntityType.TRANSFER_REQUEST,
+
+      entityId: updatedTransfer.id,
     });
+
+    await notificationHelperService.notify(
+      transferRequest.fromEmployeeId,
+      "Transfer Request Rejected",
+      `Your transfer request for "${transferRequest.examDuty.exam.examName}" has been rejected.`,
+    );
+
+    return updatedTransfer;
   }
 
   /**
@@ -440,24 +372,15 @@ class TransferRequestService {
     employeeId: string,
     data: CancelTransferRequestDto,
   ): Promise<TransferRequestResponse> {
-    const transferRequest = await transferRequestRepository.findById(id);
+    const transferRequest = await this.getTransferRequestOrThrow(id);
 
-    if (!transferRequest) {
-      throw new ApiError(404, "Transfer request not found");
-    }
-
-    if (transferRequest.status !== TransferStatus.PENDING) {
-      throw new ApiError(
-        409,
-        `Transfer request is already ${transferRequest.status}.`,
-      );
-    }
+    this.ensurePending(transferRequest);
 
     if (transferRequest.fromEmployeeId !== employeeId) {
       throw new ApiError(403, "You can only cancel your own transfer request.");
     }
 
-    const cancelledRequest = await transferRequestRepository.update(id, {
+    const cancelled = await transferRequestRepository.update(id, {
       status: TransferStatus.CANCELLED,
       reason: data.reason ?? transferRequest.reason,
     });
@@ -467,14 +390,22 @@ class TransferRequestService {
 
       action: ActivityAction.CANCEL_TRANSFER_REQUEST,
 
-      description: `${transferRequest.fromEmployee.name} cancelled the transfer request.`,
+      description: `${transferRequest.fromEmployee.name} cancelled the transfer request for "${transferRequest.examDuty.exam.examName}".`,
 
       entityType: EntityType.TRANSFER_REQUEST,
 
-      entityId: transferRequest.id,
+      entityId: cancelled.id,
     });
 
-    return cancelledRequest;
+    if (transferRequest.toEmployeeId) {
+      await notificationHelperService.notify(
+        transferRequest.toEmployeeId,
+        "Transfer Request Cancelled",
+        `${transferRequest.fromEmployee.name} cancelled the transfer request.`,
+      );
+    }
+
+    return cancelled;
   }
 }
 

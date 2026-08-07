@@ -3,30 +3,32 @@ import { z } from "zod";
 /**
  * Create Employee Validation
  */
-export const createEmployeeSchema = z.object({
-  employeeCode: z.string().trim().min(2).max(20),
+export const createEmployeeSchema = z
+  .object({
+    employeeCode: z.string().trim().min(2).max(20),
 
-  name: z.string().trim().min(2).max(100),
+    name: z.string().trim().min(2).max(100),
 
-  email: z.string().email(),
+    email: z.string().email(),
 
-  password: z
-    .string()
-    .min(8)
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
-    .max(100),
+    password: z
+      .string()
+      .min(8)
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
+      .max(100),
 
-  designation: z.string().trim().min(2).max(100),
+    designation: z.string().trim().min(2).max(100),
 
-  departmentId: z.uuid(),
+    departmentId: z.uuid(),
 
-  role: z.enum(["SUPER_ADMIN", "COE", "HOD", "FACULTY"]),
+    role: z.enum(["SUPER_ADMIN", "COE", "HOD", "FACULTY"]),
 
-  phone: z
-    .string()
-    .regex(/^[0-9]{10}$/)
-    .optional(),
-}).strict();
+    phone: z
+      .union([z.literal(""), z.string().regex(/^[0-9]{10}$/)])
+      .transform((v) => (v === "" ? undefined : v))
+      .optional(),
+  })
+  .strict();
 
 /**
  * Update Employee Validation
@@ -46,9 +48,10 @@ export const updateEmployeeSchema = z
     role: z.enum(["SUPER_ADMIN", "COE", "HOD", "FACULTY"]).optional(),
 
     phone: z
-      .string()
-      .regex(/^[0-9]{10}$/)
+      .union([z.literal(""), z.string().regex(/^[0-9]{10}$/)])
+      .transform((v) => (v === "" ? undefined : v))
       .optional(),
 
     isActive: z.boolean().optional(),
-  }).strict();
+  })
+  .strict();

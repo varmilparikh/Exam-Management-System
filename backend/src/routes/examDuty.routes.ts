@@ -3,9 +3,13 @@ import { Router } from "express";
 import {
   createExamDuty,
   getExamDuties,
+  getMyDuties,
+  getMyUpcomingDuties,
+  getEmployeeDuties,
+  getExamDutiesByExam,
   getExamDutyById,
   updateExamDuty,
-  deleteExamDuty
+  deleteExamDuty,
 } from "../controllers/examDuty.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -18,7 +22,6 @@ import {
 } from "../validators/examDuty.validator.js";
 
 import { uuidParamSchema } from "../validators/common.validator.js";
-
 
 const router = Router();
 
@@ -41,6 +44,36 @@ router.get(
   verifyJWT,
   authorizeRoles("SUPER_ADMIN", "COE", "HOD", "FACULTY"),
   getExamDuties,
+);
+
+router.get(
+  "/me/upcoming",
+  verifyJWT,
+  authorizeRoles("FACULTY", "COE", "SUPER_ADMIN", "HOD"),
+  getMyUpcomingDuties,
+);
+
+router.get(
+  "/me",
+  verifyJWT,
+  authorizeRoles("FACULTY", "COE", "SUPER_ADMIN", "HOD"),
+  getMyDuties,
+);
+
+router.get(
+  "/employee/:employeeId",
+  verifyJWT,
+  authorizeRoles("FACULTY", "COE", "SUPER_ADMIN", "HOD"),
+  validate(uuidParamSchema, "params"),
+  getEmployeeDuties,
+);
+
+router.get(
+  "/exam/:examId",
+  verifyJWT,
+  authorizeRoles("FACULTY", "COE", "SUPER_ADMIN", "HOD"),
+  validate(uuidParamSchema, "params"),
+  getExamDutiesByExam,
 );
 
 /**

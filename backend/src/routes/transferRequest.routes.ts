@@ -24,7 +24,6 @@ import {
 
 import { uuidParamSchema } from "../validators/common.validator.js";
 
-
 const router = Router();
 
 /**
@@ -34,11 +33,7 @@ const router = Router();
 router.post(
   "/",
   verifyJWT,
-  authorizeRoles(
-    "FACULTY",
-    "COE",
-    "SUPER_ADMIN",
-  ),
+  authorizeRoles("FACULTY"),
   validate(createTransferRequestSchema),
   createTransferRequest,
 );
@@ -69,11 +64,7 @@ router.get(
 router.get(
   "/my",
   verifyJWT,
-  authorizeRoles(
-    "FACULTY",
-    "COE",
-    "SUPER_ADMIN",
-  ),
+  authorizeRoles("FACULTY", "COE", "SUPER_ADMIN"),
   getMyTransferRequests,
 );
 

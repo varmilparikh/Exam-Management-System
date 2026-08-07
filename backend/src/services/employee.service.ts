@@ -16,6 +16,8 @@ import type {
 } from "../types/employee.types.js";
 import { EmployeeResponse } from "../constants/prismaSelect.js";
 
+import type { EmployeeFilters } from "../types/employeeFilter.types.js";
+
 class EmployeeService {
   /**
    * Create Employee
@@ -85,8 +87,8 @@ class EmployeeService {
   /**
    * Get All Employees
    */
-  async getAll(): Promise<EmployeeResponse[]> {
-    return employeeRepository.findAll();
+  async getAll(filters: EmployeeFilters): Promise<EmployeeResponse[]> {
+    return employeeRepository.findAll(filters);
   }
 
   /**
@@ -138,12 +140,14 @@ class EmployeeService {
       }
     }
 
+    const { departmentId, ...rest } = data;
+
     const updatedEmployee = await employeeRepository.update(id, {
-      ...data,
-      department: data.departmentId
+      ...rest,
+      department: departmentId
         ? {
             connect: {
-              id: data.departmentId,
+              id: departmentId,
             },
           }
         : undefined,

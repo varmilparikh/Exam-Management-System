@@ -4,6 +4,8 @@ import type { ApiResponse } from "@/types/api";
 
 import type { Employee } from "../types/employee";
 
+import type { EmployeeFilters } from "../types/employeeFilters";
+
 export interface CreateEmployeeDto {
   employeeCode: string;
   name: string;
@@ -26,8 +28,22 @@ export interface UpdateEmployeeDto {
   isActive?: boolean;
 }
 
-async function getAll() {
-  const response = await api.get<ApiResponse<Employee[]>>("/employees");
+const DEFAULT_FILTERS: EmployeeFilters = {
+  search: "",
+  departmentId: "",
+  role: "",
+  status: "",
+};
+
+async function getAll(filters: EmployeeFilters = DEFAULT_FILTERS) {
+  const response = await api.get<ApiResponse<Employee[]>>("/employees", {
+    params: {
+      search: filters.search || undefined,
+      departmentId: filters.departmentId || undefined,
+      role: filters.role || undefined,
+      status: filters.status || undefined,
+    },
+  });
 
   return response.data.data;
 }

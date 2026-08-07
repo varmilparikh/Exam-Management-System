@@ -5,6 +5,7 @@ import type { CreateExamDto, UpdateExamDto } from "../types/exam.types.js";
 import type { ExamResponse } from "../constants/prismaSelect.js";
 import { ExamStatus } from "../generated/prisma/client.js";
 import { isPastDate } from "../utils/date.utils.js";
+import type { ExamFilters } from "../types/examFilter.types.js";
 
 class ExamService {
   /**
@@ -43,8 +44,8 @@ class ExamService {
   /**
    * Get All Exams
    */
-  async getAll(): Promise<ExamResponse[]> {
-    return examRepository.findAll();
+  async getAll(filters: ExamFilters) {
+    return examRepository.findAll(filters);
   }
 
   /**

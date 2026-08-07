@@ -13,6 +13,7 @@ import type {
   CreateTransferRequestDto,
   RejectTransferRequestDto,
 } from "../types/transferRequest.types.js";
+import { TransferStatus } from "../generated/prisma/browser.js";
 
 /**
  * Create Transfer Request
@@ -49,8 +50,18 @@ export const createTransferRequest = asyncHandler(
  * Get All Transfer Requests
  */
 export const getTransferRequests = asyncHandler(
-  async (_req: Request, res: Response): Promise<void> => {
-    const transferRequests = await transferRequestService.getAll();
+  async (req: Request, res: Response): Promise<void> => {
+    const filters = {
+      search:
+        typeof req.query.search === "string" ? req.query.search : undefined,
+
+      status:
+        typeof req.query.status === "string"
+          ? (req.query.status as TransferStatus)
+          : undefined,
+    };
+
+    const transferRequests = await transferRequestService.getAll(filters);
 
     res
       .status(200)
@@ -68,8 +79,12 @@ export const getTransferRequests = asyncHandler(
  * Get Pending Transfer Requests
  */
 export const getPendingTransferRequests = asyncHandler(
-  async (_req: Request, res: Response): Promise<void> => {
-    const transferRequests = await transferRequestService.getPending();
+  async (req: Request, res: Response): Promise<void> => {
+    const filters = {
+      status: TransferStatus.PENDING,
+    };
+
+    const transferRequests = await transferRequestService.getAll(filters);
 
     res
       .status(200)

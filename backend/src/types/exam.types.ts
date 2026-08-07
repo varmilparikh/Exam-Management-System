@@ -1,4 +1,5 @@
 import type { ExamResponse } from "../constants/prismaSelect.js";
+import type { ExamStatus } from "../generated/prisma/client.js";
 
 export type ExamResponseDto = ExamResponse;
 
@@ -18,4 +19,5 @@ export interface UpdateExamDto {
   examName?: string;
   examDate?: Date;
   requiredFaculty?: number;
+  status?: ExamStatus;
 }

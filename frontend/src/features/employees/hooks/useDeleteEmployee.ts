@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { employeeService } from "../api/employee.service";
+import { employeeKeys } from "../queryKeys";
 
 export function useDeleteEmployee() {
   const queryClient = useQueryClient();
@@ -14,7 +15,7 @@ export function useDeleteEmployee() {
       toast.success("Employee deleted successfully.");
 
       queryClient.invalidateQueries({
-        queryKey: ["employees"],
+        queryKey: employeeKeys.all,
       });
     },
 

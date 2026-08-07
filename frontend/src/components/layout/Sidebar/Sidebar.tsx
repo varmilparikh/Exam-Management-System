@@ -1,9 +1,14 @@
 import { NavLink } from "react-router-dom";
 
-import { navigation } from "@/constants/navigation";
+import { getNavigation } from "@/permissions";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 export default function Sidebar() {
+  const { user } = useAuth();
+
+  const navigation = getNavigation(user?.role);
+
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-white">
       <div className="border-b p-6">

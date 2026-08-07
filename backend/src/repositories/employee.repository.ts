@@ -6,8 +6,7 @@ import {
   employeeSelect,
   type EmployeeResponse,
 } from "../constants/prismaSelect.js";
-
-import type { Employee } from "../generated/prisma/client.js";
+import type { EmployeeFilters } from "../types/employeeFilter.types.js";
 
 class EmployeeRepository {
   /**
@@ -82,14 +81,57 @@ class EmployeeRepository {
   /**
    * Get all employees
    */
-  async findAll(): Promise<EmployeeResponse[]> {
+  async findAll(filters: EmployeeFilters): Promise<EmployeeResponse[]> {
+    const where: Prisma.EmployeeWhereInput = {
+      isDeleted: false,
+    };
+
+    if (filters.search) {
+      where.OR = [
+        {
+          name: {
+            contains: filters.search,
+            mode: "insensitive",
+          },
+        },
+        {
+          employeeCode: {
+            contains: filters.search,
+            mode: "insensitive",
+          },
+        },
+        {
+          email: {
+            contains: filters.search,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
+
+    if (filters.departmentId) {
+      where.departmentId = filters.departmentId;
+    }
+
+    if (filters.role) {
+      where.role = filters.role;
+    }
+
+    if (filters.status === "ACTIVE") {
+      where.isActive = true;
+    }
+
+    if (filters.status === "INACTIVE") {
+      where.isActive = false;
+    }
+
     return prisma.employee.findMany({
-      where: {
-        isDeleted: false,
-      },
+      where,
+
       orderBy: {
         name: "asc",
       },
+
       select: employeeSelect,
     });
   }
