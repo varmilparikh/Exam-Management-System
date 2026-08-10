@@ -17,6 +17,7 @@
     "deploy": "prisma migrate deploy",
     "seed": "prisma db seed",
     "reset-db": "prisma migrate reset",
+    "reset-admin": "tsx prisma/reset-admin.ts",
 
     "setup": "npm run generate && npm run migrate && npm run seed",
     "postinstall": "prisma generate",
