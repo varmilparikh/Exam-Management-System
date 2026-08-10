@@ -20,12 +20,14 @@ export function getMyExamDutyColumns(): Column<ExamDuty>[] {
       title: "Exam",
       render: (duty) => duty.exam.examName,
     },
+
     {
       id: "date",
       key: "examId",
       title: "Exam Date",
       render: (duty) => new Date(duty.exam.examDate).toLocaleDateString(),
     },
+
     {
       id: "status",
       key: "status",
@@ -34,6 +36,7 @@ export function getMyExamDutyColumns(): Column<ExamDuty>[] {
         <Badge variant={statusVariants[duty.status]}>{duty.status}</Badge>
       ),
     },
+
     {
       id: "actions",
       title: "Actions",

@@ -4,26 +4,27 @@ import AppLayout from "@/layouts/AppLayout";
 
 import { DashboardPage } from "@/features/dashboard";
 import { LoginPage } from "@/features/auth";
-
-import ProtectedRoute from "./ProtectedRoute";
-import PublicRoute from "./PublicRoute";
-
 import { DepartmentsPage } from "@/features/departments";
 import { EmployeesPage } from "@/features/employees";
 import { ExamsPage } from "@/features/exams";
 import { ExamDutiesPage } from "@/features/exam-duties";
 import { TransferRequestsPage } from "@/features/transfer-requests";
-import { ROUTES } from "@/constants/routes";
 import SwapRequestsPage from "@/features/swap-requests/pages/SwapRequestsPage";
+
+import { ROUTES } from "@/constants/routes";
+
+import ProtectedRoute from "./ProtectedRoute";
+import PublicRoute from "./PublicRoute";
 import PermissionRoute from "./PermissionRoute";
 
 function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Routes */}
+        {/* ================= PUBLIC ================= */}
+
         <Route
-          path="/login"
+          path={ROUTES.LOGIN}
           element={
             <PublicRoute>
               <LoginPage />
@@ -31,7 +32,8 @@ function AppRouter() {
           }
         />
 
-        {/* Protected Routes */}
+        {/* ================= PROTECTED ================= */}
+
         <Route
           element={
             <ProtectedRoute>
@@ -39,8 +41,10 @@ function AppRouter() {
             </ProtectedRoute>
           }
         >
+          {/* Dashboard */}
           <Route path={ROUTES.HOME} element={<DashboardPage />} />
 
+          {/* Departments */}
           <Route
             path={ROUTES.DEPARTMENTS}
             element={
@@ -50,6 +54,7 @@ function AppRouter() {
             }
           />
 
+          {/* Employees */}
           <Route
             path={ROUTES.EMPLOYEES}
             element={
@@ -59,6 +64,7 @@ function AppRouter() {
             }
           />
 
+          {/* Exams */}
           <Route
             path={ROUTES.EXAMS}
             element={
@@ -68,6 +74,7 @@ function AppRouter() {
             }
           />
 
+          {/* Exam Duties */}
           <Route
             path={ROUTES.DUTIES}
             element={
@@ -77,6 +84,7 @@ function AppRouter() {
             }
           />
 
+          {/* Transfer Requests */}
           <Route
             path={ROUTES.TRANSFER_REQUESTS}
             element={
@@ -86,6 +94,7 @@ function AppRouter() {
             }
           />
 
+          {/* Swap Requests */}
           <Route
             path={ROUTES.SWAP_REQUESTS}
             element={

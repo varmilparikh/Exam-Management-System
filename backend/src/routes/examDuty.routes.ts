@@ -5,6 +5,7 @@ import {
   getExamDuties,
   getMyDuties,
   getMyUpcomingDuties,
+  getFacultyUpcomingDuties,
   getEmployeeDuties,
   getExamDutiesByExam,
   getExamDutyById,
@@ -21,7 +22,10 @@ import {
   updateExamDutySchema,
 } from "../validators/examDuty.validator.js";
 
-import { uuidParamSchema } from "../validators/common.validator.js";
+import {
+  uuidParamSchema,
+  employeeIdParamSchema,
+} from "../validators/common.validator.js";
 
 const router = Router();
 
@@ -51,6 +55,14 @@ router.get(
   verifyJWT,
   authorizeRoles("FACULTY", "COE", "SUPER_ADMIN", "HOD"),
   getMyUpcomingDuties,
+);
+
+router.get(
+  "/faculty/:employeeId/upcoming",
+  verifyJWT,
+  authorizeRoles("FACULTY", "COE", "SUPER_ADMIN", "HOD"),
+  validate(employeeIdParamSchema, "params"),
+  getFacultyUpcomingDuties,
 );
 
 router.get(

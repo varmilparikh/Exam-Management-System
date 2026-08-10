@@ -1,14 +1,19 @@
 // common.validator.ts
 import { z } from "zod";
 
-export const uuidParamSchema = z.object({
-  id: z.uuid("Invalid UUID"),
-}).strict();
+export const uuidParamSchema = z
+  .object({
+    id: z.uuid("Invalid UUID"),
+  })
+  .strict();
+
+export const employeeIdParamSchema = z.object({
+  employeeId: z.string().uuid(),
+});
 
 export const phoneSchema = z
   .string()
   .regex(/^[0-9]{10}$/, "Phone number must contain exactly 10 digits");
-
 
 export const passwordSchema = z
   .string()

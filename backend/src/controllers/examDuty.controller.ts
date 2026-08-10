@@ -87,6 +87,33 @@ export const getMyUpcomingDuties = asyncHandler(
   },
 );
 
+/**
+ * Get upcoming duties of a specific faculty member
+ *
+ * Used by the swap-request form so a faculty member
+ * can select one of the receiver's available duties.
+ */
+export const getFacultyUpcomingDuties = asyncHandler(
+  async (
+    req: Request<{ employeeId: string }>,
+    res: Response,
+  ): Promise<void> => {
+    const { employeeId } = req.params;
+
+    const duties = await examDutyService.getUpcomingByEmployee(employeeId);
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          duties,
+          "Faculty upcoming duties fetched successfully",
+        ),
+      );
+  },
+);
+
 export const getMyDuties = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     if (!req.user) {

@@ -65,7 +65,7 @@ router.patch(
 router.patch(
   "/:id/approve",
   verifyJWT,
-  authorizeRoles("COE"),
+  authorizeRoles("SUPER_ADMIN", "COE"),
   validate(uuidParamSchema, "params"),
   validate(approveSwapRequestSchema),
   approveSwapRequest,
@@ -74,7 +74,7 @@ router.patch(
 router.patch(
   "/:id/reject-by-coe",
   verifyJWT,
-  authorizeRoles("COE"),
+  authorizeRoles("SUPER_ADMIN", "COE"),
   validate(uuidParamSchema, "params"),
   validate(rejectSwapByCoeSchema),
   rejectSwapByCoe,

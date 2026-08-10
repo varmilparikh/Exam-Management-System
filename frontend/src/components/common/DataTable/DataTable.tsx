@@ -9,22 +9,22 @@ export default function DataTable<T extends { id: string }>({
 }: DataTableProps<T>) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-10">
+      <div className="flex min-h-40 items-center justify-center">
         <Spinner />
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
-      <table className="min-w-full border-collapse">
-        <thead className="bg-gray-100">
-          <tr>
+    <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-gray-50">
             {columns.map((column) => (
               <th
-                key={String(column.key)}
+                key={column.id}
                 style={{ width: column.width }}
-                className={`px-4 py-3 text-sm font-semibold ${
+                className={`px-4 py-3 text-sm font-semibold text-gray-700 ${
                   column.align === "center"
                     ? "text-center"
                     : column.align === "right"
@@ -56,7 +56,7 @@ export default function DataTable<T extends { id: string }>({
               >
                 {columns.map((column) => (
                   <td
-                    key={String(column.key)}
+                    key={`${row.id}-${column.id}`}
                     className={`px-4 py-3 ${
                       column.align === "center"
                         ? "text-center"

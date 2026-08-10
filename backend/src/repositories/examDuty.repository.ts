@@ -110,7 +110,7 @@ class ExamDutyRepository {
    */
   async findUpcomingByEmployee(
     employeeId: string,
-    limit = 5,
+    limit = 50,
   ): Promise<ExamDutyResponse[]> {
     return prisma.examDuty.findMany({
       where: {

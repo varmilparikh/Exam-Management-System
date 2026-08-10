@@ -1,11 +1,12 @@
 import { useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import Button from "@/components/ui/Button";
 import FormField from "@/components/ui/FormField";
 import Select from "@/components/ui/Select";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useEmployees } from "@/features/employees/hooks/useEmployees";
 import { useFacultyUpcomingDuties } from "@/features/exam-duties/hooks/useFacultyUpcomingDuties";
 
@@ -17,7 +18,6 @@ import {
 interface Props {
   requesterDutyId: string;
   loading?: boolean;
-
   onSubmit: (data: CreateSwapRequestFormValues) => Promise<void>;
 }
 
@@ -26,9 +26,11 @@ export default function SwapRequestForm({
   loading,
   onSubmit,
 }: Props) {
+  const { user } = useAuth();
+
   const {
     register,
-    watch,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<CreateSwapRequestFormValues>({
@@ -42,28 +44,45 @@ export default function SwapRequestForm({
     },
   });
 
-  const receiverId = watch("receiverId");
+  /*
+   * useWatch is preferred over watch() here because React Compiler
+   * considers react-hook-form's watch() function incompatible with
+   * automatic memoization.
+   */
+  const receiverId = useWatch({
+    control,
+    name: "receiverId",
+  });
 
   const { data: employees = [] } = useEmployees();
 
-  const { data: duties = [] } = useFacultyUpcomingDuties(receiverId);
+  const { data: duties = [], isLoading: dutiesLoading } =
+    useFacultyUpcomingDuties(receiverId);
 
+  /*
+   * Show only active faculty and prevent the logged-in faculty
+   * from selecting themselves.
+   */
   const facultyOptions = useMemo(
     () =>
       employees
-        .filter((employee) => employee.role === "FACULTY" && employee.isActive)
+        .filter(
+          (employee) =>
+            employee.role === "FACULTY" &&
+            employee.isActive &&
+            employee.id !== user?.id,
+        )
         .map((employee) => ({
           label: `${employee.name} (${employee.employeeCode})`,
           value: employee.id,
         })),
-    [employees],
+    [employees, user?.id],
   );
 
   const dutyOptions = useMemo(
     () =>
       duties.map((duty) => ({
         value: duty.id,
-
         label: `${duty.exam.examName} • ${new Date(
           duty.exam.examDate,
         ).toLocaleDateString()}`,
@@ -88,8 +107,14 @@ export default function SwapRequestForm({
       >
         <Select
           options={dutyOptions}
-          placeholder="Select Duty"
-          disabled={!receiverId}
+          placeholder={
+            !receiverId
+              ? "Select faculty first"
+              : dutiesLoading
+                ? "Loading duties..."
+                : "Select Duty"
+          }
+          disabled={!receiverId || dutiesLoading}
           {...register("receiverDutyId")}
         />
       </FormField>
@@ -97,6 +122,7 @@ export default function SwapRequestForm({
       <FormField label="Reason" error={errors.reason?.message}>
         <textarea
           className="min-h-28 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          placeholder="Enter reason for requesting this swap..."
           {...register("reason")}
         />
       </FormField>
