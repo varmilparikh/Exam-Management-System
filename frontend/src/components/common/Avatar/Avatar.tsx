@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { cn } from "@/lib/utils";
 
 interface AvatarProps {
@@ -15,7 +17,9 @@ const sizes = {
 
 function getInitials(name: string) {
   return name
+    .trim()
     .split(" ")
+    .filter(Boolean)
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
@@ -28,11 +32,14 @@ export default function Avatar({
   size = "md",
   className,
 }: AvatarProps) {
-  if (src) {
+  const [failedSource, setFailedSource] = useState<string | null>(null);
+
+  if (src && src !== failedSource) {
     return (
       <img
         src={src}
         alt={name}
+        onError={() => setFailedSource(src)}
         className={cn(
           "rounded-full border object-cover",
           sizes[size],
@@ -50,7 +57,7 @@ export default function Avatar({
         className,
       )}
     >
-      {getInitials(name)}
+      {getInitials(name) || "?"}
     </div>
   );
 }
