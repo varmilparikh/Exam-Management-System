@@ -6,7 +6,8 @@ import { AUTH_COOKIES, COOKIE_MAX_AGE } from "./constants.js";
 const commonCookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === "production",
-  sameSite: "lax" as const,
+  sameSite:
+    env.NODE_ENV === "production" ? ("none" as const) : ("lax" as const),
 };
 
 export function setAuthCookies(
