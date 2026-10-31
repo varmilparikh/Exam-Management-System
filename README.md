@@ -190,7 +190,14 @@ cd frontend
 npm install
 ```
 
-Create `frontend/.env` and set `VITE_API_BASE_URL` to the backend API URL (for example, `http://localhost:5000/api`).
+Create `frontend/.env` from `.env.example`. The default `/api` base URL works
+with the Vite proxy during local development.
+
+The frontend uses `/api` in production so authentication cookies stay on the
+frontend origin. The Vite development server proxies `/api` to
+`http://localhost:5000`. For a Render static site, add a rewrite rule for
+`/api/*` to the backend service's `/api/*` URL before the client-side route
+fallback to `/index.html`.
 
 ```bash
 npm run dev
