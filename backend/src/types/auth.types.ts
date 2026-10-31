@@ -1,4 +1,5 @@
 import type { EmployeeResponseDto } from "./employee.types.js";
+import type { Role } from "../generated/prisma/client.js";
 
 export interface LoginResult {
   employee: EmployeeResponseDto;
@@ -12,6 +13,8 @@ export interface RegisterUserDto {
   password: string;
   designation: string;
   departmentId: string;
+  role: Role;
+  phone?: string;
 }
 
 export interface LoginUserDto {

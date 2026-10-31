@@ -1,14 +1,37 @@
 import prisma from "../config/prisma.js";
 
-import type { Prisma, Role } from "../generated/prisma/client.js";
+import { Role, type Prisma } from "../generated/prisma/client.js";
 
 import {
   employeeSelect,
+  facultyOptionSelect,
+  type FacultyOption,
   type EmployeeResponse,
 } from "../constants/prismaSelect.js";
 import type { EmployeeFilters } from "../types/employeeFilter.types.js";
 
 class EmployeeRepository {
+  async findDepartmentIdByEmployee(employeeId: string): Promise<string | null> {
+    const employee = await prisma.employee.findFirst({
+      where: { id: employeeId, isDeleted: false },
+      select: { departmentId: true },
+    });
+
+    return employee?.departmentId ?? null;
+  }
+
+  async findActiveFacultyOptions(): Promise<FacultyOption[]> {
+    return prisma.employee.findMany({
+      where: {
+        role: Role.FACULTY,
+        isActive: true,
+        isDeleted: false,
+      },
+      orderBy: { name: "asc" },
+      select: facultyOptionSelect,
+    });
+  }
+
   /**
    * Find employee by ID
    */

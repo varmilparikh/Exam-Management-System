@@ -427,12 +427,13 @@ class DashboardRepository {
   /**
    * Get Faculty Workload
    */
-  async getFacultyWorkload(limit: number = 10) {
+  async getFacultyWorkload(limit: number = 10, departmentId?: string) {
     return prisma.employee.findMany({
       where: {
         role: Role.FACULTY,
         isDeleted: false,
         isActive: true,
+        ...(departmentId ? { departmentId } : {}),
       },
 
       orderBy: [

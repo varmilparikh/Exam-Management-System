@@ -12,6 +12,7 @@ import type {
 } from "../types/examDuty.types.js";
 
 import type { ExamDutyResponse } from "../constants/prismaSelect.js";
+import { hasSessionStarted } from "../utils/examSession.utils.js";
 
 class ExamDutyService {
   /**
@@ -36,10 +37,10 @@ class ExamDutyService {
       throw new ApiError(404, "Exam not found");
     }
 
-    if (exam.status !== ExamStatus.UPCOMING) {
+    if (exam.status !== ExamStatus.UPCOMING || hasSessionStarted(exam)) {
       throw new ApiError(
         400,
-        "Only upcoming exams can receive duty assignments",
+        "Only upcoming exam sessions can receive duty assignments",
       );
     }
 
@@ -53,7 +54,10 @@ class ExamDutyService {
       throw new ApiError(409, "Employee is already assigned to this exam");
     }
 
-    return examDutyRepository.createAssignedWithCapacity(data.employeeId, data.examId);
+    return examDutyRepository.createAssignedWithCapacity(
+      data.employeeId,
+      data.examId,
+    );
   }
 
   /**
@@ -126,6 +130,17 @@ class ExamDutyService {
     }
 
     if (data.status) {
+      if (
+        (data.status === DutyStatus.ATTENDED ||
+          data.status === DutyStatus.ABSENT) &&
+        !hasSessionStarted(examDuty.exam)
+      ) {
+        throw new ApiError(
+          409,
+          "Duty attendance can only be recorded after the session starts.",
+        );
+      }
+
       if (
         examDuty.status === DutyStatus.ATTENDED ||
         examDuty.status === DutyStatus.ABSENT

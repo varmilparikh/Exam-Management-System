@@ -1,4 +1,7 @@
-import type { TransferRequestType, TransferStatus } from "../generated/prisma/client.js";
+import type {
+  TransferRequestType,
+  TransferStatus,
+} from "../generated/prisma/client.js";
 
 /**
  * Create Transfer Request DTO
@@ -27,6 +30,8 @@ export interface ApproveTransferTransactionData {
   replacementEmployeeId: string;
 
   examDutyId: string;
+
+  fromEmployeeId: string;
 
   approvalRemark: string | null;
 }

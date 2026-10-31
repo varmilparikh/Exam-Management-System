@@ -67,6 +67,16 @@ export type EmployeeResponse = Prisma.EmployeeGetPayload<{
   select: typeof employeeSelect;
 }>;
 
+export const facultyOptionSelect = {
+  id: true,
+  name: true,
+  employeeCode: true,
+} satisfies Prisma.EmployeeSelect;
+
+export type FacultyOption = Prisma.EmployeeGetPayload<{
+  select: typeof facultyOptionSelect;
+}>;
+
 export const departmentSelect = {
   id: true,
   name: true,

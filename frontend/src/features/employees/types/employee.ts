@@ -42,3 +42,9 @@ export interface Employee {
 }
 
 export type EmployeeResponseDto = Employee;
+
+export interface FacultyOption {
+  id: string;
+  employeeCode: string;
+  name: string;
+}

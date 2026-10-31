@@ -6,8 +6,9 @@ import { AUTH_COOKIES, COOKIE_MAX_AGE } from "./constants.js";
 const commonCookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === "production",
-  sameSite:
-    env.NODE_ENV === "production" ? ("none" as const) : ("lax" as const),
+  // The production frontend proxies /api on the same origin, so Lax works
+  // for the app while keeping authentication cookies out of cross-site POSTs.
+  sameSite: "lax" as const,
 };
 
 export function setAuthCookies(

@@ -1,26 +1,8 @@
 import { z } from "zod";
 
-export const registerSchema = z.object({
-  employeeCode: z.string().min(3),
+import { createEmployeeSchema } from "./employee.validator.js";
 
-  name: z.string().min(3),
-
-  email: z.email(),
-
-  role: z.enum(["SUPER_ADMIN", "COE", "HOD", "FACULTY"]),
-
-  password: z
-    .string()
-    .min(8)
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/,
-      "Password must contain uppercase, lowercase, number and special character",
-    ),
-
-  designation: z.string(),
-
-  departmentId: z.uuid(),
-});
+export const registerSchema = createEmployeeSchema;
 
 export const loginSchema = z.object({
   email: z.email("Please enter a valid email"),

@@ -1,7 +1,7 @@
 import { hasRole, type UserRole } from "./roles";
 
 export const canViewEmployees = (role?: UserRole) =>
-  hasRole(role, ["SUPER_ADMIN", "COE", "HOD"]);
+  hasRole(role, ["SUPER_ADMIN", "COE"]);
 
 export const canCreateEmployee = (role?: UserRole) =>
   hasRole(role, ["SUPER_ADMIN"]);

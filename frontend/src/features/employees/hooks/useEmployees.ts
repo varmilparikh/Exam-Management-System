@@ -11,11 +11,21 @@ const DEFAULT_FILTERS: EmployeeFilters = {
   status: "",
 };
 
-export function useEmployees(filters: EmployeeFilters = DEFAULT_FILTERS, enabled = true) {
+export function useEmployees(
+  filters: EmployeeFilters = DEFAULT_FILTERS,
+  enabled = true,
+) {
   return useQuery({
     queryKey: [...employeeKeys.all, filters],
 
     queryFn: () => employeeService.getAll(filters),
     enabled,
+  });
+}
+
+export function useFacultyOptions() {
+  return useQuery({
+    queryKey: employeeKeys.facultyOptions(),
+    queryFn: employeeService.getFacultyOptions,
   });
 }

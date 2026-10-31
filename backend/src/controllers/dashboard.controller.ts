@@ -92,7 +92,10 @@ export const getFacultyWorkload = asyncHandler(
   async (req: Request, res: Response) => {
     const limit = Number(req.query.limit) || 10;
 
-    const workload = await dashboardService.getFacultyWorkload(limit);
+    const workload = await dashboardService.getFacultyWorkload(
+      limit,
+      req.user!,
+    );
 
     res
       .status(200)

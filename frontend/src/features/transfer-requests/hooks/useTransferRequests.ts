@@ -4,6 +4,7 @@ import { transferRequestService } from "../api/transferRequest.service";
 import { transferRequestKeys } from "../queryKeys";
 
 import type { TransferRequestFilters } from "../types/transferRequestFilters";
+import type { Employee } from "@/features/employees/types/employee";
 
 const DEFAULT_FILTERS: TransferRequestFilters = {
   search: "",
@@ -11,16 +12,17 @@ const DEFAULT_FILTERS: TransferRequestFilters = {
 };
 
 export function useTransferRequests(
-  canApprove: boolean,
+  role: Employee["role"] | undefined,
+  userId: string | undefined,
   filters: TransferRequestFilters = DEFAULT_FILTERS,
 ) {
   return useQuery({
-    queryKey: transferRequestKeys.list(filters),
+    queryKey: transferRequestKeys.list(filters, userId),
 
     queryFn: () =>
-      canApprove
-        ? transferRequestService.getAll(filters)
-        : transferRequestService.getMine(),
+      role === "FACULTY"
+        ? transferRequestService.getMine(filters)
+        : transferRequestService.getAll(filters),
 
     enabled: true,
   });

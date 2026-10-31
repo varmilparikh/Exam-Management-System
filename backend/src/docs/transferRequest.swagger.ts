@@ -75,10 +75,18 @@
  *       - Transfer Requests
  *     summary: Get all transfer requests
  *     description: >
- *       Returns all transfer requests in the system.
- *       Accessible only by COE and SUPER_ADMIN.
+ *       Returns all transfer requests for COE and SUPER_ADMIN. HOD users see
+ *       requests submitted by faculty in their own department.
+ *       Optional `search` and `status` query parameters filter the results.
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [PENDING, APPROVED, REJECTED, CANCELLED] }
  *     responses:
  *       200:
  *         description: Transfer requests retrieved successfully.
@@ -121,7 +129,8 @@
  *       - Transfer Requests
  *     summary: Get my transfer requests
  *     description: >
- *       Returns all transfer requests created by the currently authenticated user.
+ *       Returns transfer requests created by or assigned to the authenticated
+ *       faculty member. Optional `search` and `status` parameters filter results.
  *     security:
  *       - bearerAuth: []
  *     responses:

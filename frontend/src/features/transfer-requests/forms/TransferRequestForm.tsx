@@ -6,7 +6,7 @@ import Button from "@/components/ui/Button";
 import FormField from "@/components/ui/FormField";
 import Select from "@/components/ui/Select";
 
-import { useEmployees } from "@/features/employees/hooks/useEmployees";
+import { useFacultyOptions } from "@/features/employees/hooks/useEmployees";
 
 import {
   createTransferRequestSchema,
@@ -26,17 +26,15 @@ export default function TransferRequestForm({
   loading,
   onSubmit,
 }: Props) {
-  const { data: employees = [] } = useEmployees();
+  const { data: faculty = [] } = useFacultyOptions();
 
   const employeeOptions = useMemo(
     () =>
-      employees
-        .filter((employee) => employee.isActive && employee.role === "FACULTY")
-        .map((employee) => ({
-          label: `${employee.name} (${employee.employeeCode})`,
-          value: employee.id,
-        })),
-    [employees],
+      faculty.map((employee) => ({
+        label: `${employee.name} (${employee.employeeCode})`,
+        value: employee.id,
+      })),
+    [faculty],
   );
 
   const {
@@ -72,21 +70,30 @@ export default function TransferRequestForm({
         <Select
           options={[
             { value: "REPLACEMENT_FOUND", label: "I have found a replacement" },
-            { value: "NEEDS_ASSISTANCE", label: "I need help finding a replacement" },
+            {
+              value: "NEEDS_ASSISTANCE",
+              label: "I need help finding a replacement",
+            },
           ]}
           {...register("requestType")}
         />
       </FormField>
-      {requestType === "REPLACEMENT_FOUND" ? <FormField
-        label="Replacement Faculty"
-        error={errors.toEmployeeId?.message}
-      >
-        <Select
-          placeholder="Select replacement faculty"
-          options={employeeOptions}
-          {...register("toEmployeeId")}
-        />
-      </FormField> : <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">COE and Super Admin will find and assign a replacement.</p>}
+      {requestType === "REPLACEMENT_FOUND" ? (
+        <FormField
+          label="Replacement Faculty"
+          error={errors.toEmployeeId?.message}
+        >
+          <Select
+            placeholder="Select replacement faculty"
+            options={employeeOptions}
+            {...register("toEmployeeId")}
+          />
+        </FormField>
+      ) : (
+        <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
+          COE and Super Admin will find and assign a replacement.
+        </p>
+      )}
 
       <FormField label="Reason" required error={errors.reason?.message}>
         <textarea

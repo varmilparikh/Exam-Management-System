@@ -32,9 +32,15 @@ async function getAll(filters: TransferRequestFilters = DEFAULT_FILTERS) {
 
   return response.data.data;
 }
-async function getMine() {
+async function getMine(filters: TransferRequestFilters = DEFAULT_FILTERS) {
   const response = await api.get<ApiResponse<TransferRequest[]>>(
     "/transfer-requests/my",
+    {
+      params: {
+        search: filters.search || undefined,
+        status: filters.status || undefined,
+      },
+    },
   );
   return response.data.data;
 }

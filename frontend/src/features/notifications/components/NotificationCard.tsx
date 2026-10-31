@@ -8,12 +8,18 @@ interface NotificationCardProps {
   notification: Notification;
   onRead: (id: string) => void;
   onDelete: (id: string) => void;
+  actionsDisabled?: boolean;
+  readLoading?: boolean;
+  deleteLoading?: boolean;
 }
 
 export default function NotificationCard({
   notification,
   onRead,
   onDelete,
+  actionsDisabled = false,
+  readLoading = false,
+  deleteLoading = false,
 }: NotificationCardProps) {
   return (
     <div
@@ -46,6 +52,9 @@ export default function NotificationCard({
             <Button
               size="sm"
               variant="outline"
+              aria-label={`Mark notification as read: ${notification.title}`}
+              disabled={actionsDisabled}
+              loading={readLoading}
               onClick={() => onRead(notification.id)}
             >
               <Check className="h-4 w-4" />
@@ -55,6 +64,9 @@ export default function NotificationCard({
           <Button
             size="sm"
             variant="danger"
+            aria-label={`Delete notification: ${notification.title}`}
+            disabled={actionsDisabled}
+            loading={deleteLoading}
             onClick={() => onDelete(notification.id)}
           >
             <Trash2 className="h-4 w-4" />

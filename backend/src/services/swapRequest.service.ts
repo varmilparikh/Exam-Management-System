@@ -4,6 +4,7 @@ import examDutyRepository from "../repositories/examDuty.repository.js";
 import activityLogService from "./activityLog.service.js";
 import employeeValidationService from "./employeeValidation.service.js";
 import notificationHelperService from "./notificationHelper.service.js";
+import { hasSessionStarted } from "../utils/examSession.utils.js";
 
 import { ApiError } from "../utils/apiError.js";
 
@@ -57,8 +58,11 @@ class SwapRequestService {
 
   private ensureUpcoming(...duties: ExamDutyResponse[]): void {
     for (const duty of duties) {
-      if (duty.exam.status !== ExamStatus.UPCOMING) {
-        throw new ApiError(400, "Only upcoming examinations can be swapped.");
+      if (
+        duty.exam.status !== ExamStatus.UPCOMING ||
+        hasSessionStarted(duty.exam)
+      ) {
+        throw new ApiError(400, "Only upcoming exam sessions can be swapped.");
       }
     }
   }
@@ -97,6 +101,20 @@ class SwapRequestService {
       case Role.FACULTY: {
         return swapRequestRepository.findForFaculty(
           user.id,
+          page,
+          limit,
+          filters,
+        );
+      }
+
+      case Role.HOD: {
+        const departmentId =
+          await employeeRepository.findDepartmentIdByEmployee(user.id);
+        if (!departmentId) {
+          throw new ApiError(404, "Department not found.");
+        }
+        return swapRequestRepository.findForDepartment(
+          departmentId,
           page,
           limit,
           filters,
@@ -244,11 +262,18 @@ class SwapRequestService {
       );
     }
 
-    if (swapRequest.status !== SwapStatus.PENDING && swapRequest.status !== SwapStatus.ACCEPTED) {
+    if (
+      swapRequest.status !== SwapStatus.PENDING &&
+      swapRequest.status !== SwapStatus.ACCEPTED
+    ) {
       throw new ApiError(409, `Swap request is already ${swapRequest.status}.`);
     }
 
-    const updatedSwapRequest = await swapRequestRepository.completeAcceptedSwapTransaction(id, receiverId);
+    const updatedSwapRequest =
+      await swapRequestRepository.completeAcceptedSwapTransaction(
+        id,
+        receiverId,
+      );
 
     await activityLogService.log({
       employeeId: receiverId,
@@ -270,14 +295,24 @@ class SwapRequestService {
       entityId: updatedSwapRequest.id,
     });
     await Promise.all([
-      notificationHelperService.notify(updatedSwapRequest.requesterId, "Swap Completed", `Your swap with ${updatedSwapRequest.receiver.name} is complete. The duties for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}" were exchanged.`),
-      notificationHelperService.notify(updatedSwapRequest.receiverId, "Swap Completed", `Your swap with ${updatedSwapRequest.requester.name} is complete. The duties for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}" were exchanged.`),
-      this.notifyAuthorities("Swap Completed", `${updatedSwapRequest.requester.name} and ${updatedSwapRequest.receiver.name} exchanged duties for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}".`),
+      notificationHelperService.notify(
+        updatedSwapRequest.requesterId,
+        "Swap Completed",
+        `Your swap with ${updatedSwapRequest.receiver.name} is complete. The duties for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}" were exchanged.`,
+      ),
+      notificationHelperService.notify(
+        updatedSwapRequest.receiverId,
+        "Swap Completed",
+        `Your swap with ${updatedSwapRequest.requester.name} is complete. The duties for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}" were exchanged.`,
+      ),
+      this.notifyAuthorities(
+        "Swap Completed",
+        `${updatedSwapRequest.requester.name} and ${updatedSwapRequest.receiver.name} exchanged duties for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}".`,
+      ),
     ]);
 
     return updatedSwapRequest;
   }
-
 
   /**
    * Receiver rejects swap request
@@ -392,7 +427,6 @@ class SwapRequestService {
 
     return updatedSwapRequest;
   }
-
 }
 
 export default new SwapRequestService();

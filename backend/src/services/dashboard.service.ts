@@ -7,6 +7,7 @@ import type {
 } from "../types/dashboard.types.js";
 
 import { ApiError } from "../utils/apiError.js";
+import { Role } from "../generated/prisma/client.js";
 
 class DashboardService {
   async getCoeDashboard(): Promise<CoeDashboardDto> {
@@ -138,7 +139,19 @@ class DashboardService {
   /**
    * Get Faculty Workload
    */
-  async getFacultyWorkload(limit: number) {
+  async getFacultyWorkload(
+    limit: number,
+    user: { id: string; role: Role },
+  ) {
+    if (user.role === Role.HOD) {
+      const departmentId =
+        await dashboardRepository.getDepartmentIdByEmployee(user.id);
+      if (!departmentId) {
+        throw new ApiError(404, "Department not found");
+      }
+      return dashboardRepository.getFacultyWorkload(limit, departmentId);
+    }
+
     return dashboardRepository.getFacultyWorkload(limit);
   }
 }

@@ -2,7 +2,7 @@ import api from "@/lib/api";
 
 import type { ApiResponse } from "@/types/api";
 
-import type { Employee } from "../types/employee";
+import type { Employee, FacultyOption } from "../types/employee";
 
 import type { EmployeeFilters } from "../types/employeeFilters";
 
@@ -48,6 +48,14 @@ async function getAll(filters: EmployeeFilters = DEFAULT_FILTERS) {
   return response.data.data;
 }
 
+async function getFacultyOptions() {
+  const response = await api.get<ApiResponse<FacultyOption[]>>(
+    "/employees/faculty-options",
+  );
+
+  return response.data.data;
+}
+
 async function getById(id: string) {
   const response = await api.get<ApiResponse<Employee>>(`/employees/${id}`);
 
@@ -77,6 +85,7 @@ async function remove(id: string) {
 
 export const employeeService = {
   getAll,
+  getFacultyOptions,
   getById,
   create,
   update,

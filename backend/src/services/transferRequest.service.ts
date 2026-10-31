@@ -20,6 +20,7 @@ import examDutyRepository from "../repositories/examDuty.repository.js";
 import employeeValidationService from "./employeeValidation.service.js";
 import activityLogService from "./activityLog.service.js";
 import notificationHelperService from "./notificationHelper.service.js";
+import { hasSessionStarted } from "../utils/examSession.utils.js";
 
 import { ApiError } from "../utils/apiError.js";
 
@@ -68,10 +69,19 @@ class TransferRequestService {
   private ensureUpcoming(duty: {
     exam: {
       status: ExamStatus;
+      examDate: Date;
+      startTime: Date;
+      endTime: Date;
     };
   }): void {
-    if (duty.exam.status !== ExamStatus.UPCOMING) {
-      throw new ApiError(400, "Only upcoming examinations can be transferred.");
+    if (
+      duty.exam.status !== ExamStatus.UPCOMING ||
+      hasSessionStarted(duty.exam)
+    ) {
+      throw new ApiError(
+        400,
+        "Only upcoming exam sessions can be transferred.",
+      );
     }
   }
 
@@ -111,11 +121,23 @@ class TransferRequestService {
       await employeeValidationService.validateFaculty(data.toEmployeeId);
     }
 
-    if (data.requestType === TransferRequestType.REPLACEMENT_FOUND && !data.toEmployeeId) {
-      throw new ApiError(400, "Select the replacement faculty member you have found.");
+    if (
+      data.requestType === TransferRequestType.REPLACEMENT_FOUND &&
+      !data.toEmployeeId
+    ) {
+      throw new ApiError(
+        400,
+        "Select the replacement faculty member you have found.",
+      );
     }
-    if (data.requestType === TransferRequestType.NEEDS_ASSISTANCE && data.toEmployeeId) {
-      throw new ApiError(400, "A replacement must not be selected when requesting assistance.");
+    if (
+      data.requestType === TransferRequestType.NEEDS_ASSISTANCE &&
+      data.toEmployeeId
+    ) {
+      throw new ApiError(
+        400,
+        "A replacement must not be selected when requesting assistance.",
+      );
     }
 
     const transfer = await transferRequestRepository.create({
@@ -213,6 +235,18 @@ class TransferRequestService {
       case Role.FACULTY:
         return transferRequestRepository.findForFaculty(user.id, filters);
 
+      case Role.HOD: {
+        const departmentId =
+          await employeeRepository.findDepartmentIdByEmployee(user.id);
+        if (!departmentId) {
+          throw new ApiError(404, "Department not found.");
+        }
+        return transferRequestRepository.findForDepartment(
+          departmentId,
+          filters,
+        );
+      }
+
       default:
         return [];
     }
@@ -226,6 +260,23 @@ class TransferRequestService {
     userId: string,
     role: Role,
   ): Promise<TransferRequestResponse> {
+    if (role === Role.HOD) {
+      const departmentId =
+        await employeeRepository.findDepartmentIdByEmployee(userId);
+      if (!departmentId) {
+        throw new ApiError(404, "Department not found.");
+      }
+
+      const request = await transferRequestRepository.findByIdForDepartment(
+        id,
+        departmentId,
+      );
+      if (!request) {
+        throw new ApiError(404, "Transfer request not found.");
+      }
+      return request;
+    }
+
     const request = await this.getTransferRequestOrThrow(id);
 
     const isOwner = request.fromEmployeeId === userId;
@@ -253,8 +304,11 @@ class TransferRequestService {
   /**
    * Get transfer requests created by an employee
    */
-  async getMyRequests(employeeId: string): Promise<TransferRequestResponse[]> {
-    return transferRequestRepository.findForFaculty(employeeId, {});
+  async getMyRequests(
+    employeeId: string,
+    filters: TransferRequestFilters,
+  ): Promise<TransferRequestResponse[]> {
+    return transferRequestRepository.findForFaculty(employeeId, filters);
   }
 
   /**
@@ -309,6 +363,7 @@ class TransferRequestService {
         approvedById,
         replacementEmployeeId: replacementEmployee.id,
         examDutyId: transferRequest.examDutyId,
+        fromEmployeeId: transferRequest.fromEmployeeId,
         approvalRemark: data.approvalRemark ?? null,
       });
 
@@ -401,10 +456,11 @@ class TransferRequestService {
       throw new ApiError(403, "You can only cancel your own transfer request.");
     }
 
-    const cancelled = await transferRequestRepository.update(id, {
-      status: TransferStatus.CANCELLED,
-      reason: data.reason ?? transferRequest.reason,
-    });
+    const cancelled = await transferRequestRepository.cancelPending(
+      id,
+      employeeId,
+      data.reason ?? transferRequest.reason,
+    );
 
     await activityLogService.log({
       employeeId,

@@ -1,7 +1,13 @@
 import prisma from "../config/prisma.js";
 
 import type { Prisma } from "../generated/prisma/client.js";
-import { TransferStatus, DutyStatus } from "../generated/prisma/client.js";
+import {
+  TransferStatus,
+  DutyStatus,
+  ExamOptInStatus,
+  ExamStatus,
+  Role,
+} from "../generated/prisma/client.js";
 
 import {
   transferRequestSelect,
@@ -14,6 +20,8 @@ import type {
 } from "../types/transferRequest.types.js";
 
 import type { TransferRequestFilters } from "../types/transferRequestFilter.types.js";
+import { ApiError } from "../utils/apiError.js";
+import { hasSessionStarted } from "../utils/examSession.utils.js";
 
 class TransferRequestRepository {
   /**
@@ -89,6 +97,36 @@ class TransferRequestRepository {
       where,
       orderBy: {
         createdAt: "desc",
+      },
+      select: transferRequestSelect,
+    });
+  }
+
+  async findForDepartment(
+    departmentId: string,
+    filters: TransferRequestFilters,
+  ): Promise<TransferRequestResponse[]> {
+    return prisma.transferRequest.findMany({
+      where: {
+        AND: [
+          this.buildFilters(filters),
+          { fromEmployee: { departmentId, isDeleted: false } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      select: transferRequestSelect,
+    });
+  }
+
+  async findByIdForDepartment(
+    id: string,
+    departmentId: string,
+  ): Promise<TransferRequestResponse | null> {
+    return prisma.transferRequest.findFirst({
+      where: {
+        id,
+        isDeleted: false,
+        fromEmployee: { departmentId, isDeleted: false },
       },
       select: transferRequestSelect,
     });
@@ -213,6 +251,37 @@ class TransferRequestRepository {
     });
   }
 
+  async cancelPending(
+    id: string,
+    employeeId: string,
+    reason: string | null | undefined,
+  ): Promise<TransferRequestResponse> {
+    const updated = await prisma.transferRequest.updateMany({
+      where: {
+        id,
+        fromEmployeeId: employeeId,
+        status: TransferStatus.PENDING,
+        isDeleted: false,
+      },
+      data: {
+        status: TransferStatus.CANCELLED,
+        reason,
+      },
+    });
+
+    if (updated.count !== 1) {
+      throw new ApiError(
+        409,
+        "This transfer request has already been processed.",
+      );
+    }
+
+    return prisma.transferRequest.findUniqueOrThrow({
+      where: { id },
+      select: transferRequestSelect,
+    });
+  }
+
   /**
    * Approve transfer transaction
    *
@@ -223,59 +292,166 @@ class TransferRequestRepository {
     approvedById,
     replacementEmployeeId,
     examDutyId,
+    fromEmployeeId,
     approvalRemark,
   }: ApproveTransferTransactionData): Promise<TransferRequestResponse> {
-    return prisma.$transaction(async (tx) => {
-      await tx.transferRequest.update({
-        where: {
-          id,
-        },
-
-        data: {
-          status: TransferStatus.APPROVED,
-
-          approvedBy: {
-            connect: {
-              id: approvedById,
+    try {
+      return await prisma.$transaction(
+        async (tx) => {
+          const updatedRequest = await tx.transferRequest.updateMany({
+            where: {
+              id,
+              fromEmployeeId,
+              examDutyId,
+              status: TransferStatus.PENDING,
+              isDeleted: false,
             },
-          },
+            data: {
+              status: TransferStatus.APPROVED,
+              approvedById,
+              approvedAt: new Date(),
+              approvalRemark,
+              toEmployeeId: replacementEmployeeId,
+            },
+          });
 
-          approvedAt: new Date(),
+          if (updatedRequest.count !== 1) {
+            throw new ApiError(
+              409,
+              "This transfer request has already been processed.",
+            );
+          }
 
-          approvalRemark,
+          const duty = await tx.examDuty.findFirst({
+            where: {
+              id: examDutyId,
+              employeeId: fromEmployeeId,
+              status: DutyStatus.ASSIGNED,
+              isDeleted: false,
+              exam: { isDeleted: false, status: ExamStatus.UPCOMING },
+            },
+            select: {
+              id: true,
+              examId: true,
+              exam: {
+                select: {
+                  examDate: true,
+                  startTime: true,
+                  endTime: true,
+                  status: true,
+                },
+              },
+            },
+          });
 
-          toEmployee: {
-            connect: {
+          if (!duty || hasSessionStarted(duty.exam)) {
+            throw new ApiError(
+              409,
+              "The duty is no longer available for transfer.",
+            );
+          }
+
+          const replacement = await tx.employee.findFirst({
+            where: {
               id: replacementEmployeeId,
+              role: Role.FACULTY,
+              isActive: true,
+              isDeleted: false,
             },
-          },
-        },
-      });
+            select: { id: true },
+          });
 
-      await tx.examDuty.update({
-        where: {
-          id: examDutyId,
-        },
+          if (!replacement) {
+            throw new ApiError(
+              409,
+              "The replacement faculty member is no longer active.",
+            );
+          }
 
-        data: {
-          employee: {
-            connect: {
-              id: replacementEmployeeId,
+          const [overlappingDuty, overlappingOptIn] = await Promise.all([
+            tx.examDuty.findFirst({
+              where: {
+                employeeId: replacementEmployeeId,
+                isDeleted: false,
+                id: { not: examDutyId },
+                exam: {
+                  isDeleted: false,
+                  status: { in: [ExamStatus.UPCOMING, ExamStatus.ACTIVE] },
+                  examDate: duty.exam.examDate,
+                  startTime: { lt: duty.exam.endTime },
+                  endTime: { gt: duty.exam.startTime },
+                },
+              },
+              select: { id: true },
+            }),
+            tx.examOptIn.findFirst({
+              where: {
+                employeeId: replacementEmployeeId,
+                status: {
+                  in: [ExamOptInStatus.PENDING, ExamOptInStatus.CONFIRMED],
+                },
+                examId: { not: duty.examId },
+                exam: {
+                  isDeleted: false,
+                  status: ExamStatus.UPCOMING,
+                  examDate: duty.exam.examDate,
+                  startTime: { lt: duty.exam.endTime },
+                  endTime: { gt: duty.exam.startTime },
+                },
+              },
+              select: { id: true },
+            }),
+          ]);
+
+          if (overlappingDuty || overlappingOptIn) {
+            throw new ApiError(
+              409,
+              "The replacement faculty member has a duty or opt-in during this session.",
+            );
+          }
+
+          const updatedDuty = await tx.examDuty.updateMany({
+            where: {
+              id: examDutyId,
+              employeeId: fromEmployeeId,
+              status: DutyStatus.ASSIGNED,
+              isDeleted: false,
             },
-          },
+            data: {
+              employeeId: replacementEmployeeId,
+              status: DutyStatus.ASSIGNED,
+            },
+          });
 
-          status: DutyStatus.ASSIGNED,
+          if (updatedDuty.count !== 1) {
+            throw new ApiError(
+              409,
+              "The duty changed while the transfer was being approved.",
+            );
+          }
+
+          return tx.transferRequest.findUniqueOrThrow({
+            where: { id },
+            select: transferRequestSelect,
+          });
         },
-      });
-
-      return tx.transferRequest.findUniqueOrThrow({
-        where: {
-          id,
-        },
-
-        select: transferRequestSelect,
-      });
-    });
+        { isolationLevel: "Serializable" },
+      );
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "P2034"
+      ) {
+        throw new ApiError(
+          409,
+          "The duty changed during approval. Please retry.",
+        );
+      }
+      throw error;
+    }
   }
 
   /**
@@ -288,34 +464,30 @@ class TransferRequestRepository {
     approvedById,
     approvalRemark,
   }: RejectTransferTransactionData): Promise<TransferRequestResponse> {
-    return prisma.$transaction(async (tx) => {
-      await tx.transferRequest.update({
-        where: {
-          id,
-        },
+    const updated = await prisma.transferRequest.updateMany({
+      where: {
+        id,
+        status: TransferStatus.PENDING,
+        isDeleted: false,
+      },
+      data: {
+        status: TransferStatus.REJECTED,
+        approvedById,
+        approvedAt: new Date(),
+        approvalRemark,
+      },
+    });
 
-        data: {
-          status: TransferStatus.REJECTED,
+    if (updated.count !== 1) {
+      throw new ApiError(
+        409,
+        "This transfer request has already been processed.",
+      );
+    }
 
-          approvedBy: {
-            connect: {
-              id: approvedById,
-            },
-          },
-
-          approvedAt: new Date(),
-
-          approvalRemark,
-        },
-      });
-
-      return tx.transferRequest.findUniqueOrThrow({
-        where: {
-          id,
-        },
-
-        select: transferRequestSelect,
-      });
+    return prisma.transferRequest.findUniqueOrThrow({
+      where: { id },
+      select: transferRequestSelect,
     });
   }
 }

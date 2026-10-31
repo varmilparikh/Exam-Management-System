@@ -9,6 +9,7 @@ import {
 } from "../controllers/auth.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
+import { authorizeRoles } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 
 import { registerSchema, loginSchema } from "../validators/auth.validator.js";
@@ -17,7 +18,13 @@ const router = Router();
 
 /* ---------- Local Authentication ---------- */
 
-router.post("/register", validate(registerSchema), register);
+router.post(
+  "/register",
+  verifyJWT,
+  authorizeRoles("SUPER_ADMIN"),
+  validate(registerSchema),
+  register,
+);
 
 router.post("/login", validate(loginSchema), login);
 

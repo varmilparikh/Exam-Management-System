@@ -22,7 +22,12 @@ import { uuidParamSchema } from "../validators/common.validator.js";
 
 const router = Router();
 
-router.get("/", verifyJWT, getSwapRequests);
+router.get(
+  "/",
+  verifyJWT,
+  authorizeRoles("SUPER_ADMIN", "COE", "HOD", "FACULTY"),
+  getSwapRequests,
+);
 
 router.post(
   "/",

@@ -4,8 +4,10 @@
  *   post:
  *     tags:
  *       - Authentication
- *     summary: Register a new employee
- *     description: Creates a new employee account in the system.
+ *     summary: Register an employee (SUPER_ADMIN only)
+ *     description: Creates an employee account. Requires an authenticated SUPER_ADMIN session.
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -44,6 +46,10 @@
  *         description: Employee registered successfully.
  *       400:
  *         description: Validation error.
+ *       401:
+ *         description: Authentication required.
+ *       403:
+ *         description: Only SUPER_ADMIN may create an employee.
  *       409:
  *         description: Employee already exists.
  *       500:

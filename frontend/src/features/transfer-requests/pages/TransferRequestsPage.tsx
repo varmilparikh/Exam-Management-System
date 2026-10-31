@@ -48,6 +48,7 @@ export default function TransferRequestsPage() {
       <TransferRequestTable
         filters={filters}
         canApprove={canApprove}
+        role={user?.role}
         userId={user?.id}
       />
     </div>

@@ -6,19 +6,22 @@ import { useTransferRequests } from "../hooks/useTransferRequests";
 import type { TransferRequest } from "../types/transferRequest";
 import type { TransferRequestFilters } from "../types/transferRequestFilters";
 import { getTransferRequestColumns } from "../columns";
+import type { Employee } from "@/features/employees/types/employee";
 
 interface TransferRequestTableProps {
   filters: TransferRequestFilters;
   canApprove: boolean;
+  role?: Employee["role"];
   userId?: string;
 }
 
 export default function TransferRequestTable({
   filters,
   canApprove,
+  role,
   userId,
 }: TransferRequestTableProps) {
-  const { data = [], isLoading } = useTransferRequests(canApprove, filters);
+  const { data = [], isLoading } = useTransferRequests(role, userId, filters);
   const cancel = useCancelTransferRequest();
   const [pendingCancel, setPendingCancel] = useState<TransferRequest | null>(
     null,

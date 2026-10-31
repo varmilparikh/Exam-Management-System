@@ -22,7 +22,10 @@ class EmployeeService {
   /**
    * Create Employee
    */
-  async create(data: CreateEmployeeDto): Promise<EmployeeResponse> {
+  async create(
+    data: CreateEmployeeDto,
+    createdById: string,
+  ): Promise<EmployeeResponse> {
     // Check email
     const emailExists = await employeeRepository.existsByEmail(data.email);
 
@@ -71,7 +74,7 @@ class EmployeeService {
 
     try {
       await activityLogService.log({
-        employeeId: employee.id,
+        employeeId: createdById,
         action: ActivityAction.CREATE_EMPLOYEE,
         description: `${employee.name} was created`,
         entityType: EntityType.EMPLOYEE,
@@ -91,6 +94,10 @@ class EmployeeService {
     return employeeRepository.findAll(filters);
   }
 
+  async getFacultyOptions() {
+    return employeeRepository.findActiveFacultyOptions();
+  }
+
   /**
    * Get Employee By ID
    */
@@ -107,7 +114,11 @@ class EmployeeService {
   /**
    * Update Employee
    */
-  async update(id: string, data: UpdateEmployeeDto): Promise<EmployeeResponse> {
+  async update(
+    id: string,
+    data: UpdateEmployeeDto,
+    updatedById: string,
+  ): Promise<EmployeeResponse> {
     const employee = await employeeRepository.findById(id);
 
     if (!employee) {
@@ -155,7 +166,7 @@ class EmployeeService {
 
     try {
       await activityLogService.log({
-        employeeId: updatedEmployee.id,
+        employeeId: updatedById,
         action: ActivityAction.UPDATE_EMPLOYEE, // or your enum value
         description: `${updatedEmployee.name} was updated`,
         entityType: EntityType.EMPLOYEE,
@@ -171,7 +182,7 @@ class EmployeeService {
   /**
    * Soft Delete Employee
    */
-  async delete(id: string): Promise<EmployeeResponse> {
+  async delete(id: string, deletedById: string): Promise<EmployeeResponse> {
     const employee = await employeeRepository.findById(id);
 
     if (!employee) {
@@ -186,7 +197,7 @@ class EmployeeService {
 
     try {
       await activityLogService.log({
-        employeeId: deletedEmployee.id,
+        employeeId: deletedById,
         action: ActivityAction.DELETE_EMPLOYEE, // or your enum value
         description: `${deletedEmployee.name} was deleted`,
         entityType: EntityType.EMPLOYEE,

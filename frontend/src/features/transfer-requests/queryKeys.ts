@@ -3,8 +3,8 @@ import type { TransferRequestFilters } from "./types/transferRequestFilters";
 export const transferRequestKeys = {
   all: ["transfer-requests"] as const,
 
-  list: (filters: TransferRequestFilters) =>
-    [...transferRequestKeys.all, filters] as const,
+  list: (filters: TransferRequestFilters, userId?: string) =>
+    [...transferRequestKeys.all, userId, filters] as const,
 
   mine: () => [...transferRequestKeys.all, "mine"] as const,
 

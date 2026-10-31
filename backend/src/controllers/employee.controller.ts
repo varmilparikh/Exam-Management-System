@@ -4,6 +4,7 @@ import employeeService from "../services/employee.service.js";
 
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import { ApiError } from "../utils/apiError.js";
 import type { EmployeeFilters } from "../types/employeeFilter.types.js";
 
 import type {
@@ -30,7 +31,11 @@ type EmployeeIdRequest = Request<{ id: string }>;
  */
 export const createEmployee = asyncHandler(
   async (req: CreateEmployeeRequest, res: Response): Promise<void> => {
-    const employee = await employeeService.create(req.body);
+    if (!req.user) {
+      throw new ApiError(401, "Authentication required");
+    }
+
+    const employee = await employeeService.create(req.body, req.user.id);
 
     res
       .status(201)
@@ -71,6 +76,18 @@ export const getEmployees = asyncHandler(
   },
 );
 
+export const getFacultyOptions = asyncHandler(
+  async (_req: Request, res: Response): Promise<void> => {
+    const options = await employeeService.getFacultyOptions();
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, options, "Faculty options fetched successfully"),
+      );
+  },
+);
+
 /**
  * Get Employee By ID
  */
@@ -91,9 +108,13 @@ export const getEmployeeById = asyncHandler(
  */
 export const updateEmployee = asyncHandler(
   async (req: UpdateEmployeeRequest, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new ApiError(401, "Authentication required");
+    }
+
     const { id } = req.params;
 
-    const employee = await employeeService.update(id, req.body);
+    const employee = await employeeService.update(id, req.body, req.user.id);
 
     res
       .status(200)
@@ -106,9 +127,13 @@ export const updateEmployee = asyncHandler(
  */
 export const deleteEmployee = asyncHandler(
   async (req: EmployeeIdRequest, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new ApiError(401, "Authentication required");
+    }
+
     const { id } = req.params;
 
-    await employeeService.delete(id);
+    await employeeService.delete(id, req.user.id);
 
     res
       .status(200)

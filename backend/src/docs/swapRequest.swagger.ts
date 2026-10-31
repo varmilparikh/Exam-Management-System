@@ -4,6 +4,7 @@
  *   get:
  *     tags: [Swap Requests]
  *     summary: List swap requests visible to the current user
+ *     description: COE and SUPER_ADMIN see all requests, faculty see requests they sent or received, and HOD users see requests submitted by faculty in their department.
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200: { description: Swap requests with both faculty members and duties. }

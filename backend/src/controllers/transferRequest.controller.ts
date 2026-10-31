@@ -51,6 +51,10 @@ export const createTransferRequest = asyncHandler(
  */
 export const getTransferRequests = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
     const filters = {
       search:
         typeof req.query.search === "string" ? req.query.search : undefined,
@@ -61,7 +65,10 @@ export const getTransferRequests = asyncHandler(
           : undefined,
     };
 
-    const transferRequests = await transferRequestService.getAll(filters);
+    const transferRequests = await transferRequestService.getRequests(
+      req.user,
+      filters,
+    );
 
     res
       .status(200)
@@ -138,9 +145,17 @@ export const getMyTransferRequests = asyncHandler(
     }
 
     const { id: employeeId } = req.user;
+    const filters = {
+      search:
+        typeof req.query.search === "string" ? req.query.search : undefined,
+      status:
+        typeof req.query.status === "string"
+          ? (req.query.status as TransferStatus)
+          : undefined,
+    };
 
     const transferRequests =
-      await transferRequestService.getMyRequests(employeeId);
+      await transferRequestService.getMyRequests(employeeId, filters);
 
     res
       .status(200)

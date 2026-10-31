@@ -15,7 +15,7 @@ export default function SwapRequestTable({
   filters,
   currentUserId,
 }: SwapRequestTableProps) {
-  const { data = [], isLoading } = useSwapRequests(filters);
+  const { data = [], isLoading } = useSwapRequests(filters, currentUserId);
 
   const columns = useMemo(
     () =>

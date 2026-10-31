@@ -31,7 +31,9 @@ export default function NotificationList({
   }, [data?.pagination.totalPages, onPageChange, page]);
 
   if (error) {
-    return <p className="text-sm text-red-600">Failed to load notifications.</p>;
+    return (
+      <p className="text-sm text-red-600">Failed to load notifications.</p>
+    );
   }
 
   if (isLoading) {
@@ -50,15 +52,38 @@ export default function NotificationList({
           notification={notification}
           onRead={(id) => markAsRead.mutate(id)}
           onDelete={(id) => deleteNotification.mutate(id)}
+          actionsDisabled={markAsRead.isPending || deleteNotification.isPending}
+          readLoading={
+            markAsRead.isPending && markAsRead.variables === notification.id
+          }
+          deleteLoading={
+            deleteNotification.isPending &&
+            deleteNotification.variables === notification.id
+          }
         />
       ))}
       <div className="flex items-center justify-between border-t pt-4">
         <p className="text-sm text-gray-500">
-          {data?.pagination.total ?? 0} notifications · Page {page} of {data?.pagination.totalPages ?? 1}
+          {data?.pagination.total ?? 0} notifications · Page {page} of{" "}
+          {data?.pagination.totalPages ?? 1}
         </p>
         <div className="flex gap-2">
-          <Button size="sm" variant="secondary" disabled={page <= 1 || isFetching} onClick={() => onPageChange(page - 1)}>Previous</Button>
-          <Button size="sm" variant="secondary" disabled={!data || page >= data.pagination.totalPages || isFetching} onClick={() => onPageChange(page + 1)}>Next</Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={page <= 1 || isFetching}
+            onClick={() => onPageChange(page - 1)}
+          >
+            Previous
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={!data || page >= data.pagination.totalPages || isFetching}
+            onClick={() => onPageChange(page + 1)}
+          >
+            Next
+          </Button>
         </div>
       </div>
     </div>

@@ -44,7 +44,7 @@ router.post(
 router.get(
   "/",
   verifyJWT,
-  authorizeRoles("COE", "SUPER_ADMIN"),
+  authorizeRoles("COE", "SUPER_ADMIN", "HOD"),
   getTransferRequests,
 );
 

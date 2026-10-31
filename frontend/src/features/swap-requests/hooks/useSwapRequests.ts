@@ -10,9 +10,12 @@ const DEFAULT_FILTERS: SwapRequestFilters = {
   status: "",
 };
 
-export function useSwapRequests(filters: SwapRequestFilters = DEFAULT_FILTERS) {
+export function useSwapRequests(
+  filters: SwapRequestFilters = DEFAULT_FILTERS,
+  userId?: string,
+) {
   return useQuery({
-    queryKey: [...swapRequestKeys.all, filters],
+    queryKey: [...swapRequestKeys.all, userId, filters],
     queryFn: () => swapRequestService.getAll(filters),
   });
 }

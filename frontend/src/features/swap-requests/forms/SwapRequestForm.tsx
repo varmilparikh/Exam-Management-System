@@ -7,7 +7,7 @@ import FormField from "@/components/ui/FormField";
 import Select from "@/components/ui/Select";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useEmployees } from "@/features/employees/hooks/useEmployees";
+import { useFacultyOptions } from "@/features/employees/hooks/useEmployees";
 import { useFacultyUpcomingDuties } from "@/features/exam-duties/hooks/useFacultyUpcomingDuties";
 
 import {
@@ -54,7 +54,7 @@ export default function SwapRequestForm({
     name: "receiverId",
   });
 
-  const { data: employees = [] } = useEmployees();
+  const { data: faculty = [] } = useFacultyOptions();
 
   const { data: duties = [], isLoading: dutiesLoading } =
     useFacultyUpcomingDuties(receiverId);
@@ -65,18 +65,13 @@ export default function SwapRequestForm({
    */
   const facultyOptions = useMemo(
     () =>
-      employees
-        .filter(
-          (employee) =>
-            employee.role === "FACULTY" &&
-            employee.isActive &&
-            employee.id !== user?.id,
-        )
+      faculty
+        .filter((employee) => employee.id !== user?.id)
         .map((employee) => ({
           label: `${employee.name} (${employee.employeeCode})`,
           value: employee.id,
         })),
-    [employees, user?.id],
+    [faculty, user?.id],
   );
 
   const dutyOptions = useMemo(

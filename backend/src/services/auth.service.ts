@@ -23,7 +23,10 @@ import { verifyRefreshToken } from "../auth/tokens/verifyRefreshToken.js";
 import { toEmployeeResponse } from "../mappers/employee.mapper.js";
 
 class AuthService {
-  async register(data: RegisterUserDto): Promise<EmployeeResponseDto> {
+  async register(
+    data: RegisterUserDto,
+    createdById: string,
+  ): Promise<EmployeeResponseDto> {
     // Check email
     const existingEmail = await authRepository.findByEmail(data.email);
 
@@ -62,6 +65,8 @@ class AuthService {
       email: data.email,
       password: hashedPassword,
       designation: data.designation,
+      role: data.role,
+      phone: data.phone,
 
       department: {
         connect: {
@@ -69,6 +74,18 @@ class AuthService {
         },
       },
     });
+
+    try {
+      await activityLogService.log({
+        employeeId: createdById,
+        action: ActivityAction.CREATE_EMPLOYEE,
+        description: `${employee.name} was created by an administrator`,
+        entityType: EntityType.EMPLOYEE,
+        entityId: employee.id,
+      });
+    } catch (error) {
+      console.error("Failed to create employee log", error);
+    }
 
     // Remove sensitive information
     return toEmployeeResponse(employee);
@@ -95,6 +112,13 @@ class AuthService {
 
     if (!isPasswordValid) {
       throw new ApiError(401, "Invalid email or password");
+    }
+
+    if (!employee.isActive) {
+      throw new ApiError(
+        403,
+        "This account is inactive. Contact an administrator.",
+      );
     }
 
     // Update last login

@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   createEmployee,
   getEmployees,
+  getFacultyOptions,
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
@@ -35,7 +36,14 @@ router.post(
 /**
  * Get All Employees
  */
-router.get("/", verifyJWT, getEmployees);
+router.get(
+  "/faculty-options",
+  verifyJWT,
+  authorizeRoles("SUPER_ADMIN", "COE", "FACULTY"),
+  getFacultyOptions,
+);
+
+router.get("/", verifyJWT, authorizeRoles("SUPER_ADMIN", "COE"), getEmployees);
 
 /**
  * Get Employee By ID
@@ -43,6 +51,7 @@ router.get("/", verifyJWT, getEmployees);
 router.get(
   "/:id",
   verifyJWT,
+  authorizeRoles("SUPER_ADMIN", "COE"),
   validate(uuidParamSchema, "params"),
   getEmployeeById,
 );

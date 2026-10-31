@@ -19,7 +19,11 @@ export async function register(
   req: Request<Record<string, never>, unknown, RegisterInput>,
   res: Response,
 ): Promise<void> {
-  const employee = await authService.register(req.body);
+  if (!req.user) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  const employee = await authService.register(req.body, req.user.id);
 
   res
     .status(201)
