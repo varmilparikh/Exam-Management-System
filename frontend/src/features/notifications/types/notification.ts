@@ -14,3 +14,13 @@ export interface Notification {
 export interface UnreadCount {
   count: number;
 }
+
+export interface NotificationPage {
+  notifications: Notification[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}

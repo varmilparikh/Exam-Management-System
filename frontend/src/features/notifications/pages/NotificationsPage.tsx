@@ -1,10 +1,12 @@
-import Button from "@/components/ui/Button";
+import { useState } from "react";
 
+import Button from "@/components/ui/Button";
 import NotificationList from "../components/NotificationList";
 
 import { useMarkAllAsRead } from "../hooks/useMarkAllAsRead";
 
 export default function NotificationsPage() {
+  const [page, setPage] = useState(1);
   const markAll = useMarkAllAsRead();
 
   return (
@@ -16,10 +18,16 @@ export default function NotificationsPage() {
           <p className="text-gray-500">View and manage your notifications.</p>
         </div>
 
-        <Button onClick={() => markAll.mutate()}>Mark All as Read</Button>
+        <Button
+          loading={markAll.isPending}
+          disabled={markAll.isPending}
+          onClick={() => markAll.mutate()}
+        >
+          Mark All as Read
+        </Button>
       </div>
 
-      <NotificationList />
+      <NotificationList page={page} onPageChange={setPage} />
     </div>
   );
 }

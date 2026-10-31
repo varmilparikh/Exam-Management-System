@@ -2,6 +2,7 @@ export type SwapStatus =
   | "PENDING"
   | "ACCEPTED"
   | "APPROVED"
+  | "COMPLETED"
   | "REJECTED"
   | "CANCELLED";
 
@@ -18,7 +19,7 @@ export interface SwapRequest {
 
   reason?: string;
 
-  approvalRemark?: string;
+  completedAt?: string | null;
 
   createdAt: string;
   updatedAt: string;

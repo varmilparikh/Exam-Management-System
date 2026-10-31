@@ -8,13 +8,11 @@ import type { SwapRequestFilters } from "../types/swapRequestFilters";
 
 interface SwapRequestTableProps {
   filters: SwapRequestFilters;
-  canApprove: boolean;
   currentUserId: string;
 }
 
 export default function SwapRequestTable({
   filters,
-  canApprove,
   currentUserId,
 }: SwapRequestTableProps) {
   const { data = [], isLoading } = useSwapRequests(filters);
@@ -22,10 +20,9 @@ export default function SwapRequestTable({
   const columns = useMemo(
     () =>
       getSwapRequestColumns({
-        canApprove,
         currentUserId,
       }),
-    [canApprove, currentUserId],
+    [currentUserId],
   );
 
   return (

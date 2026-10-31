@@ -23,6 +23,9 @@ export const rolePermissions: Record<Role, Permission[]> = {
     "exam:edit",
     "exam:delete",
 
+    "exam-opt-in:view",
+    "exam-opt-in:review",
+
     // Duties
     "duty:view",
     "duty:assign",
@@ -34,13 +37,14 @@ export const rolePermissions: Record<Role, Permission[]> = {
 
     // Swaps
     "swap:view",
-    "swap:approve",
 
     // Notifications
     "notification:view",
 
     // Reports
     "reports:view",
+    "workload:view",
+    "activity:view",
   ],
 
   COE: [
@@ -53,6 +57,9 @@ export const rolePermissions: Record<Role, Permission[]> = {
     "exam:edit",
     "exam:delete",
 
+    "exam-opt-in:view",
+    "exam-opt-in:review",
+
     "duty:view",
     "duty:assign",
 
@@ -60,15 +67,19 @@ export const rolePermissions: Record<Role, Permission[]> = {
     "transfer:approve",
 
     "swap:view",
-    "swap:approve",
 
     "notification:view",
 
     "reports:view",
+    "workload:view",
+    "activity:view",
   ],
 
   HOD: [
+    "workload:view",
     "department:view",
+
+    "exam-opt-in:view",
 
     "exam:view",
 
@@ -78,12 +89,11 @@ export const rolePermissions: Record<Role, Permission[]> = {
 
     "swap:view",
 
-    "reports:view",
-
     "notification:view",
   ],
 
   FACULTY: [
+    "workload:view",
     "exam:view",
 
     "duty:view",

@@ -6,12 +6,10 @@ import SwapStatusBadge from "./components/SwapStatusBadge";
 import SwapActions from "./components/SwapActions";
 
 interface SwapRequestColumnOptions {
-  canApprove: boolean;
   currentUserId: string;
 }
 
 export function getSwapRequestColumns({
-  canApprove,
   currentUserId,
 }: SwapRequestColumnOptions): Column<SwapRequest>[] {
   return [
@@ -52,7 +50,6 @@ export function getSwapRequestColumns({
       render: (request) => (
         <SwapActions
           request={request}
-          canApprove={canApprove}
           currentUserId={currentUserId}
         />
       ),

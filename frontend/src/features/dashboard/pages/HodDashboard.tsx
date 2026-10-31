@@ -1,4 +1,4 @@
-import { Users, ClipboardList, ArrowRightLeft, Repeat } from "lucide-react";
+import { Users, ClipboardList, ArrowRightLeft, Repeat, CalendarDays } from "lucide-react";
 
 import DashboardHeader from "../components/DashboardHeader";
 import StatCard from "../components/StatCard";
@@ -24,7 +24,7 @@ export default function HodDashboard() {
     <div className="space-y-6">
       <DashboardHeader />
 
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
           title="Faculty"
           value={data.totalFaculty}
@@ -37,6 +37,13 @@ export default function HodDashboard() {
           value={data.upcomingDepartmentDuties}
           icon={<ClipboardList className="h-6 w-6" />}
           color="bg-green-100 text-green-600"
+        />
+
+        <StatCard
+          title="Pending Exam Opt-ins"
+          value={data.pendingExamOptIns}
+          icon={<CalendarDays className="h-6 w-6" />}
+          color="bg-orange-100 text-orange-600"
         />
 
         <StatCard

@@ -3,6 +3,7 @@ import StatCard from "../components/StatCard";
 import FacultyQuickActions from "../components/FacultyQuickActions";
 import FacultyDutiesCard from "../components/FacultyDutiesCard";
 import NotificationsCard from "../components/NotificationsCard";
+import FacultyUpcomingExamOptIns from "@/features/exam-opt-ins/components/FacultyUpcomingExamOptIns";
 
 import { useFacultyDashboard } from "../hooks/useFacultyDashboard";
 
@@ -12,6 +13,7 @@ import {
   ArrowRightLeft,
   Repeat,
   Bell,
+  CalendarDays,
 } from "lucide-react";
 
 export default function FacultyDashboard() {
@@ -25,7 +27,7 @@ export default function FacultyDashboard() {
     <div className="space-y-6">
       <DashboardHeader />
 
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-6">
         <StatCard
           title="Upcoming Duties"
           value={data.myUpcomingDuties}
@@ -55,6 +57,13 @@ export default function FacultyDashboard() {
         />
 
         <StatCard
+          title="Pending Exam Opt-ins"
+          value={data.pendingExamOptIns}
+          icon={<CalendarDays className="h-6 w-6" />}
+          color="bg-orange-100 text-orange-600"
+        />
+
+        <StatCard
           title="Notifications"
           value={data.unreadNotifications}
           icon={<Bell className="h-6 w-6" />}
@@ -63,6 +72,8 @@ export default function FacultyDashboard() {
       </div>
 
       <FacultyQuickActions />
+
+      <FacultyUpcomingExamOptIns />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <FacultyDutiesCard />

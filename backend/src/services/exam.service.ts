@@ -21,6 +21,10 @@ class ExamService {
       throw new ApiError(400, "Exam date cannot be in the past");
     }
 
+    if (data.endTime <= data.startTime) {
+      throw new ApiError(400, "Session end time must be after its start time");
+    }
+
     const duplicate = await examRepository.findDuplicate(
       data.examName,
       data.examDate,
@@ -36,6 +40,9 @@ class ExamService {
     return examRepository.create({
       examName: data.examName,
       examDate: data.examDate,
+      sessionName: data.sessionName,
+      startTime: data.startTime,
+      endTime: data.endTime,
       requiredFaculty: data.requiredFaculty,
       status: ExamStatus.UPCOMING,
     });
@@ -75,8 +82,30 @@ class ExamService {
       throw new ApiError(400, "Required faculty must be greater than zero");
     }
 
+    if (data.requiredFaculty !== undefined) {
+      const reserved = await examRepository.countReservedPositions(id);
+      if (data.requiredFaculty < reserved) {
+        throw new ApiError(409, `Required faculty cannot be reduced below ${reserved} assigned or opted-in positions.`);
+      }
+    }
+
     if (data.examDate !== undefined && isPastDate(data.examDate)) {
       throw new ApiError(400, "Exam date cannot be in the past");
+    }
+
+    const startTime = data.startTime ?? exam.startTime;
+    const endTime = data.endTime ?? exam.endTime;
+    if (endTime <= startTime) {
+      throw new ApiError(400, "Session end time must be after its start time");
+    }
+
+    const sessionChanged =
+      (data.examDate !== undefined && data.examDate.getTime() !== exam.examDate.getTime()) ||
+      (data.sessionName !== undefined && data.sessionName !== exam.sessionName) ||
+      (data.startTime !== undefined && data.startTime.getTime() !== exam.startTime.getTime()) ||
+      (data.endTime !== undefined && data.endTime.getTime() !== exam.endTime.getTime());
+    if (sessionChanged && await examRepository.hasDutiesOrOptIns(id)) {
+      throw new ApiError(409, "An exam session cannot change after duties or opt-ins have been created.");
     }
 
     if (

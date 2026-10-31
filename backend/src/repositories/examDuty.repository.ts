@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { ApiError } from "../utils/apiError.js";
 
 import {
   DutyStatus,
@@ -12,6 +13,51 @@ import {
 } from "../constants/prismaSelect.js";
 
 class ExamDutyRepository {
+  async createAssignedWithCapacity(employeeId: string, examId: string): Promise<ExamDutyResponse> {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const exam = await tx.exam.findFirst({
+          where: { id: examId, isDeleted: false },
+          select: { id: true, examDate: true, startTime: true, endTime: true, requiredFaculty: true, status: true },
+        });
+        if (!exam || exam.status !== ExamStatus.UPCOMING) throw new ApiError(409, "Only upcoming examinations can receive duty assignments.");
+        const duplicate = await tx.examDuty.findFirst({ where: { employeeId, examId, isDeleted: false }, select: { id: true } });
+        if (duplicate) throw new ApiError(409, "Employee is already assigned to this exam.");
+        const [assignedCount, pendingOptIns] = await Promise.all([
+          tx.examDuty.count({ where: { examId, isDeleted: false, employeeId: { not: null } } }),
+          tx.examOptIn.count({ where: { examId, status: "PENDING" } }),
+        ]);
+        if (assignedCount + pendingOptIns >= exam.requiredFaculty) throw new ApiError(409, "Required faculty limit reached.");
+        const overlappingDuty = await tx.examDuty.findFirst({
+          where: {
+            employeeId,
+            isDeleted: false,
+            exam: { isDeleted: false, examDate: exam.examDate, startTime: { lt: exam.endTime }, endTime: { gt: exam.startTime } },
+          },
+          select: { id: true },
+        });
+        const overlappingOptIn = await tx.examOptIn.findFirst({
+          where: {
+            employeeId,
+            status: { in: ["PENDING", "CONFIRMED"] },
+            examId: { not: examId },
+            exam: { isDeleted: false, examDate: exam.examDate, startTime: { lt: exam.endTime }, endTime: { gt: exam.startTime } },
+          },
+          select: { id: true },
+        });
+        if (overlappingDuty || overlappingOptIn) throw new ApiError(409, "Employee already has a duty or opt-in during this session.");
+        return tx.examDuty.create({
+          data: { employeeId, examId, status: DutyStatus.ASSIGNED },
+          select: examDutySelect,
+        });
+      }, { isolationLevel: "Serializable" });
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      if (typeof error === "object" && error !== null && "code" in error && error.code === "P2034") throw new ApiError(409, "The exam capacity changed. Please retry.");
+      throw error;
+    }
+  }
+
   /**
    * Find Exam Duty by ID
    */

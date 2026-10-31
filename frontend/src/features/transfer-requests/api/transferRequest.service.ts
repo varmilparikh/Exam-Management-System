@@ -5,6 +5,7 @@ import type { TransferRequestFilters } from "../types/transferRequestFilters";
 
 export interface CreateTransferRequestDto {
   examDutyId: string;
+  requestType: "REPLACEMENT_FOUND" | "NEEDS_ASSISTANCE";
   toEmployeeId?: string;
   reason: string;
 }

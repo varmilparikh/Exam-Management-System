@@ -53,28 +53,7 @@ class ExamDutyService {
       throw new ApiError(409, "Employee is already assigned to this exam");
     }
 
-    // Check faculty limit
-    const assignedFaculty = await examDutyRepository.countByExam(data.examId);
-
-    if (assignedFaculty >= exam.requiredFaculty) {
-      throw new ApiError(400, "Required faculty limit reached");
-    }
-
-    return examDutyRepository.create({
-      employee: {
-        connect: {
-          id: data.employeeId,
-        },
-      },
-
-      exam: {
-        connect: {
-          id: data.examId,
-        },
-      },
-
-      status: DutyStatus.ASSIGNED,
-    });
+    return examDutyRepository.createAssignedWithCapacity(data.employeeId, data.examId);
   }
 
   /**

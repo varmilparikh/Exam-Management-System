@@ -19,6 +19,7 @@ import cookieParser from "cookie-parser";
 import { APP_NAME, APP_VERSION } from "./constants/app.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import reportsRoutes from "./routes/reports.routes.js";
+import examOptInRoutes from "./routes/examOptIn.routes.js";
 
 const app = express();
 
@@ -72,6 +73,8 @@ app.use("/api/swap-requests", swapRequestRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.use("/api/reports", reportsRoutes);
+
+app.use("/api/exam-opt-ins", examOptInRoutes);
 
 app.get("/", (req, res) => {
   res.json({

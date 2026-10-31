@@ -14,8 +14,6 @@ export default function SwapRequestsPage() {
 
   const { data: user } = useCurrentUser();
 
-  const canApprove = hasPermission(user?.role, "swap:approve");
-
   const canView = hasPermission(user?.role, "swap:view");
 
   if (!canView) {
@@ -41,7 +39,6 @@ export default function SwapRequestsPage() {
 
       <SwapRequestTable
         filters={filters}
-        canApprove={canApprove}
         currentUserId={user?.id ?? ""}
       />
     </div>

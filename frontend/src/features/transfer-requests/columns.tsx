@@ -49,6 +49,13 @@ export function getTransferRequestColumns({
     },
 
     {
+      id: "requestType",
+      key: "requestType",
+      title: "Request Type",
+      render: (request) => request.requestType === "NEEDS_ASSISTANCE" ? "Needs assistance" : "Replacement found",
+    },
+
+    {
       id: "toEmployeeId",
       key: "toEmployeeId",
       title: "Replacement",

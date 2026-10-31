@@ -7,6 +7,7 @@ import {
   ExamStatus,
   SwapStatus,
   TransferStatus,
+  ExamOptInStatus,
 } from "../generated/prisma/client.js";
 
 import {
@@ -15,6 +16,20 @@ import {
 } from "../constants/prismaSelect.js";
 
 class DashboardRepository {
+  async countPendingExamOptIns(): Promise<number> {
+    return prisma.examOptIn.count({ where: { status: ExamOptInStatus.PENDING } });
+  }
+
+  async countDepartmentPendingExamOptIns(departmentId: string): Promise<number> {
+    return prisma.examOptIn.count({
+      where: { status: ExamOptInStatus.PENDING, employee: { departmentId, isDeleted: false } },
+    });
+  }
+
+  async countEmployeePendingExamOptIns(employeeId: string): Promise<number> {
+    return prisma.examOptIn.count({ where: { employeeId, status: ExamOptInStatus.PENDING } });
+  }
+
   async countEmployees(): Promise<number> {
     return prisma.employee.count({
       where: {
@@ -292,6 +307,9 @@ class DashboardRepository {
         examName: true,
         examDate: true,
         requiredFaculty: true,
+        sessionName: true,
+        startTime: true,
+        endTime: true,
         status: true,
         createdAt: true,
       },

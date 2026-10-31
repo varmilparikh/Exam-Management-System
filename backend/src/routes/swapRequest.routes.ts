@@ -5,8 +5,6 @@ import {
   acceptSwapRequest,
   rejectSwapRequest,
   cancelSwapRequest,
-  approveSwapRequest,
-  rejectSwapByCoe,
   getSwapRequests,
 } from "../controllers/swapRequest.controller.js";
 
@@ -14,8 +12,6 @@ import {
   createSwapRequestSchema,
   rejectSwapRequestSchema,
   cancelSwapRequestSchema,
-  approveSwapRequestSchema,
-  rejectSwapByCoeSchema,
 } from "../validators/swapRequest.validator.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -60,24 +56,6 @@ router.patch(
   validate(uuidParamSchema, "params"),
   validate(cancelSwapRequestSchema),
   cancelSwapRequest,
-);
-
-router.patch(
-  "/:id/approve",
-  verifyJWT,
-  authorizeRoles("SUPER_ADMIN", "COE"),
-  validate(uuidParamSchema, "params"),
-  validate(approveSwapRequestSchema),
-  approveSwapRequest,
-);
-
-router.patch(
-  "/:id/reject-by-coe",
-  verifyJWT,
-  authorizeRoles("SUPER_ADMIN", "COE"),
-  validate(uuidParamSchema, "params"),
-  validate(rejectSwapByCoeSchema),
-  rejectSwapByCoe,
 );
 
 export default router;

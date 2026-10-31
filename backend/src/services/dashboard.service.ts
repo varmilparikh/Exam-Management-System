@@ -19,6 +19,7 @@ class DashboardService {
       assignedDuties,
       pendingTransferRequests,
       pendingSwapRequests,
+      pendingExamOptIns,
       totalNotifications,
       totalActivityLogs,
     ] = await Promise.all([
@@ -30,6 +31,7 @@ class DashboardService {
       dashboardRepository.countAssignedDuties(),
       dashboardRepository.countPendingTransferRequests(),
       dashboardRepository.countPendingSwapRequests(),
+      dashboardRepository.countPendingExamOptIns(),
       dashboardRepository.countNotifications(),
       dashboardRepository.countActivityLogs(),
     ]);
@@ -43,6 +45,7 @@ class DashboardService {
       assignedDuties,
       pendingTransferRequests,
       pendingSwapRequests,
+      pendingExamOptIns,
       totalNotifications,
       totalActivityLogs,
     };
@@ -55,12 +58,14 @@ class DashboardService {
       pendingTransferRequests,
       pendingSwapRequests,
       unreadNotifications,
+      pendingExamOptIns,
     ] = await Promise.all([
       dashboardRepository.countUpcomingDuties(employeeId),
       dashboardRepository.countCompletedDuties(employeeId),
       dashboardRepository.countPendingTransfersByEmployee(employeeId),
       dashboardRepository.countPendingSwapsByEmployee(employeeId),
       dashboardRepository.countUnreadNotifications(employeeId),
+      dashboardRepository.countEmployeePendingExamOptIns(employeeId),
     ]);
 
     return {
@@ -69,6 +74,7 @@ class DashboardService {
       pendingTransferRequests,
       pendingSwapRequests,
       unreadNotifications,
+      pendingExamOptIns,
     };
   }
 
@@ -85,11 +91,13 @@ class DashboardService {
       upcomingDepartmentDuties,
       pendingTransferRequests,
       pendingSwapRequests,
+      pendingExamOptIns,
     ] = await Promise.all([
       dashboardRepository.countFacultyByDepartment(departmentId),
       dashboardRepository.countUpcomingDepartmentDuties(departmentId),
       dashboardRepository.countDepartmentPendingTransfers(departmentId),
       dashboardRepository.countDepartmentPendingSwaps(departmentId),
+      dashboardRepository.countDepartmentPendingExamOptIns(departmentId),
     ]);
 
     return {
@@ -97,6 +105,7 @@ class DashboardService {
       upcomingDepartmentDuties,
       pendingTransferRequests,
       pendingSwapRequests,
+      pendingExamOptIns,
     };
   }
 

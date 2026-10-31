@@ -11,7 +11,13 @@ export const employeeReportQuerySchema =
 
     role: z.nativeEnum(Role).optional(),
 
-    isActive: z.coerce.boolean().optional(),
+    isActive: z
+      .preprocess(
+        (value) =>
+          value === "true" ? true : value === "false" ? false : value,
+        z.boolean(),
+      )
+      .optional(),
 
   });
 

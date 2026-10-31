@@ -15,21 +15,6 @@ export type CreateSwapRequestFormValues = z.infer<
 >;
 
 /**
- * Approve Swap
- */
-export const approveSwapRequestSchema = z.object({
-  approvalRemark: z
-    .string()
-    .trim()
-    .min(3, "Approval remark must be at least 3 characters.")
-    .max(500, "Approval remark cannot exceed 500 characters."),
-});
-
-export type ApproveSwapRequestFormValues = z.infer<
-  typeof approveSwapRequestSchema
->;
-
-/**
  * Reject Swap
  */
 export const rejectSwapRequestSchema = z.object({
@@ -60,16 +45,3 @@ export const cancelSwapRequestSchema = z.object({
 export type CancelSwapRequestFormValues = z.infer<
   typeof cancelSwapRequestSchema
 >;
-
-/**
- * Reject By COE
- */
-export const rejectSwapByCoeSchema = z.object({
-  approvalRemark: z
-    .string()
-    .trim()
-    .min(3, "Approval remark must be at least 3 characters.")
-    .max(500, "Approval remark cannot exceed 500 characters."),
-});
-
-export type RejectSwapByCoeFormValues = z.infer<typeof rejectSwapByCoeSchema>;

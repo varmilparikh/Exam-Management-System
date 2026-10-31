@@ -28,8 +28,6 @@ export function usePermissions() {
       canAssignDuty: hasPermission(user?.role, "duty:assign"),
 
       canApproveTransfer: hasPermission(user?.role, "transfer:approve"),
-      canApproveSwap: hasPermission(user?.role, "swap:approve"),
-
       canViewReports: hasPermission(user?.role, "reports:view"),
     }),
     [user?.role],

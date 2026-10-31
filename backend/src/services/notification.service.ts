@@ -47,8 +47,21 @@ class NotificationService {
     employeeId: string,
     page: number,
     limit: number,
-  ): Promise<NotificationResponse[]> {
-    return notificationRepository.findByEmployee(employeeId, page, limit);
+  ) {
+    const [notifications, total] = await Promise.all([
+      notificationRepository.findByEmployee(employeeId, page, limit),
+      notificationRepository.countByEmployee(employeeId),
+    ]);
+
+    return {
+      notifications,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    };
   }
 
   /**

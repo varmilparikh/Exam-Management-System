@@ -17,6 +17,9 @@ export default function SwapStatusBadge({ status }: SwapStatusBadgeProps) {
     case "APPROVED":
       return <Badge variant="success">Approved</Badge>;
 
+    case "COMPLETED":
+      return <Badge variant="success">Completed</Badge>;
+
     case "REJECTED":
       return <Badge variant="danger">Rejected</Badge>;
 

@@ -20,16 +20,6 @@ export const createSwapRequestSchema = z
   .strict();
 
 /**
- * Accept Swap Request
- */
-
-export const approveSwapRequestSchema = z
-  .object({
-    approvalRemark: z.string().trim().min(3).max(500),
-  })
-  .strict();
-
-/**
  * Reject Swap Request Schema
  */
 export const rejectSwapRequestSchema = z
@@ -52,18 +42,5 @@ export const cancelSwapRequestSchema = z
       .trim()
       .min(5, "Reason must be at least 5 characters.")
       .max(500, "Reason cannot exceed 500 characters."),
-  })
-  .strict();
-
-/**
- * Reject Swap Request by COE Schema
- */
-export const rejectSwapByCoeSchema = z
-  .object({
-    approvalRemark: z
-      .string()
-      .trim()
-      .min(3, "Approval remark must be at least 3 characters.")
-      .max(500, "Approval remark cannot exceed 500 characters."),
   })
   .strict();

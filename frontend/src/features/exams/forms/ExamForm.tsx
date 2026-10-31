@@ -40,6 +40,9 @@ export default function ExamForm({
       examDate: initialValues?.examDate
         ? initialValues.examDate.substring(0, 10)
         : "",
+      sessionName: initialValues?.sessionName ?? "Morning",
+      startTime: initialValues?.startTime?.substring(11, 16) ?? "09:00",
+      endTime: initialValues?.endTime?.substring(11, 16) ?? "12:00",
       requiredFaculty: initialValues?.requiredFaculty ?? 1,
     },
   });
@@ -66,6 +69,19 @@ export default function ExamForm({
       <FormField label="Exam Date" required error={errors.examDate?.message}>
         <Input type="date" {...register("examDate")} />
       </FormField>
+
+      <FormField label="Session" required error={errors.sessionName?.message}>
+        <Input placeholder="Morning" {...register("sessionName")} />
+      </FormField>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField label="Start time" required error={errors.startTime?.message}>
+          <Input type="time" {...register("startTime")} />
+        </FormField>
+        <FormField label="End time" required error={errors.endTime?.message}>
+          <Input type="time" {...register("endTime")} />
+        </FormField>
+      </div>
 
       <FormField
         label="Required Faculty"

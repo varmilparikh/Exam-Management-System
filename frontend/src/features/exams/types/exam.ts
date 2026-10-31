@@ -4,6 +4,9 @@ export interface Exam {
   examName: string;
 
   examDate: string;
+  sessionName: string;
+  startTime: string;
+  endTime: string;
 
   requiredFaculty: number;
 

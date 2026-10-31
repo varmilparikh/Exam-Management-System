@@ -5,6 +5,7 @@ import { ApiError } from "../utils/apiError.js";
 import type { CreateActivityLogDto } from "../types/activityLog.types.js";
 
 import { ActivityLogResponse } from "../constants/prismaSelect.js";
+import type { ActivityLogFilters } from "../types/activityLogFilter.types.js";
 
 class ActivityLogService {
   /**
@@ -30,17 +31,17 @@ class ActivityLogService {
   /**
    * Get All Activity Logs
    */
-  async getAll(page: number, limit: number) {
+  async getAll(page: number, limit: number, filters: ActivityLogFilters = {}) {
     const [logs, total] = await Promise.all([
-      activityLogRepository.findAll(page, limit),
-      activityLogRepository.count(),
+      activityLogRepository.findAll(page, limit, filters),
+      activityLogRepository.count(filters),
     ]);
 
     return {
       page,
       limit,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.max(1, Math.ceil(total / limit)),
       logs,
     };
   }

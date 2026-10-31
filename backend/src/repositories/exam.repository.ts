@@ -86,6 +86,28 @@ class ExamRepository {
     });
   }
 
+  async hasDutiesOrOptIns(id: string): Promise<boolean> {
+    const [duty, optIn] = await Promise.all([
+      prisma.examDuty.findFirst({
+        where: { examId: id, isDeleted: false },
+        select: { id: true },
+      }),
+      prisma.examOptIn.findFirst({
+        where: { examId: id },
+        select: { id: true },
+      }),
+    ]);
+    return Boolean(duty || optIn);
+  }
+
+  async countReservedPositions(id: string): Promise<number> {
+    const [assigned, optedIn] = await Promise.all([
+      prisma.examDuty.count({ where: { examId: id, isDeleted: false, employeeId: { not: null } } }),
+      prisma.examOptIn.count({ where: { examId: id, status: "PENDING" } }),
+    ]);
+    return assigned + optedIn;
+  }
+
   /**
    * Create exam
    */

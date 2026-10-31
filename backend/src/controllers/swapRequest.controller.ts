@@ -8,10 +8,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 import type {
   CreateSwapRequestDto,
-  ApproveSwapRequestDto,
   RejectSwapRequestDto,
   CancelSwapRequestDto,
-  RejectSwapByCoeDto,
 } from "../types/swapRequest.types.js";
 
 import type { SwapRequestFilters } from "../types/swapRequestFilter.types.js";
@@ -105,35 +103,6 @@ export const acceptSwapRequest = asyncHandler(
 );
 
 /**
- * Approve Swap Request
- */
-export const approveSwapRequest = asyncHandler(
-  async (
-    req: Request<{ id: string }, unknown, ApproveSwapRequestDto>,
-    res: Response,
-  ): Promise<void> => {
-    const { id } = req.params;
-    if (!req.user) {
-      throw new ApiError(401, "Unauthorized");
-    }
-
-    const { id: employeeId } = req.user;
-
-    const swapRequest = await swapRequestService.approveSwap(
-      id,
-      employeeId,
-      req.body,
-    );
-
-    res
-      .status(200)
-      .json(
-        new ApiResponse(200, swapRequest, "Swap request approved successfully"),
-      );
-  },
-);
-
-/**
  * Reject Swap Request
  */
 export const rejectSwapRequest = asyncHandler(
@@ -191,35 +160,6 @@ export const cancelSwapRequest = asyncHandler(
           swapRequest,
           "Swap request cancelled successfully",
         ),
-      );
-  },
-);
-
-/**
- * Reject Swap Request By COE
- */
-export const rejectSwapByCoe = asyncHandler(
-  async (
-    req: Request<{ id: string }, unknown, RejectSwapByCoeDto>,
-    res: Response,
-  ): Promise<void> => {
-    const { id } = req.params;
-    if (!req.user) {
-      throw new ApiError(401, "Unauthorized");
-    }
-
-    const { id: employeeId } = req.user;
-
-    const swapRequest = await swapRequestService.rejectSwapByCoe(
-      id,
-      employeeId,
-      req.body,
-    );
-
-    res
-      .status(200)
-      .json(
-        new ApiResponse(200, swapRequest, "Swap request rejected successfully"),
       );
   },
 );

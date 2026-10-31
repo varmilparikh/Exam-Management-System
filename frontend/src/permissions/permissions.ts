@@ -13,6 +13,8 @@ export type Permission =
   | "exam:create"
   | "exam:edit"
   | "exam:delete"
+  | "exam-opt-in:view"
+  | "exam-opt-in:review"
 
   | "duty:view"
   | "duty:assign"
@@ -23,8 +25,10 @@ export type Permission =
 
   | "swap:view"
   | "swap:create"
-  | "swap:approve"
 
   | "reports:view"
+  | "workload:view"
+
+  | "activity:view"
 
   | "notification:view";

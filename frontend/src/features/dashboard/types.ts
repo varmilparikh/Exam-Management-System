@@ -11,6 +11,7 @@ export interface CoeDashboard {
   assignedDuties: number;
   pendingTransferRequests: number;
   pendingSwapRequests: number;
+  pendingExamOptIns: number;
   totalNotifications: number;
   totalActivityLogs: number;
 }
@@ -21,6 +22,7 @@ export interface FacultyDashboard {
   pendingTransferRequests: number;
   pendingSwapRequests: number;
   unreadNotifications: number;
+  pendingExamOptIns: number;
 }
 
 export interface HodDashboard {
@@ -28,6 +30,7 @@ export interface HodDashboard {
   upcomingDepartmentDuties: number;
   pendingTransferRequests: number;
   pendingSwapRequests: number;
+  pendingExamOptIns: number;
 }
 
 export interface DashboardPendingRequests {

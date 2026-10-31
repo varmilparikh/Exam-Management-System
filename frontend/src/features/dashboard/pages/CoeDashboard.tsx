@@ -33,7 +33,7 @@ export default function CoeDashboard() {
     <div className="space-y-6">
       <DashboardHeader />
 
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-6">
         <StatCard
           title="Employees"
           value={data.totalEmployees}
@@ -60,6 +60,13 @@ export default function CoeDashboard() {
           value={data.assignedDuties}
           icon={<ClipboardList className="h-6 w-6" />}
           color="bg-purple-100 text-purple-600"
+        />
+
+        <StatCard
+          title="Pending Exam Opt-ins"
+          value={data.pendingExamOptIns}
+          icon={<CalendarDays className="h-6 w-6" />}
+          color="bg-orange-100 text-orange-600"
         />
 
         <StatCard

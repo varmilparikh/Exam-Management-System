@@ -1,4 +1,17 @@
-export function mapEmployeeReportRows(employees: any[]) {
+interface EmployeeReportSource {
+  employeeCode: string;
+  name: string;
+  email: string;
+  designation: string;
+  role: string;
+  department: { name: string };
+  attendedCount: number;
+  transferCount: number;
+  averageDuty: number;
+  isActive: boolean;
+}
+
+export function mapEmployeeReportRows(employees: EmployeeReportSource[]) {
   return employees.map((employee) => ({
     employeeCode: employee.employeeCode,
     name: employee.name,

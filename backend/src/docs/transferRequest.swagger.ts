@@ -6,11 +6,8 @@
  *       Workflow for transferring examination duties.
  *
  *       Transfer lifecycle:
- *       1. Faculty creates a transfer request.
- *       2. Status becomes PENDING.
- *       3. COE reviews the request.
- *       4. COE either APPROVES or REJECTS the request.
- *       5. If approved, the examination duty is transferred.
+ *       Faculty chooses REPLACEMENT_FOUND (and supplies a replacement) or NEEDS_ASSISTANCE (the authority supplies one).
+ *       Both requests remain PENDING until COE or SUPER_ADMIN assigns the replacement or rejects the request.
  */
 /**
  * @swagger
@@ -22,11 +19,10 @@
  *     description: >
  *       Creates a new examination duty transfer request.
  *
- *       A Faculty member, COE, or SUPER_ADMIN can request to transfer
- *       one of their assigned examination duties to another faculty member.
+ *       A faculty member may supply a replacement or ask COE/SUPER_ADMIN to find one.
  *
  *       The request is created with **PENDING** status and must be
- *       approved by the COE before the duty is transferred.
+ *       reviewed by COE or SUPER_ADMIN before the duty is transferred.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -37,7 +33,7 @@
  *             type: object
  *             required:
  *               - examDutyId
- *               - toEmployeeId
+ *               - requestType
  *             properties:
  *               examDutyId:
  *                 type: string
@@ -46,7 +42,11 @@
  *               toEmployeeId:
  *                 type: string
  *                 format: uuid
+ *                 description: Required for REPLACEMENT_FOUND; omit for NEEDS_ASSISTANCE.
  *                 example: 409a5d6e-8aef-43b7-a534-34c501681a14
+ *               requestType:
+ *                 type: string
+ *                 enum: [REPLACEMENT_FOUND, NEEDS_ASSISTANCE]
  *               reason:
  *                 type: string
  *                 example: Medical emergency

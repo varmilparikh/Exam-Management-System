@@ -83,6 +83,9 @@ export const examSelect = {
   id: true,
   examName: true,
   examDate: true,
+  sessionName: true,
+  startTime: true,
+  endTime: true,
   requiredFaculty: true,
   status: true,
   isDeleted: true,
@@ -92,6 +95,46 @@ export const examSelect = {
 
 export type ExamResponse = Prisma.ExamGetPayload<{
   select: typeof examSelect;
+}>;
+
+export const examOptInSelect = {
+  id: true,
+  employeeId: true,
+  examId: true,
+  status: true,
+  reviewedById: true,
+  reviewedAt: true,
+  reviewRemark: true,
+  createdAt: true,
+  updatedAt: true,
+  employee: {
+    select: {
+      id: true,
+      employeeCode: true,
+      name: true,
+      role: true,
+      department: { select: { id: true, name: true } },
+    },
+  },
+  exam: {
+    select: {
+      id: true,
+      examName: true,
+      examDate: true,
+      sessionName: true,
+      startTime: true,
+      endTime: true,
+      requiredFaculty: true,
+      status: true,
+    },
+  },
+  reviewedBy: {
+    select: { id: true, employeeCode: true, name: true, role: true },
+  },
+} satisfies Prisma.ExamOptInSelect;
+
+export type ExamOptInResponse = Prisma.ExamOptInGetPayload<{
+  select: typeof examOptInSelect;
 }>;
 
 export const examDutySelect = {
@@ -128,6 +171,9 @@ export const examDutySelect = {
       id: true,
       examName: true,
       examDate: true,
+      sessionName: true,
+      startTime: true,
+      endTime: true,
       requiredFaculty: true,
       status: true,
     },
@@ -226,6 +272,7 @@ export const transferRequestSelect = {
   examDutyId: true,
 
   status: true,
+  requestType: true,
 
   reason: true,
 
@@ -275,6 +322,9 @@ export const transferRequestSelect = {
           id: true,
           examName: true,
           examDate: true,
+          sessionName: true,
+          startTime: true,
+          endTime: true,
           status: true,
         },
       },
@@ -299,6 +349,10 @@ export const swapRequestSelect = {
 
   reason: true,
 
+  approvedById: true,
+  approvedAt: true,
+  approvalRemark: true,
+
   isDeleted: true,
 
   createdAt: true,
@@ -314,6 +368,15 @@ export const swapRequestSelect = {
   },
 
   receiver: {
+    select: {
+      id: true,
+      employeeCode: true,
+      name: true,
+      role: true,
+    },
+  },
+
+  approvedBy: {
     select: {
       id: true,
       employeeCode: true,

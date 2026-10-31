@@ -64,6 +64,15 @@ class NotificationRepository {
     });
   }
 
+  async countByEmployee(employeeId: string): Promise<number> {
+    return prisma.notification.count({
+      where: {
+        employeeId,
+        isDeleted: false,
+      },
+    });
+  }
+
   /**
    * Get unread notifications by employee
    */

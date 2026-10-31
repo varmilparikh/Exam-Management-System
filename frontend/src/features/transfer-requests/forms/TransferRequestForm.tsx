@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import Button from "@/components/ui/Button";
@@ -42,16 +42,19 @@ export default function TransferRequestForm({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<CreateTransferRequestFormValues>({
     resolver: zodResolver(createTransferRequestSchema),
 
     defaultValues: {
       examDutyId,
+      requestType: "REPLACEMENT_FOUND",
       toEmployeeId: "",
       reason: "",
     },
   });
+  const requestType = useWatch({ control, name: "requestType" });
 
   const submit = async (data: CreateTransferRequestFormValues) => {
     const normalized = {
@@ -65,16 +68,25 @@ export default function TransferRequestForm({
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-5">
       <input type="hidden" {...register("examDutyId")} />
-      <FormField
+      <FormField label="Request type" required>
+        <Select
+          options={[
+            { value: "REPLACEMENT_FOUND", label: "I have found a replacement" },
+            { value: "NEEDS_ASSISTANCE", label: "I need help finding a replacement" },
+          ]}
+          {...register("requestType")}
+        />
+      </FormField>
+      {requestType === "REPLACEMENT_FOUND" ? <FormField
         label="Replacement Faculty"
         error={errors.toEmployeeId?.message}
       >
         <Select
-          placeholder="Select faculty (optional)"
+          placeholder="Select replacement faculty"
           options={employeeOptions}
           {...register("toEmployeeId")}
         />
-      </FormField>
+      </FormField> : <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">COE and Super Admin will find and assign a replacement.</p>}
 
       <FormField label="Reason" required error={errors.reason?.message}>
         <textarea

@@ -18,10 +18,8 @@ import {
 
 import type {
   CreateSwapRequestDto,
-  ApproveSwapRequestDto,
   RejectSwapRequestDto,
   CancelSwapRequestDto,
-  RejectSwapByCoeDto,
 } from "../types/swapRequest.types.js";
 
 import {
@@ -31,18 +29,21 @@ import {
 import type { SwapRequestFilters } from "../types/swapRequestFilter.types.js";
 
 class SwapRequestService {
+  private async notifyAuthorities(title: string, message: string) {
+    const [admins, coes] = await Promise.all([
+      employeeRepository.findByRole(Role.SUPER_ADMIN),
+      employeeRepository.findByRole(Role.COE),
+    ]);
+    await notificationHelperService.notifyMany(
+      [...new Set([...admins, ...coes].map((employee) => employee.id))],
+      title,
+      message,
+    );
+  }
+
   private ensurePending(request: SwapRequestResponse): void {
     if (request.status !== SwapStatus.PENDING) {
       throw new ApiError(409, `Swap request is already ${request.status}.`);
-    }
-  }
-
-  private ensureAccepted(request: SwapRequestResponse): void {
-    if (request.status !== SwapStatus.ACCEPTED) {
-      throw new ApiError(
-        409,
-        `Swap request is ${request.status}, not ACCEPTED.`,
-      );
     }
   }
 
@@ -90,12 +91,8 @@ class SwapRequestService {
       case Role.SUPER_ADMIN:
         return swapRequestRepository.findAll(page, limit, filters);
 
-      case Role.COE: {
-        return swapRequestRepository.findAll(page, limit, {
-          ...filters,
-          status: SwapStatus.ACCEPTED,
-        });
-      }
+      case Role.COE:
+        return swapRequestRepository.findAll(page, limit, filters);
 
       case Role.FACULTY: {
         return swapRequestRepository.findForFaculty(
@@ -223,6 +220,10 @@ class SwapRequestService {
       "Swap Request Received",
       `${requester.name} has requested to swap examination duties with you.`,
     );
+    await this.notifyAuthorities(
+      "Swap Request Received",
+      `${requester.name} requested to exchange "${requesterDuty.exam.examName}" with ${receiver.name}'s "${receiverDuty.exam.examName}" duty. The system will complete the exchange after the receiver accepts.`,
+    );
 
     return swapRequest;
   }
@@ -243,136 +244,40 @@ class SwapRequestService {
       );
     }
 
-    this.ensurePending(swapRequest);
+    if (swapRequest.status !== SwapStatus.PENDING && swapRequest.status !== SwapStatus.ACCEPTED) {
+      throw new ApiError(409, `Swap request is already ${swapRequest.status}.`);
+    }
 
-    const updatedSwapRequest = await swapRequestRepository.update(id, {
-      status: SwapStatus.ACCEPTED,
-    });
+    const updatedSwapRequest = await swapRequestRepository.completeAcceptedSwapTransaction(id, receiverId);
 
     await activityLogService.log({
       employeeId: receiverId,
 
       action: ActivityAction.ACCEPT_SWAP_REQUEST,
 
-      description: `${updatedSwapRequest.receiver.name} accepted ${updatedSwapRequest.requester.name}'s swap request.`,
+      description: `${updatedSwapRequest.receiver.name} accepted ${updatedSwapRequest.requester.name}'s swap. "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}" duties were exchanged.`,
 
       entityType: EntityType.SWAP_REQUEST,
 
       entityId: updatedSwapRequest.id,
     });
 
-    const coes = await employeeRepository.findByRole(Role.COE);
-
-    await notificationHelperService.notifyMany(
-      coes.map((coe) => coe.id),
-      "Swap Request Awaiting Approval",
-      `${updatedSwapRequest.requester.name} and ${updatedSwapRequest.receiver.name} have agreed to swap examination duties. Approval is required.`,
-    );
-
-    return updatedSwapRequest;
-  }
-
-  /**
-   * COE approves swap request
-   */
-  async approveSwap(
-    id: string,
-    approvedById: string,
-    data: ApproveSwapRequestDto,
-  ): Promise<SwapRequestResponse> {
-    // 1. Check approver
-    const approver = await employeeValidationService.validateEmployee(
-      approvedById,
-      "Approver",
-    );
-
-    // 2. Find swap request
-    const swapRequest = await this.getSwapRequestOrThrow(id);
-
-    // 3. Request must be accepted
-    this.ensureAccepted(swapRequest);
-
-    // 4. Load both duties
-    const requesterDuty = await examDutyRepository.findById(
-      swapRequest.requesterDutyId,
-    );
-
-    const receiverDuty = await examDutyRepository.findById(
-      swapRequest.receiverDutyId,
-    );
-
-    if (!requesterDuty || !receiverDuty) {
-      throw new ApiError(404, "Exam duty not found");
-    }
-
-    // 5. Duties must still be assigned
-    this.ensureAssigned(requesterDuty, receiverDuty);
-
-    // 6. Check if receiver already has a duty for requester's exam
-    const receiverExistingDuty = await examDutyRepository.findByEmployeeAndExam(
-      swapRequest.receiverId,
-      requesterDuty.examId,
-    );
-
-    if (receiverExistingDuty && receiverExistingDuty.id !== requesterDuty.id) {
-      throw new ApiError(
-        400,
-        "Swap cannot be approved because the receiver already has a duty for this examination.",
-      );
-    }
-
-    // 7. Check if requester already has a duty for receiver's exam
-    const requesterExistingDuty =
-      await examDutyRepository.findByEmployeeAndExam(
-        swapRequest.requesterId,
-        receiverDuty.examId,
-      );
-
-    if (requesterExistingDuty && requesterExistingDuty.id !== receiverDuty.id) {
-      throw new ApiError(
-        400,
-        "Swap cannot be approved because the requester already has a duty for this examination.",
-      );
-    }
-
-    this.ensureUpcoming(requesterDuty, receiverDuty);
-
-    // 6. Perform transaction
-    const updatedSwapRequest =
-      await swapRequestRepository.approveSwapTransaction({
-        id,
-        approvedById,
-        approvalRemark: data.approvalRemark ?? null,
-        requesterDutyId: requesterDuty.id,
-        receiverDutyId: receiverDuty.id,
-        requesterId: swapRequest.requesterId,
-        receiverId: swapRequest.receiverId,
-      });
-
-    // 7. Activity log
     await activityLogService.log({
-      employeeId: approvedById,
-
-      action: ActivityAction.APPROVE_SWAP_REQUEST,
-
-      description:
-        `${approver.name} approved the duty swap between ` +
-        `${swapRequest.requester.name} and ${swapRequest.receiver.name}.`,
-
+      employeeId: receiverId,
+      action: ActivityAction.COMPLETE_SWAP_REQUEST,
+      description: `The system exchanged "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}" between ${updatedSwapRequest.requester.name} and ${updatedSwapRequest.receiver.name} after receiver acceptance.`,
       entityType: EntityType.SWAP_REQUEST,
-
       entityId: updatedSwapRequest.id,
     });
+    await Promise.all([
+      notificationHelperService.notify(updatedSwapRequest.requesterId, "Swap Completed", `Your swap with ${updatedSwapRequest.receiver.name} is complete. The duties for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}" were exchanged.`),
+      notificationHelperService.notify(updatedSwapRequest.receiverId, "Swap Completed", `Your swap with ${updatedSwapRequest.requester.name} is complete. The duties for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}" were exchanged.`),
+      this.notifyAuthorities("Swap Completed", `${updatedSwapRequest.requester.name} and ${updatedSwapRequest.receiver.name} exchanged duties for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}".`),
+    ]);
 
-    // 8. Notify requester
-    await notificationHelperService.notifySwapApproved(
-      swapRequest.requesterId,
-      swapRequest.receiverId,
-    );
-
-    // 10. Return response
     return updatedSwapRequest;
   }
+
 
   /**
    * Receiver rejects swap request
@@ -423,6 +328,10 @@ class SwapRequestService {
       "Swap Request Rejected",
       `${updatedSwapRequest.receiver.name} rejected your swap request.`,
     );
+    await this.notifyAuthorities(
+      "Swap Request Rejected",
+      `${updatedSwapRequest.receiver.name} rejected ${updatedSwapRequest.requester.name}'s swap request for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}".`,
+    );
     return updatedSwapRequest;
   }
 
@@ -469,6 +378,11 @@ class SwapRequestService {
       entityId: updatedSwapRequest.id,
     });
 
+    await this.notifyAuthorities(
+      "Swap Request Cancelled",
+      `${updatedSwapRequest.requester.name} cancelled the swap request to ${updatedSwapRequest.receiver.name} for "${updatedSwapRequest.requesterDuty.exam.examName}" and "${updatedSwapRequest.receiverDuty.exam.examName}".`,
+    );
+
     // 6. Notify receiver
     await notificationHelperService.notify(
       updatedSwapRequest.receiverId,
@@ -479,73 +393,6 @@ class SwapRequestService {
     return updatedSwapRequest;
   }
 
-  /**
-   * COE rejects an accepted swap request
-   */
-  async rejectSwapByCoe(
-    id: string,
-    approvedById: string,
-    data: RejectSwapByCoeDto,
-  ): Promise<SwapRequestResponse> {
-    // 1. Find approver
-    const approver = await employeeValidationService.validateEmployee(
-      approvedById,
-      "Approver",
-    );
-
-    // 2. Find swap request
-    const swapRequest = await this.getSwapRequestOrThrow(id);
-
-    // 3. Must already be accepted
-    this.ensureAccepted(swapRequest);
-
-    // 4. Reject request
-    const updatedSwapRequest = await swapRequestRepository.update(id, {
-      status: SwapStatus.REJECTED,
-
-      approvedBy: {
-        connect: {
-          id: approvedById,
-        },
-      },
-
-      approvedAt: new Date(),
-
-      approvalRemark: data.approvalRemark,
-    });
-
-    // 5. Activity Log
-    await activityLogService.log({
-      employeeId: approvedById,
-
-      action: ActivityAction.REJECT_SWAP_REQUEST_BY_COE,
-
-      description:
-        `${approver.name} rejected the swap request between ` +
-        `${updatedSwapRequest.requester.name} and ` +
-        `${updatedSwapRequest.receiver.name}.`,
-
-      entityType: EntityType.SWAP_REQUEST,
-
-      entityId: updatedSwapRequest.id,
-    });
-
-    // 6. Notify requester
-    await notificationHelperService.notify(
-      updatedSwapRequest.requesterId,
-      "Swap Request Rejected",
-      "Your accepted swap request has been rejected by the COE.",
-    );
-
-    // 7. Notify receiver
-    await notificationHelperService.notify(
-      updatedSwapRequest.receiverId,
-      "Swap Request Rejected",
-      "The swap request you accepted has been rejected by the COE.",
-    );
-
-    return updatedSwapRequest;
-  }
 }
 
 export default new SwapRequestService();

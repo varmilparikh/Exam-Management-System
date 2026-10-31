@@ -6,6 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 
 import type { CreateNotificationDto } from "../types/notification.types.js";
+import { notificationListQuerySchema } from "../validators/notification.validator.js";
 
 /**
  * Create Notification
@@ -32,9 +33,7 @@ export const getMyNotifications = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const { id: employeeId } = req.user!;
 
-    const page = Number(req.query.page) || 1;
-
-    const limit = Number(req.query.limit) || 20;
+    const { page, limit } = notificationListQuerySchema.parse(req.query);
 
     const notifications = await notificationService.getByEmployee(
       employeeId,

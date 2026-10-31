@@ -11,20 +11,12 @@ export interface CreateSwapRequestDto {
   reason?: string;
 }
 
-export interface ApproveSwapRequestDto {
-  approvalRemark: string;
-}
-
 export interface RejectSwapRequestDto {
   reason?: string;
 }
 
 export interface CancelSwapRequestDto {
   reason?: string;
-}
-
-export interface RejectSwapByCoeDto {
-  approvalRemark: string;
 }
 
 const DEFAULT_FILTERS: SwapRequestFilters = {
@@ -84,30 +76,10 @@ async function cancel(id: string, data: CancelSwapRequestDto) {
   return response.data.data;
 }
 
-async function approve(id: string, data: ApproveSwapRequestDto) {
-  const response = await api.patch<ApiResponse<SwapRequest>>(
-    `/swap-requests/${id}/approve`,
-    data,
-  );
-
-  return response.data.data;
-}
-
-async function rejectByCoe(id: string, data: RejectSwapByCoeDto) {
-  const response = await api.patch<ApiResponse<SwapRequest>>(
-    `/swap-requests/${id}/reject-by-coe`,
-    data,
-  );
-
-  return response.data.data;
-}
-
 export const swapRequestService = {
   getAll,
   create,
   accept,
   reject,
   cancel,
-  approve,
-  rejectByCoe,
 };

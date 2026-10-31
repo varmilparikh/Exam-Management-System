@@ -17,6 +17,9 @@
  *             required:
  *               - examName
  *               - examDate
+ *               - sessionName
+ *               - startTime
+ *               - endTime
  *               - requiredFaculty
  *             properties:
  *               examName:
@@ -29,6 +32,17 @@
  *               requiredFaculty:
  *                 type: integer
  *                 example: 10
+ *               sessionName:
+ *                 type: string
+ *                 example: Morning
+ *               startTime:
+ *                 type: string
+ *                 pattern: '^([01]\\d|2[0-3]):[0-5]\\d$'
+ *                 example: '10:00'
+ *               endTime:
+ *                 type: string
+ *                 pattern: '^([01]\\d|2[0-3]):[0-5]\\d$'
+ *                 example: '13:00'
  *     responses:
  *       201:
  *         description: Exam created successfully.

@@ -9,12 +9,18 @@ import type { ExamFilters } from "../types/examFilters";
 export interface CreateExamDto {
   examName: string;
   examDate: string;
+  sessionName: string;
+  startTime: string;
+  endTime: string;
   requiredFaculty: number;
 }
 
 export interface UpdateExamDto {
   examName?: string;
   examDate?: string;
+  sessionName?: string;
+  startTime?: string;
+  endTime?: string;
   requiredFaculty?: number;
   status?: Exam["status"];
 }

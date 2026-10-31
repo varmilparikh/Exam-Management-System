@@ -41,6 +41,7 @@ export default function UpcomingExamsCard() {
 
               <p className="mt-2 text-sm text-gray-500">
                 {new Date(exam.examDate).toLocaleDateString()}
+                {` · ${exam.sessionName} · ${formatTime(exam.startTime)}–${formatTime(exam.endTime)}`}
               </p>
 
               <p className="mt-1 text-sm text-gray-500">
@@ -52,4 +53,8 @@ export default function UpcomingExamsCard() {
       )}
     </DashboardCard>
   );
+}
+
+function formatTime(value: string) {
+  return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
 }

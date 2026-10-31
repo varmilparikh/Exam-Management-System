@@ -2,8 +2,7 @@ import prisma from "../config/prisma.js";
 
 import type { Prisma } from "../generated/prisma/client.js";
 import { ApiError } from "../utils/apiError.js";
-import { SwapStatus } from "../generated/prisma/client.js";
-import type { ApproveSwapTransactionData } from "../types/swapRequest.types.js";
+import { DutyStatus, ExamOptInStatus, ExamStatus, SwapStatus } from "../generated/prisma/client.js";
 import {
   swapRequestSelect,
   type SwapRequestResponse,
@@ -12,6 +11,94 @@ import {
 import type { SwapRequestFilters } from "../types/swapRequestFilter.types.js";
 
 class SwapRequestRepository {
+  async completeAcceptedSwapTransaction(id: string, receiverId: string): Promise<SwapRequestResponse> {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const request = await tx.swapRequest.findFirst({
+          where: { id, receiverId, status: { in: [SwapStatus.PENDING, SwapStatus.ACCEPTED] }, isDeleted: false },
+          select: { id: true, requesterId: true, receiverId: true, requesterDutyId: true, receiverDutyId: true },
+        });
+        if (!request) throw new ApiError(409, "This swap request has already been processed or is no longer available.");
+
+        const [requesterDuty, receiverDuty] = await Promise.all([
+          tx.examDuty.findFirst({
+            where: { id: request.requesterDutyId, employeeId: request.requesterId, isDeleted: false, status: DutyStatus.ASSIGNED },
+            select: { id: true, employeeId: true, examId: true, exam: { select: { examDate: true, startTime: true, endTime: true, status: true } } },
+          }),
+          tx.examDuty.findFirst({
+            where: { id: request.receiverDutyId, employeeId: request.receiverId, isDeleted: false, status: DutyStatus.ASSIGNED },
+            select: { id: true, employeeId: true, examId: true, exam: { select: { examDate: true, startTime: true, endTime: true, status: true } } },
+          }),
+        ]);
+        if (!requesterDuty || !receiverDuty) throw new ApiError(409, "The duties changed since this request was created.");
+        if (requesterDuty.exam.status !== ExamStatus.UPCOMING || receiverDuty.exam.status !== ExamStatus.UPCOMING) {
+          throw new ApiError(409, "Only upcoming exam duties can be swapped.");
+        }
+
+        const dutyIds = [request.requesterDutyId, request.receiverDutyId];
+        const [requesterOverlap, receiverOverlap, requesterOptIn, receiverOptIn] = await Promise.all([
+          tx.examDuty.findFirst({
+            where: {
+              employeeId: request.requesterId,
+              isDeleted: false,
+              id: { notIn: dutyIds },
+              exam: { isDeleted: false, examDate: receiverDuty.exam.examDate, startTime: { lt: receiverDuty.exam.endTime }, endTime: { gt: receiverDuty.exam.startTime } },
+            },
+            select: { id: true },
+          }),
+          tx.examDuty.findFirst({
+            where: {
+              employeeId: request.receiverId,
+              isDeleted: false,
+              id: { notIn: dutyIds },
+              exam: { isDeleted: false, examDate: requesterDuty.exam.examDate, startTime: { lt: requesterDuty.exam.endTime }, endTime: { gt: requesterDuty.exam.startTime } },
+            },
+            select: { id: true },
+          }),
+          tx.examOptIn.findFirst({
+            where: {
+              employeeId: request.requesterId,
+              status: { in: [ExamOptInStatus.PENDING, ExamOptInStatus.CONFIRMED] },
+              examId: { notIn: [requesterDuty.examId, receiverDuty.examId] },
+              exam: { isDeleted: false, examDate: receiverDuty.exam.examDate, startTime: { lt: receiverDuty.exam.endTime }, endTime: { gt: receiverDuty.exam.startTime } },
+            },
+            select: { id: true },
+          }),
+          tx.examOptIn.findFirst({
+            where: {
+              employeeId: request.receiverId,
+              status: { in: [ExamOptInStatus.PENDING, ExamOptInStatus.CONFIRMED] },
+              examId: { notIn: [requesterDuty.examId, receiverDuty.examId] },
+              exam: { isDeleted: false, examDate: requesterDuty.exam.examDate, startTime: { lt: requesterDuty.exam.endTime }, endTime: { gt: requesterDuty.exam.startTime } },
+            },
+            select: { id: true },
+          }),
+        ]);
+        if (requesterOverlap || receiverOverlap || requesterOptIn || receiverOptIn) {
+          throw new ApiError(409, "The swap would conflict with another duty or opt-in.");
+        }
+
+        await tx.examDuty.update({ where: { id: request.requesterDutyId }, data: { employeeId: null } });
+        await tx.examDuty.update({ where: { id: request.receiverDutyId }, data: { employeeId: null } });
+        await tx.examDuty.update({ where: { id: request.requesterDutyId }, data: { employeeId: request.receiverId } });
+        await tx.examDuty.update({ where: { id: request.receiverDutyId }, data: { employeeId: request.requesterId } });
+
+        const updated = await tx.swapRequest.updateMany({
+          where: { id, receiverId, status: { in: [SwapStatus.PENDING, SwapStatus.ACCEPTED] }, isDeleted: false },
+          data: { status: SwapStatus.COMPLETED, completedAt: new Date() },
+        });
+        if (updated.count !== 1) throw new ApiError(409, "This swap request has already been processed.");
+        return tx.swapRequest.findUniqueOrThrow({ where: { id }, select: swapRequestSelect });
+      }, { isolationLevel: "Serializable" });
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      if (typeof error === "object" && error !== null && "code" in error && error.code === "P2034") {
+        throw new ApiError(409, "A duty changed during the swap. Please retry.");
+      }
+      throw error;
+    }
+  }
+
   private buildFilters(
     filters: SwapRequestFilters,
   ): Prisma.SwapRequestWhereInput {
@@ -219,139 +306,6 @@ class SwapRequestRepository {
     });
   }
 
-  async approveSwapTransaction(
-    data: ApproveSwapTransactionData,
-  ): Promise<SwapRequestResponse> {
-    return prisma.$transaction(async (tx) => {
-      // 1. Lock/verify the swap request is still ACCEPTED
-      const request = await tx.swapRequest.findFirst({
-        where: {
-          id: data.id,
-          status: SwapStatus.ACCEPTED,
-          isDeleted: false,
-        },
-        select: {
-          id: true,
-          requesterDutyId: true,
-          receiverDutyId: true,
-          requesterId: true,
-          receiverId: true,
-        },
-      });
-
-      if (!request) {
-        throw new ApiError(
-          409,
-          "This swap request has already been processed or is no longer available.",
-        );
-      }
-
-      // 2. Verify the two duties still belong to the expected faculties
-      const requesterDuty = await tx.examDuty.findFirst({
-        where: {
-          id: data.requesterDutyId,
-          employeeId: data.requesterId,
-          isDeleted: false,
-        },
-        select: {
-          id: true,
-          employeeId: true,
-        },
-      });
-
-      const receiverDuty = await tx.examDuty.findFirst({
-        where: {
-          id: data.receiverDutyId,
-          employeeId: data.receiverId,
-          isDeleted: false,
-        },
-        select: {
-          id: true,
-          employeeId: true,
-        },
-      });
-
-      if (!requesterDuty || !receiverDuty) {
-        throw new ApiError(
-          409,
-          "The duties have changed since the swap request was created. Please create a new swap request.",
-        );
-      }
-
-      /*
-       * Temporarily clear the employee assignments.
-       *
-       * This prevents a possible unique(employeeId, examId)
-       * conflict while exchanging assignments.
-       */
-      await tx.examDuty.update({
-        where: {
-          id: data.requesterDutyId,
-        },
-        data: {
-          employeeId: null,
-        },
-      });
-
-      await tx.examDuty.update({
-        where: {
-          id: data.receiverDutyId,
-        },
-        data: {
-          employeeId: null,
-        },
-      });
-
-      // 3. Faculty B receives Faculty A's duty
-      await tx.examDuty.update({
-        where: {
-          id: data.requesterDutyId,
-        },
-        data: {
-          employeeId: data.receiverId,
-        },
-      });
-
-      // 4. Faculty A receives Faculty B's duty
-      await tx.examDuty.update({
-        where: {
-          id: data.receiverDutyId,
-        },
-        data: {
-          employeeId: data.requesterId,
-        },
-      });
-
-      // 5. Mark request as APPROVED
-      const result = await tx.swapRequest.updateMany({
-        where: {
-          id: data.id,
-          status: SwapStatus.ACCEPTED,
-        },
-        data: {
-          status: SwapStatus.APPROVED,
-          approvedById: data.approvedById,
-          approvedAt: new Date(),
-          approvalRemark: data.approvalRemark,
-        },
-      });
-
-      if (result.count === 0) {
-        throw new ApiError(
-          409,
-          "This swap request has already been processed.",
-        );
-      }
-
-      // 6. Return updated request
-      return tx.swapRequest.findUniqueOrThrow({
-        where: {
-          id: data.id,
-        },
-        select: swapRequestSelect,
-      });
-    });
-  }
 }
 
 export default new SwapRequestRepository();

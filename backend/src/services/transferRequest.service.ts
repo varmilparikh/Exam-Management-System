@@ -1,5 +1,4 @@
 import {
-  transferRequestSelect,
   type TransferRequestResponse,
   type ExamDutyResponse,
 } from "../constants/prismaSelect.js";
@@ -13,7 +12,9 @@ import {
   EntityType,
   ExamStatus,
   Role,
+  TransferRequestType,
 } from "../generated/prisma/client.js";
+import employeeRepository from "../repositories/employee.repository.js";
 import transferRequestRepository from "../repositories/transferRequest.repository.js";
 import examDutyRepository from "../repositories/examDuty.repository.js";
 import employeeValidationService from "./employeeValidation.service.js";
@@ -110,7 +111,15 @@ class TransferRequestService {
       await employeeValidationService.validateFaculty(data.toEmployeeId);
     }
 
+    if (data.requestType === TransferRequestType.REPLACEMENT_FOUND && !data.toEmployeeId) {
+      throw new ApiError(400, "Select the replacement faculty member you have found.");
+    }
+    if (data.requestType === TransferRequestType.NEEDS_ASSISTANCE && data.toEmployeeId) {
+      throw new ApiError(400, "A replacement must not be selected when requesting assistance.");
+    }
+
     const transfer = await transferRequestRepository.create({
+      requestType: data.requestType,
       status: TransferStatus.PENDING,
 
       reason: data.reason,
@@ -164,6 +173,18 @@ class TransferRequestService {
         `${requester.name} has requested to transfer an examination duty to you.`,
       );
     }
+
+    const [admins, coes] = await Promise.all([
+      employeeRepository.findByRole(Role.SUPER_ADMIN),
+      employeeRepository.findByRole(Role.COE),
+    ]);
+    await notificationHelperService.notifyMany(
+      [...new Set([...admins, ...coes].map((employee) => employee.id))],
+      data.requestType === TransferRequestType.NEEDS_ASSISTANCE
+        ? "Transfer Assistance Requested"
+        : "Transfer Request Submitted",
+      `${requester.name} ${data.requestType === TransferRequestType.NEEDS_ASSISTANCE ? "needs help finding a replacement for" : "found a replacement for"} "${examDuty.exam.examName}".`,
+    );
 
     return transfer;
   }

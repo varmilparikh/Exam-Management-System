@@ -24,6 +24,7 @@
 
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "test": "tsx --test src/utils/examSession.utils.test.ts src/validators/workflow.validators.test.ts",
 
     "format": "prettier --write .",
     "format:check": "prettier --check ."

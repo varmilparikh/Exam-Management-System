@@ -9,6 +9,9 @@ export type ExamResponseDto = ExamResponse;
 export interface CreateExamDto {
   examName: string;
   examDate: Date;
+  sessionName: string;
+  startTime: Date;
+  endTime: Date;
   requiredFaculty: number;
 }
 
@@ -18,6 +21,9 @@ export interface CreateExamDto {
 export interface UpdateExamDto {
   examName?: string;
   examDate?: Date;
+  sessionName?: string;
+  startTime?: Date;
+  endTime?: Date;
   requiredFaculty?: number;
   status?: ExamStatus;
 }

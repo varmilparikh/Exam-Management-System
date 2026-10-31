@@ -1,10 +1,14 @@
 import api from "@/lib/api";
 import type { ApiResponse } from "@/types/api";
 
-import type { Notification, UnreadCount } from "../types/notification";
+import type {
+  Notification,
+  NotificationPage,
+  UnreadCount,
+} from "../types/notification";
 
 async function getNotifications(page = 1, limit = 20) {
-  const response = await api.get<ApiResponse<Notification[]>>(
+  const response = await api.get<ApiResponse<NotificationPage>>(
     "/notifications",
     {
       params: {

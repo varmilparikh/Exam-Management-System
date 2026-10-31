@@ -85,6 +85,10 @@ model Employee {
   // Exam Duties
   duties ExamDuty[]
 
+  examOptIns ExamOptIn[]
+
+  reviewedExamOptIns ExamOptIn[] @relation("ExamOptInReviewer")
+
   // Notifications
   notifications Notification[]
 
@@ -138,6 +142,18 @@ enum DutyStatus {
   ABSENT
 }
 
+enum ExamOptInStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED
+}
+
+enum TransferRequestType {
+  REPLACEMENT_FOUND
+  NEEDS_ASSISTANCE
+}
+
 enum TransferStatus {
   PENDING       // waiting for replacement faculty
   ACCEPTED      // waiting for COE
@@ -156,6 +172,7 @@ enum SwapStatus {
   PENDING // Waiting for receiver
   ACCEPTED // Receiver accepted, waiting for COE
   APPROVED // COE approved and duties swapped
+  COMPLETED // Receiver accepted and the system exchanged both duties
   REJECTED // Receiver or COE rejected
   CANCELLED // Requester cancelled
 }
@@ -177,12 +194,17 @@ model Exam {
 
   examName String   @unique
   examDate DateTime
+  sessionName String
+  startTime DateTime @db.Time(0)
+  endTime DateTime @db.Time(0)
 
   requiredFaculty Int
 
   status ExamStatus
 
   duties ExamDuty[]
+
+  optIns ExamOptIn[]
 
   isDeleted Boolean @default(false)
 
@@ -191,8 +213,34 @@ model Exam {
   updatedAt DateTime @updatedAt
 
   @@index([examDate])
+  @@index([examDate, startTime, endTime], map: "exams_session_date_time_idx")
   @@index([status, examDate])
   @@map("exams")
+}
+
+model ExamOptIn {
+  id String @id @default(uuid())
+
+  employeeId String
+  examId String
+  status ExamOptInStatus @default(PENDING)
+
+  reviewedById String?
+  reviewedAt DateTime?
+  reviewRemark String?
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reviewedBy Employee? @relation("ExamOptInReviewer", fields: [reviewedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, examId])
+  @@index([examId, status])
+  @@index([employeeId, status])
+  @@index([reviewedById])
+  @@map("exam_opt_ins")
 }
 
 model ExamDuty {
@@ -235,6 +283,7 @@ model TransferRequest {
   examDutyId     String
 
   status TransferStatus
+  requestType TransferRequestType
 
   reason String?
 
@@ -282,6 +331,7 @@ model SwapRequest {
   approvedBy   Employee? @relation("SwapApprover", fields: [approvedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   approvedAt DateTime?
+  completedAt DateTime?
 
   approvalRemark String?
 
@@ -355,6 +405,10 @@ enum ActivityAction {
   ASSIGN_EXAM_DUTY
   UPDATE_EXAM_DUTY
   DELETE_EXAM_DUTY
+  CREATE_EXAM_OPT_IN
+  CANCEL_EXAM_OPT_IN
+  CONFIRM_EXAM_OPT_IN
+  REJECT_EXAM_OPT_IN
 
   CREATE_TRANSFER_REQUEST
   APPROVE_TRANSFER_REQUEST
@@ -367,6 +421,7 @@ enum ActivityAction {
   CANCEL_SWAP_REQUEST
   REJECT_SWAP_REQUEST_BY_RECEIVER
   REJECT_SWAP_REQUEST_BY_COE
+  COMPLETE_SWAP_REQUEST
 }
 
 enum EntityType {

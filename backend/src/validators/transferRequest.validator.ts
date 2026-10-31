@@ -1,11 +1,12 @@
 import { z } from "zod";
 
-import { TransferStatus } from "../generated/prisma/client.js";
+import { TransferRequestType, TransferStatus } from "../generated/prisma/client.js";
 
 /**
  * Create Transfer Request Validation
  */
 export const createTransferRequestSchema = z.object({
+  requestType: z.nativeEnum(TransferRequestType),
   toEmployeeId: z
     .uuid("Invalid replacement employee ID")
     .optional(),
@@ -17,7 +18,13 @@ export const createTransferRequestSchema = z.object({
     .trim()
     .min(5)
     .max(500),
-}).strict();
+}).strict().refine(
+  (data) => data.requestType !== TransferRequestType.REPLACEMENT_FOUND || Boolean(data.toEmployeeId),
+  { path: ["toEmployeeId"], message: "Select the replacement faculty member you have found." },
+).refine(
+  (data) => data.requestType !== TransferRequestType.NEEDS_ASSISTANCE || !data.toEmployeeId,
+  { path: ["toEmployeeId"], message: "Leave replacement blank when requesting assistance." },
+);
 
 /**
  * Approve Transfer Request Validation

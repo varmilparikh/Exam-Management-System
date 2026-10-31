@@ -21,6 +21,66 @@ const swaggerOptions: swaggerJsdoc.Options = {
     ],
 
     components: {
+      parameters: {
+        ReportPage: {
+          name: "page",
+          in: "query",
+          schema: { type: "integer", minimum: 1, default: 1 },
+        },
+        ReportLimit: {
+          name: "limit",
+          in: "query",
+          schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
+        },
+        ReportSearch: {
+          name: "search",
+          in: "query",
+          schema: { type: "string" },
+        },
+        ReportStatus: {
+          name: "status",
+          in: "query",
+          schema: { type: "string" },
+        },
+        EmployeeRole: {
+          name: "role",
+          in: "query",
+          schema: {
+            type: "string",
+            enum: ["SUPER_ADMIN", "COE", "HOD", "FACULTY"],
+          },
+        },
+        EmployeeIsActive: {
+          name: "isActive",
+          in: "query",
+          schema: { type: "boolean" },
+        },
+        ReportDepartmentId: {
+          name: "departmentId",
+          in: "query",
+          schema: { type: "string", format: "uuid" },
+        },
+        ReportFromDate: {
+          name: "fromDate",
+          in: "query",
+          schema: { type: "string", format: "date" },
+        },
+        ReportToDate: {
+          name: "toDate",
+          in: "query",
+          schema: { type: "string", format: "date" },
+        },
+        ReportSortBy: {
+          name: "sortBy",
+          in: "query",
+          schema: { type: "string" },
+        },
+        ReportSortOrder: {
+          name: "sortOrder",
+          in: "query",
+          schema: { type: "string", enum: ["asc", "desc"], default: "asc" },
+        },
+      },
       securitySchemes: {
         bearerAuth: {
           type: "http",
@@ -72,6 +132,10 @@ const swaggerOptions: swaggerJsdoc.Options = {
       {
         name: "Activity Logs",
         description: "Activity Log APIs",
+      },
+      {
+        name: "Reports",
+        description: "Employee, exam, workflow, and workload reports.",
       },
     ],
   },

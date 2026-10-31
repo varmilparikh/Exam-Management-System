@@ -10,6 +10,17 @@ import { ExamsPage } from "@/features/exams";
 import { ExamDutiesPage } from "@/features/exam-duties";
 import { TransferRequestsPage } from "@/features/transfer-requests";
 import SwapRequestsPage from "@/features/swap-requests/pages/SwapRequestsPage";
+import {
+  ReportsPage,
+  FacultyWorkloadReportPage,
+  ExamReportPage,
+  WorkflowReportPage,
+  DutyReportPage,
+  ActivityReportPage,
+} from "@/features/reports";
+import { ActivityLogsPage } from "@/features/activity-logs";
+import { NotificationsPage } from "@/features/notifications";
+import ExamOptInsPage from "@/features/exam-opt-ins/pages/ExamOptInsPage";
 
 import { ROUTES } from "@/constants/routes";
 
@@ -74,6 +85,15 @@ function AppRouter() {
             }
           />
 
+          <Route
+            path={ROUTES.EXAM_OPT_INS}
+            element={
+              <PermissionRoute permission="exam-opt-in:view">
+                <ExamOptInsPage />
+              </PermissionRoute>
+            }
+          />
+
           {/* Exam Duties */}
           <Route
             path={ROUTES.DUTIES}
@@ -100,6 +120,75 @@ function AppRouter() {
             element={
               <PermissionRoute permission="swap:view">
                 <SwapRequestsPage />
+              </PermissionRoute>
+            }
+          />
+
+          {/* Reports */}
+          <Route
+            path={ROUTES.REPORTS}
+            element={
+              <PermissionRoute permission="reports:view">
+                <ReportsPage />
+              </PermissionRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.REPORTS_WORKLOAD}
+            element={
+              <PermissionRoute permission="workload:view">
+                <FacultyWorkloadReportPage />
+              </PermissionRoute>
+            }
+          />
+
+          <Route path={ROUTES.REPORTS_DUTIES} element={<PermissionRoute permission="workload:view"><DutyReportPage /></PermissionRoute>} />
+
+          <Route path={ROUTES.REPORTS_ACTIVITY} element={<PermissionRoute permission="activity:view"><ActivityReportPage /></PermissionRoute>} />
+
+          <Route
+            path={ROUTES.REPORTS_EXAMS}
+            element={
+              <PermissionRoute permission="reports:view">
+                <ExamReportPage />
+              </PermissionRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.REPORTS_TRANSFERS}
+            element={
+              <PermissionRoute permission="reports:view">
+                <WorkflowReportPage kind="transfers" />
+              </PermissionRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.REPORTS_SWAPS}
+            element={
+              <PermissionRoute permission="reports:view">
+                <WorkflowReportPage kind="swaps" />
+              </PermissionRoute>
+            }
+          />
+
+          {/* Activity log and notifications */}
+          <Route
+            path={ROUTES.ACTIVITY_LOGS}
+            element={
+              <PermissionRoute permission="activity:view">
+                <ActivityLogsPage />
+              </PermissionRoute>
+            }
+          />
+
+          <Route
+            path={ROUTES.NOTIFICATIONS}
+            element={
+              <PermissionRoute permission="notification:view">
+                <NotificationsPage />
               </PermissionRoute>
             }
           />

@@ -13,6 +13,7 @@ export interface TransferRequest {
   toEmployeeId: string | null;
   examDutyId: string;
   status: TransferStatus;
+  requestType: "REPLACEMENT_FOUND" | "NEEDS_ASSISTANCE";
   reason: string;
   approvedById: string | null;
   approvedAt: string | null;

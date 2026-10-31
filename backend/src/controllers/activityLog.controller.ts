@@ -4,16 +4,22 @@ import activityLogService from "../services/activityLog.service.js";
 
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import { activityLogQuerySchema } from "../validators/activityLog.validator.js";
 
 /**
  * Get All Activity Logs
  */
 export const getActivityLogs = asyncHandler(
   async (req: Request, res: Response) => {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
+    const { page, limit, search, action, fromDate, toDate } =
+      activityLogQuerySchema.parse(req.query);
 
-    const logs = await activityLogService.getAll(page, limit);
+    const logs = await activityLogService.getAll(page, limit, {
+      search,
+      action,
+      fromDate,
+      toDate,
+    });
 
     res
       .status(200)
@@ -41,8 +47,7 @@ export const getActivityLogById = asyncHandler(
  */
 export const getMyActivityLogs = asyncHandler(
   async (req: Request, res: Response) => {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
+    const { page, limit } = activityLogQuerySchema.parse(req.query);
 
     const logs = await activityLogService.getMyLogs(req.user!.id, page, limit);
 
