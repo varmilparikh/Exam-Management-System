@@ -14,7 +14,7 @@ interface ExamTableProps {
 }
 
 export default function ExamTable({ filters }: ExamTableProps) {
-  const { data = [], isLoading } = useExams(filters);
+  const { data = [], isLoading, isError, refetch } = useExams(filters);
 
   const { user } = useAuth();
 
@@ -35,6 +35,9 @@ export default function ExamTable({ filters }: ExamTableProps) {
       columns={columns}
       data={data}
       loading={isLoading}
+      error={isError}
+      onRetry={() => void refetch()}
+      errorMessage="Exam records could not be retrieved. Check your connection and try again."
       emptyMessage={
         filters.search ? "No matching exams found." : "No exams found."
       }

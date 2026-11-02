@@ -17,7 +17,7 @@ export default function ExamDutyTable({
   filters,
   canManage,
 }: ExamDutyTableProps) {
-  const { data = [], isLoading } = useExamDuties(filters);
+  const { data = [], isLoading, isError, refetch } = useExamDuties(filters);
   const update = useUpdateExamDuty();
   const remove = useDeleteExamDuty();
   const [pendingDelete, setPendingDelete] = useState<ExamDuty | null>(null);
@@ -45,6 +45,9 @@ export default function ExamDutyTable({
         columns={columns}
         data={data}
         loading={isLoading}
+        error={isError}
+        onRetry={() => void refetch()}
+        errorMessage="Exam duties could not be retrieved. Check your connection and try again."
         emptyMessage="No exam duties have been assigned yet."
       />
       <ConfirmDialog

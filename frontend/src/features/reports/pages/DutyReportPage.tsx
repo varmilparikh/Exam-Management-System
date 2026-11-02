@@ -3,6 +3,7 @@ import { Download, FileSpreadsheet, FileText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import Button from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
+import QueryErrorState from "@/components/common/QueryErrorState/QueryErrorState";
 import { reportsService } from "../api/reports.service";
 import { downloadBlob } from "../utils/downloadReport";
 import type { StatusReportFilters } from "../types/report";
@@ -14,7 +15,7 @@ export default function DutyReportPage() {
   const [filters, setFilters] = useState(initialFilters);
   const [exporting, setExporting] = useState<"csv" | "excel" | "pdf" | null>(null);
   const [exportError, setExportError] = useState("");
-  const { data, isLoading, isFetching, error } = useQuery({ queryKey: ["reports", "duties", filters], queryFn: () => reportsService.getDutyReport(filters) });
+  const { data, isLoading, isFetching, error, refetch } = useQuery({ queryKey: ["reports", "duties", filters], queryFn: () => reportsService.getDutyReport(filters) });
   const update = <K extends keyof StatusReportFilters>(key: K, value: StatusReportFilters[K]) => setFilters((old) => ({ ...old, [key]: value, page: key === "page" ? value as number : 1 }));
   const exportAs = async (format: "csv" | "excel" | "pdf") => {
     setExporting(format); setExportError("");
@@ -22,7 +23,7 @@ export default function DutyReportPage() {
     catch { setExportError("Could not export the duty report."); }
     finally { setExporting(null); }
   };
-  if (error) return <p className="p-6 text-sm text-red-600">Failed to load duty report.</p>;
+  if (error) return <QueryErrorState title="Duty report is unavailable" message="Check your connection and try again." onRetry={() => void refetch()} />;
   return <div className="space-y-6">
     <header><h1 className="text-2xl font-semibold">Duty Report</h1><p className="mt-1 text-sm text-slate-500">Faculty, exam session, department and duty status.</p></header>
     <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{["Matching duties", ...statuses].map((status) => <div key={status} className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]"><p className="text-sm text-slate-500">{status}</p><p className="mt-2 text-2xl font-semibold">{status === "Matching duties" ? data?.summary.total ?? 0 : data?.summary.statusCounts[status] ?? 0}</p></div>)}</section>

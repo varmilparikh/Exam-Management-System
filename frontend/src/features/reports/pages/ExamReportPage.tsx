@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import Button from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
+import QueryErrorState from "@/components/common/QueryErrorState/QueryErrorState";
 import { reportsService } from "../api/reports.service";
 import { downloadBlob } from "../utils/downloadReport";
 import type { StatusReportFilters } from "../types/report";
@@ -25,7 +26,7 @@ export default function ExamReportPage() {
   const [exporting, setExporting] = useState<"csv" | "excel" | "pdf" | null>(null);
   const [exportError, setExportError] = useState("");
 
-  const { data, isLoading, isFetching, error } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["reports", "exams", filters],
     queryFn: () => reportsService.getExamReport(filters),
   });
@@ -57,9 +58,7 @@ export default function ExamReportPage() {
     }
   };
 
-  if (error) {
-    return <p className="p-6 text-sm text-red-600">Failed to load exam report.</p>;
-  }
+  if (error) return <QueryErrorState title="Exam report is unavailable" message="Check your connection and try again." onRetry={() => void refetch()} />;
 
   return (
     <div className="space-y-6">

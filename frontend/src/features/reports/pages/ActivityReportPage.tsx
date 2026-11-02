@@ -3,6 +3,7 @@ import { Download, FileSpreadsheet, FileText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import Button from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
+import QueryErrorState from "@/components/common/QueryErrorState/QueryErrorState";
 import { reportsService } from "../api/reports.service";
 import { downloadBlob } from "../utils/downloadReport";
 import type { StatusReportFilters } from "../types/report";
@@ -12,7 +13,7 @@ export default function ActivityReportPage() {
   const [filters, setFilters] = useState(initialFilters);
   const [exporting, setExporting] = useState<"csv" | "excel" | "pdf" | null>(null);
   const [exportError, setExportError] = useState("");
-  const { data, isLoading, isFetching, error } = useQuery({ queryKey: ["reports", "activity", filters], queryFn: () => reportsService.getActivityReport(filters) });
+  const { data, isLoading, isFetching, error, refetch } = useQuery({ queryKey: ["reports", "activity", filters], queryFn: () => reportsService.getActivityReport(filters) });
   const update = <K extends keyof typeof initialFilters>(key: K, value: (typeof initialFilters)[K]) => setFilters((old) => ({ ...old, [key]: value, page: key === "page" ? value as number : 1 }));
   const exportAs = async (format: "csv" | "excel" | "pdf") => {
     setExporting(format); setExportError("");
@@ -20,7 +21,7 @@ export default function ActivityReportPage() {
     catch { setExportError("Could not export the activity report."); }
     finally { setExporting(null); }
   };
-  if (error) return <p className="p-6 text-sm text-red-600">Failed to load activity report.</p>;
+  if (error) return <QueryErrorState title="Activity report is unavailable" message="Check your connection and try again." onRetry={() => void refetch()} />;
   const actions = Object.keys(data?.summary.actionCounts ?? {}).sort();
   return <div className="space-y-6">
     <header><h1 className="text-2xl font-semibold">Activity Report</h1><p className="mt-1 text-sm text-slate-500">Audit trail by user, action, entity and timestamp.</p></header>

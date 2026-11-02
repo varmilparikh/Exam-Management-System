@@ -3,6 +3,7 @@ import { Download, FileSpreadsheet, FileText } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
+import QueryErrorState from "@/components/common/QueryErrorState/QueryErrorState";
 
 import { useEmployees } from "@/features/employees/hooks/useEmployees";
 
@@ -47,6 +48,7 @@ export default function FacultyWorkloadReportPage() {
     isLoading,
     isFetching,
     error,
+    refetch,
   } = useFacultyWorkloadReport(filters);
 
   const faculty = useMemo(
@@ -107,17 +109,7 @@ export default function FacultyWorkloadReportPage() {
     }
   };
 
-  if (error) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold">Faculty Workload Report</h1>
-
-        <p className="mt-4 text-sm text-red-600">
-          Failed to load faculty workload report.
-        </p>
-      </div>
-    );
-  }
+  if (error) return <QueryErrorState title="Faculty workload report is unavailable" message="Check your connection and try again." onRetry={() => void refetch()} />;
 
   return (
     <div className="space-y-6">

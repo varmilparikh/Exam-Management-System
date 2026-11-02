@@ -7,16 +7,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { toast } from "sonner";
 import { examOptInService } from "../api/examOptIn.service";
-import type { ExamOptInStatus } from "../types";
+import type { ExamOptIn, ExamOptInStatus } from "../types";
 import StatusChip from "@/components/ui/StatusChip";
+import { Dialog } from "@/components/ui/Dialog";
+import QueryErrorState from "@/components/common/QueryErrorState/QueryErrorState";
 
 const queryKey = ["exam-opt-ins"] as const;
 
 export default function ExamOptInsPage() {
   const [status, setStatus] = useState<ExamOptInStatus | "">("PENDING");
+  const [rejectTarget, setRejectTarget] = useState<ExamOptIn | null>(null);
+  const [rejectRemark, setRejectRemark] = useState("");
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { data = [], isLoading, error } = useQuery({
+  const { data = [], isLoading, error, refetch } = useQuery({
     queryKey: [...queryKey, "all", status],
     queryFn: () => examOptInService.getAll({ status: status || undefined }),
   });
@@ -24,6 +28,10 @@ export default function ExamOptInsPage() {
     mutationFn: ({ id, action, remark }: { id: string; action: "confirm" | "reject"; remark?: string }) => examOptInService.review(id, action, remark),
     onSuccess: (_, variables) => {
       toast.success(variables.action === "confirm" ? "Participation confirmed." : "Opt-in rejected.");
+      if (variables.action === "reject") {
+        setRejectTarget(null);
+        setRejectRemark("");
+      }
       void queryClient.invalidateQueries({ queryKey });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -46,7 +54,7 @@ export default function ExamOptInsPage() {
 
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
         {isLoading ? <div className="space-y-3 p-6"><Skeleton /><Skeleton /><Skeleton /></div>
-          : error ? <p className="p-6 text-sm text-red-600">Could not load faculty opt-ins.</p>
+          : error ? <QueryErrorState compact title="Session requests are unavailable" message="Check your connection and try again." onRetry={() => void refetch()} />
           : data.length === 0 ? <p className="p-8 text-center text-sm text-slate-500">No opt-ins match this filter.</p>
           : <table className="min-w-240 w-full text-left text-sm">
             <thead><tr className="border-b border-slate-200 bg-slate-50/90 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"><th className="whitespace-nowrap px-4 py-3">Faculty</th><th className="px-4 py-3">Department</th><th className="px-4 py-3">Exam session</th><th className="whitespace-nowrap px-4 py-3">Date and time</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Action</th></tr></thead>
@@ -59,13 +67,71 @@ export default function ExamOptInsPage() {
               <td className="px-4 py-3">{canReview && item.status === "PENDING" ? <div className="flex gap-2">
                 <Button size="sm" disabled={review.isPending} loading={review.isPending} onClick={() => review.mutate({ id: item.id, action: "confirm" })}>Confirm</Button>
                 <Button size="sm" variant="danger" disabled={review.isPending} onClick={() => {
-                  const remark = window.prompt("Reason for rejecting this opt-in:");
-                  if (remark?.trim()) review.mutate({ id: item.id, action: "reject", remark: remark.trim() });
+                  setRejectTarget(item);
+                  setRejectRemark("");
                 }}>Reject</Button>
               </div> : item.reviewRemark || "—"}</td>
             </tr>)}</tbody>
           </table>}
       </div>
+
+      <Dialog.Root
+        open={Boolean(rejectTarget)}
+        onOpenChange={(open) => {
+          if (!open && !review.isPending) {
+            setRejectTarget(null);
+            setRejectRemark("");
+          }
+        }}
+      >
+        <Dialog.Content maxWidth="sm">
+          <Dialog.Header
+            title="Reject participation request"
+            description={rejectTarget ? `Add a reason for ${rejectTarget.employee.name}'s request to join ${rejectTarget.exam.examName}.` : undefined}
+          />
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              const remark = rejectRemark.trim();
+              if (rejectTarget && remark.length >= 5) {
+                review.mutate({ id: rejectTarget.id, action: "reject", remark });
+              }
+            }}
+          >
+            <Dialog.Body>
+              <label htmlFor="reject-opt-in-reason" className="block text-sm font-semibold text-slate-700">
+                Reason <span className="text-rose-600">*</span>
+              </label>
+              <textarea
+                id="reject-opt-in-reason"
+                required
+                minLength={5}
+                maxLength={500}
+                rows={4}
+                value={rejectRemark}
+                onChange={(event) => setRejectRemark(event.target.value)}
+                placeholder="Explain why this request cannot be approved."
+                className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                aria-describedby="reject-opt-in-reason-help"
+              />
+              <p id="reject-opt-in-reason-help" className="mt-1.5 text-xs leading-5 text-slate-500">
+                Enter 5–500 characters. The faculty member will see this reason.
+              </p>
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Button type="button" variant="secondary" disabled={review.isPending} onClick={() => {
+                setRejectTarget(null);
+                setRejectRemark("");
+              }}>
+                Keep request
+              </Button>
+              <Button type="submit" variant="danger" loading={review.isPending} disabled={rejectRemark.trim().length < 5}>
+                Reject request
+              </Button>
+            </Dialog.Footer>
+          </form>
+        </Dialog.Content>
+      </Dialog.Root>
     </div>
   );
 }

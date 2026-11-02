@@ -21,7 +21,7 @@ export default function TransferRequestTable({
   role,
   userId,
 }: TransferRequestTableProps) {
-  const { data = [], isLoading } = useTransferRequests(role, userId, filters);
+  const { data = [], isLoading, isError, refetch } = useTransferRequests(role, userId, filters);
   const cancel = useCancelTransferRequest();
   const [pendingCancel, setPendingCancel] = useState<TransferRequest | null>(
     null,
@@ -42,6 +42,9 @@ export default function TransferRequestTable({
         columns={columns}
         data={data}
         loading={isLoading}
+        error={isError}
+        onRetry={() => void refetch()}
+        errorMessage="Transfer requests could not be retrieved. Check your connection and try again."
         emptyMessage="No transfer requests found."
       />
       <ConfirmDialog

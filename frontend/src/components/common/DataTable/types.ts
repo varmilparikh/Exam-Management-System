@@ -42,5 +42,11 @@ export interface DataTableProps<T extends { id: string }> {
 
   loading?: boolean;
 
+  error?: boolean;
+
+  onRetry?: () => void;
+
+  errorMessage?: string;
+
   emptyMessage?: string;
 }

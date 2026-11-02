@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import Button from "@/components/ui/Button";
+import QueryErrorState from "@/components/common/QueryErrorState/QueryErrorState";
 
 import NotificationCard from "./NotificationCard";
 import EmptyNotifications from "./EmptyNotifications";
@@ -17,7 +18,7 @@ export default function NotificationList({
   page: number;
   onPageChange: (page: number) => void;
 }) {
-  const { data, isLoading, isFetching, error } = useNotifications(page);
+  const { data, isLoading, isFetching, error, refetch } = useNotifications(page);
 
   const markAsRead = useMarkAsRead();
 
@@ -32,7 +33,7 @@ export default function NotificationList({
 
   if (error) {
     return (
-      <p className="text-sm text-red-600">Failed to load notifications.</p>
+      <QueryErrorState title="Notifications are unavailable" message="Check your connection and try loading them again." onRetry={() => void refetch()} />
     );
   }
 

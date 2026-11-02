@@ -15,7 +15,7 @@ interface DepartmentTableProps {
 }
 
 export default function DepartmentTable({ filters }: DepartmentTableProps) {
-  const { data = [], isLoading } = useDepartments(filters);
+  const { data = [], isLoading, isError, refetch } = useDepartments(filters);
 
   const { user } = useAuth();
 
@@ -37,6 +37,9 @@ export default function DepartmentTable({ filters }: DepartmentTableProps) {
       columns={columns}
       data={data}
       loading={isLoading}
+      error={isError}
+      onRetry={() => void refetch()}
+      errorMessage="Department records could not be retrieved. Check your connection and try again."
       emptyMessage="No departments found."
     />
   );

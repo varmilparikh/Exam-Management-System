@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import Button from "@/components/ui/Button";
+import QueryErrorState from "@/components/common/QueryErrorState/QueryErrorState";
 import Skeleton from "@/components/ui/Skeleton";
 import { getActivityLogs } from "../api/activityLog.service";
 import type { ActivityLogFilters } from "../types/activityLog";
@@ -28,7 +29,7 @@ const DEFAULT_FILTERS: ActivityLogFilters = {
 
 export default function ActivityLogsPage() {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const { data, isLoading, isFetching, error } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["activity-logs", filters],
     queryFn: () => getActivityLogs(filters),
   });
@@ -43,7 +44,9 @@ export default function ActivityLogsPage() {
   }));
 
   if (error) {
-    return <p className="p-6 text-sm text-red-600">Failed to load activity logs.</p>;
+    return (
+      <QueryErrorState title="Activity logs are unavailable" message="We couldn’t retrieve the activity history. Check your connection and try again." onRetry={() => void refetch()} />
+    );
   }
 
   return (

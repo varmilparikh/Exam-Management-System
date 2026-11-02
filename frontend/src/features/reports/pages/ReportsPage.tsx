@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 
 import Button from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
+import QueryErrorState from "@/components/common/QueryErrorState/QueryErrorState";
 
 import { useEmployees } from "@/features/employees/hooks/useEmployees";
 import { useEmployeeReport } from "../hooks/useEmployeeReport";
@@ -33,7 +34,7 @@ export default function ReportsPage() {
     null,
   );
   const [exportError, setExportError] = useState("");
-  const { data: overview } = useQuery({ queryKey: ["reports", "overview"], queryFn: reportsService.getReportsOverview });
+  const { data: overview, isError: overviewError, refetch: refetchOverview } = useQuery({ queryKey: ["reports", "overview"], queryFn: reportsService.getReportsOverview });
 
   const { data: employees = [] } = useEmployees();
 
@@ -42,6 +43,7 @@ export default function ReportsPage() {
     isLoading,
     isFetching,
     error,
+    refetch,
   } = useEmployeeReport(filters);
 
   const departmentOptions = useMemo(() => {
@@ -93,17 +95,7 @@ export default function ReportsPage() {
     }
   };
 
-  if (error) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold">Reports</h1>
-
-        <p className="mt-4 text-sm text-red-600">
-          Failed to load employee report.
-        </p>
-      </div>
-    );
-  }
+  if (error) return <QueryErrorState title="Employee report is unavailable" message="Check your connection and try again." onRetry={() => void refetch()} />;
 
   return (
     <div className="space-y-6">
@@ -115,7 +107,7 @@ export default function ReportsPage() {
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+      {overviewError ? <QueryErrorState compact title="Overview metrics are unavailable" message="The employee report is still available below." onRetry={() => void refetchOverview()} /> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
         {[
           ["Active exams", overview?.activeExams ?? 0],
           ["Upcoming exams", overview?.upcomingExams ?? 0],
@@ -124,7 +116,7 @@ export default function ReportsPage() {
           ["Pending opt-ins", overview?.pendingOptIns ?? 0],
           ["Completed swaps", overview?.completedSwaps ?? 0],
         ].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]"><p className="text-sm text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div>)}
-      </div>
+      </div>}
 
       <Link
         to={ROUTES.REPORTS_WORKLOAD}

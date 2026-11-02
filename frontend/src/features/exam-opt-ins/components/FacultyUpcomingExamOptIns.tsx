@@ -3,6 +3,7 @@ import { CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 
 import Button from "@/components/ui/Button";
+import QueryErrorState from "@/components/common/QueryErrorState/QueryErrorState";
 import DashboardCard from "@/components/ui/DashboardCard";
 import EmptyState from "@/components/ui/EmptyState";
 import Skeleton from "@/components/ui/Skeleton";
@@ -14,7 +15,7 @@ const queryKey = ["exam-opt-ins"] as const;
 
 export default function FacultyUpcomingExamOptIns() {
   const queryClient = useQueryClient();
-  const { data: exams = [], isLoading, error } = useQuery({
+  const { data: exams = [], isLoading, error, refetch } = useQuery({
     queryKey: [...queryKey, "upcoming"],
     queryFn: examOptInService.getUpcoming,
   });
@@ -38,7 +39,7 @@ export default function FacultyUpcomingExamOptIns() {
   return (
     <DashboardCard title="Upcoming sessions" icon={<CalendarDays className="h-5 w-5 text-blue-700" />}>
       {isLoading ? <div className="space-y-3"><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /></div>
-        : error ? <p className="text-sm text-red-600">Could not load upcoming exam sessions.</p>
+        : error ? <QueryErrorState compact title="Upcoming sessions couldn’t be loaded" message="Check your connection and try again." onRetry={() => void refetch()} />
         : exams.length === 0 ? <EmptyState title="No Upcoming Exams" description="There are no open exam sessions to opt into." />
         : <div className="space-y-3">
           {exams.map((exam) => <UpcomingExamCard key={exam.id} exam={exam} loading={optIn.isPending || cancel.isPending} onOptIn={() => optIn.mutate(exam.id)} onCancel={() => exam.myOptInId && cancel.mutate(exam.myOptInId)} />)}

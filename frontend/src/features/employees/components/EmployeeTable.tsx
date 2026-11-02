@@ -14,7 +14,7 @@ interface EmployeeTableProps {
 }
 
 export default function EmployeeTable({ filters }: EmployeeTableProps) {
-  const { data = [], isLoading } = useEmployees(filters);
+  const { data = [], isLoading, isError, refetch } = useEmployees(filters);
   const { user } = useAuth();
 
   const canEdit = hasPermission(user?.role, "employee:edit");
@@ -34,6 +34,9 @@ export default function EmployeeTable({ filters }: EmployeeTableProps) {
       columns={columns}
       data={data}
       loading={isLoading}
+      error={isError}
+      onRetry={() => void refetch()}
+      errorMessage="Employee records could not be retrieved. Check your connection and try again."
       emptyMessage="No employees found."
     />
   );

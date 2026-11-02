@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import Button from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
+import QueryErrorState from "@/components/common/QueryErrorState/QueryErrorState";
 import { reportsService } from "../api/reports.service";
 import { downloadBlob } from "../utils/downloadReport";
 import type { StatusReportFilters } from "../types/report";
@@ -31,7 +32,7 @@ export default function WorkflowReportPage({ kind }: { kind: WorkflowReportKind 
   const title = isTransfer ? "Transfer Request Report" : "Swap Request Report";
   const statuses = isTransfer ? TRANSFER_STATUSES : SWAP_STATUSES;
 
-  const { data, isLoading, isFetching, error } = useQuery<TransferReportResponse | SwapReportResponse>({
+  const { data, isLoading, isFetching, error, refetch } = useQuery<TransferReportResponse | SwapReportResponse>({
     queryKey: ["reports", kind, filters],
     queryFn: () => isTransfer
       ? reportsService.getTransferReport(filters)
@@ -58,7 +59,7 @@ export default function WorkflowReportPage({ kind }: { kind: WorkflowReportKind 
     }
   };
 
-  if (error) return <p className="p-6 text-sm text-red-600">Failed to load {title.toLowerCase()}.</p>;
+  if (error) return <QueryErrorState title={`${title} is unavailable`} message="Check your connection and try again." onRetry={() => void refetch()} />;
 
   const rows = (data?.rows ?? []).map((row) => "fromEmployee" in row
     ? { id: row.id, exam: row.exam, examDate: row.examDate, first: row.fromEmployee, second: row.toEmployee, requestType: row.requestType, status: row.status, reason: row.reason, reviewer: row.approvedBy, completion: row.approvedAt, createdAt: row.createdAt }
