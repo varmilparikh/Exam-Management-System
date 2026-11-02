@@ -16,8 +16,20 @@ class ReportExportService {
       })),
     });
 
+    const safeRecords = data.map((row) => {
+      const record: Record<string, unknown> = {};
+      for (const column of columns) {
+        const value = row[column.id];
+        record[String(column.id)] =
+          typeof value === "string" && /^[\t\r\n\x20]*[=+\-@]/.test(value)
+            ? `'${value}`
+            : value;
+      }
+      return record;
+    });
+
     return (
-      csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(data)
+      csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(safeRecords)
     );
   }
 
