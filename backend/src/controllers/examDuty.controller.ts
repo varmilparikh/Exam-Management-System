@@ -61,7 +61,14 @@ export const getEmployeeDuties = asyncHandler(
     req: Request<{ employeeId: string }>,
     res: Response,
   ): Promise<void> => {
-    const duties = await examDutyService.getByEmployee(req.params.employeeId);
+    if (!req.user) {
+      throw new ApiError(401, "Authentication required");
+    }
+
+    const duties = await examDutyService.getEmployeeDutiesForUser(
+      req.params.employeeId,
+      req.user,
+    );
 
     res
       .status(200)
@@ -100,7 +107,7 @@ export const getFacultyUpcomingDuties = asyncHandler(
   ): Promise<void> => {
     const { employeeId } = req.params;
 
-    const duties = await examDutyService.getUpcomingByEmployee(employeeId);
+    const duties = await examDutyService.getUpcomingByFaculty(employeeId);
 
     res
       .status(200)

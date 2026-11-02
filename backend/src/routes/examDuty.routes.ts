@@ -46,7 +46,7 @@ router.post(
 router.get(
   "/",
   verifyJWT,
-  authorizeRoles("SUPER_ADMIN", "COE", "HOD", "FACULTY"),
+  authorizeRoles("SUPER_ADMIN", "COE"),
   getExamDuties,
 );
 
@@ -60,7 +60,7 @@ router.get(
 router.get(
   "/faculty/:employeeId/upcoming",
   verifyJWT,
-  authorizeRoles("FACULTY", "COE", "SUPER_ADMIN", "HOD"),
+  authorizeRoles("FACULTY", "COE", "SUPER_ADMIN"),
   validate(employeeIdParamSchema, "params"),
   getFacultyUpcomingDuties,
 );
@@ -83,7 +83,7 @@ router.get(
 router.get(
   "/exam/:examId",
   verifyJWT,
-  authorizeRoles("FACULTY", "COE", "SUPER_ADMIN", "HOD"),
+  authorizeRoles("COE", "SUPER_ADMIN"),
   validate(uuidParamSchema, "params"),
   getExamDutiesByExam,
 );
@@ -94,7 +94,7 @@ router.get(
 router.get(
   "/:id",
   verifyJWT,
-  authorizeRoles("SUPER_ADMIN", "COE", "HOD", "FACULTY"),
+  authorizeRoles("SUPER_ADMIN", "COE"),
   validate(uuidParamSchema, "params"),
   getExamDutyById,
 );

@@ -5,7 +5,7 @@
  *     tags:
  *       - Exam Duties
  *     summary: Create a new exam duty
- *     description: Creates a new examination duty. Only SUPER_ADMIN and COE can perform this operation.
+ *     description: Assigns one active faculty member to an upcoming exam session. Only SUPER_ADMIN and COE can perform this operation.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -16,7 +16,7 @@
  *             type: object
  *             required:
  *               - examId
- *               - status
+ *               - employeeId
  *             properties:
  *               examId:
  *                 type: string
@@ -27,14 +27,6 @@
  *                 format: uuid
  *                 nullable: true
  *                 example: f088aa8a-f52b-4408-9a0e-eac8cba753ad
- *               status:
- *                 type: string
- *                 enum:
- *                   - ASSIGNED
- *                   - ATTENDED
- *                   - TRANSFERRED
- *                   - ABSENT
- *                 example: ASSIGNED
  *     responses:
  *       201:
  *         description: Exam duty created successfully.
@@ -55,7 +47,7 @@
  *     tags:
  *       - Exam Duties
  *     summary: Get all exam duties
- *     description: Returns all examination duties.
+ *     description: Returns all examination duties. Only SUPER_ADMIN and COE can access this directory; faculty and HOD users use their own duty endpoints.
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -76,7 +68,7 @@
  *     tags:
  *       - Exam Duties
  *     summary: Get exam duty by ID
- *     description: Returns an examination duty by its unique ID.
+ *     description: Returns an examination duty by its unique ID. Only SUPER_ADMIN and COE can access this endpoint.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -123,10 +115,6 @@
  *           schema:
  *             type: object
  *             properties:
- *               employeeId:
- *                 type: string
- *                 format: uuid
- *                 nullable: true
  *               status:
  *                 type: string
  *                 enum:

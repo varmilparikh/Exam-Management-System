@@ -4,7 +4,7 @@ import examRepository from "../repositories/exam.repository.js";
 
 import { ApiError } from "../utils/apiError.js";
 
-import { DutyStatus, ExamStatus } from "../generated/prisma/client.js";
+import { DutyStatus, ExamStatus, Role } from "../generated/prisma/client.js";
 
 import type {
   CreateExamDutyDto,
@@ -82,10 +82,47 @@ class ExamDutyService {
     return examDutyRepository.findByEmployee(employeeId);
   }
 
+  async getEmployeeDutiesForUser(
+    employeeId: string,
+    user: { id: string; role: Role },
+  ): Promise<ExamDutyResponse[]> {
+    if (user.role === Role.FACULTY && user.id !== employeeId) {
+      throw new ApiError(403, "You can only view your own examination duties.");
+    }
+
+    if (user.role === Role.HOD) {
+      const [userDepartmentId, employeeDepartmentId] = await Promise.all([
+        employeeRepository.findDepartmentIdByEmployee(user.id),
+        employeeRepository.findDepartmentIdByEmployee(employeeId),
+      ]);
+      if (!userDepartmentId) {
+        throw new ApiError(404, "Department not found.");
+      }
+      if (employeeDepartmentId !== userDepartmentId) {
+        throw new ApiError(404, "Employee not found in your department.");
+      }
+    }
+
+    return examDutyRepository.findByEmployee(employeeId);
+  }
+
   /**
    * Upcoming duties of an employee
    */
   async getUpcomingByEmployee(employeeId: string): Promise<ExamDutyResponse[]> {
+    return examDutyRepository.findUpcomingByEmployee(employeeId);
+  }
+
+  async getUpcomingByFaculty(employeeId: string): Promise<ExamDutyResponse[]> {
+    const employee = await employeeRepository.findById(employeeId);
+    if (
+      !employee ||
+      employee.role !== Role.FACULTY ||
+      !employee.isActive
+    ) {
+      throw new ApiError(404, "Active faculty member not found.");
+    }
+
     return examDutyRepository.findUpcomingByEmployee(employeeId);
   }
 
