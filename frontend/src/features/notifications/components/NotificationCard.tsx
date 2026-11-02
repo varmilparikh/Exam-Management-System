@@ -39,9 +39,9 @@ export default function NotificationCard({
           <div>
             <h3 className="font-semibold">{notification.title}</h3>
 
-            <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
+            <p className="mt-1 text-sm text-slate-600">{notification.message}</p>
 
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-slate-400">
               {new Date(notification.createdAt).toLocaleString()}
             </p>
           </div>

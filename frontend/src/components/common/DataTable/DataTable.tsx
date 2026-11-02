@@ -16,15 +16,15 @@ export default function DataTable<T extends { id: string }>({
   }
 
   return (
-    <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
+    <div className="w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-gray-50">
+          <tr className="border-b border-slate-200 bg-slate-50/90">
             {columns.map((column) => (
               <th
                 key={column.id}
                 style={{ width: column.width }}
-                className={`px-4 py-3 text-sm font-semibold text-gray-700 ${
+                className={`whitespace-nowrap px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${
                   column.align === "center"
                     ? "text-center"
                     : column.align === "right"
@@ -43,7 +43,7 @@ export default function DataTable<T extends { id: string }>({
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-4 py-8 text-center text-gray-500"
+                className="px-4 py-10 text-center text-sm text-slate-500"
               >
                 {emptyMessage}
               </td>
@@ -52,12 +52,12 @@ export default function DataTable<T extends { id: string }>({
             data.map((row) => (
               <tr
                 key={row.id}
-                className="border-t transition-colors hover:bg-gray-50"
+                className="border-t border-slate-100 transition-colors odd:bg-white even:bg-slate-50/35 hover:bg-blue-50/45"
               >
                 {columns.map((column) => (
                   <td
                     key={`${row.id}-${column.id}`}
-                    className={`px-4 py-3 ${
+                    className={`px-4 py-3.5 text-sm text-slate-700 ${
                       column.align === "center"
                         ? "text-center"
                         : column.align === "right"

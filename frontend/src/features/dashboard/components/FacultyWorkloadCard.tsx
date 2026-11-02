@@ -13,7 +13,7 @@ export default function FacultyWorkloadCard() {
     return (
       <DashboardCard
         title="Faculty Workload"
-        icon={<Users className="h-5 w-5 text-green-600" />}
+        icon={<Users className="h-5 w-5 text-teal-700" />}
       >
         <div className="space-y-3">
           <Skeleton className="h-14 w-full" />
@@ -28,7 +28,7 @@ export default function FacultyWorkloadCard() {
     return (
       <DashboardCard
         title="Faculty Workload"
-        icon={<Users className="h-5 w-5 text-green-600" />}
+        icon={<Users className="h-5 w-5 text-teal-700" />}
       >
         <EmptyState
           title="No Faculty Data"
@@ -41,32 +41,32 @@ export default function FacultyWorkloadCard() {
   return (
     <DashboardCard
       title="Faculty Workload"
-      icon={<Users className="h-5 w-5 text-green-600" />}
+        icon={<Users className="h-5 w-5 text-teal-700" />}
     >
       <div className="space-y-4">
         {workload.map((faculty) => (
           <div
             key={faculty.id}
-            className="flex items-center justify-between rounded-lg border p-4"
+            className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300 hover:bg-slate-50/70"
           >
             <div>
               <p className="font-semibold">{faculty.name}</p>
 
-              <p className="text-sm text-gray-500">{faculty.employeeCode}</p>
+              <p className="text-sm text-slate-500">{faculty.employeeCode}</p>
 
-              <p className="text-sm text-gray-500">{faculty.designation}</p>
+              <p className="text-sm text-slate-500">{faculty.designation}</p>
             </div>
 
             <div className="text-right">
-              <p className="text-lg font-bold">{faculty.attendedCount}</p>
+              <p className="text-lg font-semibold text-slate-900">{faculty.attendedCount}</p>
 
-              <p className="text-xs text-gray-500">Duties Attended</p>
+              <p className="text-xs text-slate-500">Duties Attended</p>
 
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-slate-400">
                 Avg: {faculty.averageDuty}
               </p>
 
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-400">
                 Transfers: {faculty.transferCount}
               </p>
             </div>

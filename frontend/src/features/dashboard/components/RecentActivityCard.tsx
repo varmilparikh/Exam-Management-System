@@ -13,7 +13,7 @@ export default function RecentActivityCard() {
     return (
       <DashboardCard
         title="Recent Activities"
-        icon={<History className="h-5 w-5 text-purple-600" />}
+        icon={<History className="h-5 w-5 text-indigo-700" />}
       >
         <div className="space-y-3">
           <Skeleton className="h-14 w-full" />
@@ -28,7 +28,7 @@ export default function RecentActivityCard() {
     return (
       <DashboardCard
         title="Recent Activities"
-        icon={<History className="h-5 w-5 text-purple-600" />}
+        icon={<History className="h-5 w-5 text-indigo-700" />}
       >
         <EmptyState
           title="No Recent Activities"
@@ -41,18 +41,18 @@ export default function RecentActivityCard() {
   return (
     <DashboardCard
       title="Recent Activities"
-      icon={<History className="h-5 w-5 text-purple-600" />}
+        icon={<History className="h-5 w-5 text-indigo-700" />}
     >
       <div className="space-y-4">
         {activities.map((activity) => (
           <div
             key={activity.id}
-            className="border-b pb-3 last:border-none last:pb-0"
+            className="border-b border-slate-100 pb-3 last:border-none last:pb-0"
           >
             <div className="flex items-center justify-between">
               <p className="font-medium">{activity.employee.name}</p>
 
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-slate-500">
                 {new Date(activity.createdAt).toLocaleDateString()}
               </span>
             </div>
@@ -61,7 +61,7 @@ export default function RecentActivityCard() {
               {activity.action}
             </p>
 
-            <p className="text-sm text-gray-600">{activity.description}</p>
+            <p className="text-sm text-slate-600">{activity.description}</p>
           </div>
         ))}
       </div>

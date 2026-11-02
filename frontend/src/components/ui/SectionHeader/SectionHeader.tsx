@@ -12,11 +12,11 @@ export default function SectionHeader({
   action,
 }: SectionHeaderProps) {
   return (
-    <div className="mb-6 flex items-center justify-between">
+    <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-2xl font-bold">{title}</h2>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">{title}</h2>
 
-        {description && <p className="mt-1 text-gray-500">{description}</p>}
+        {description && <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>}
       </div>
 
       {action}

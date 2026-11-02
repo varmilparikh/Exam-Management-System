@@ -65,10 +65,10 @@ export default function WorkflowReportPage({ kind }: { kind: WorkflowReportKind 
     : { id: row.id, exam: row.exam, examDate: "", first: row.requester, second: row.receiver, requestType: "", status: row.status, reason: row.reason, reviewer: "", completion: row.completedAt, createdAt: row.createdAt });
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold">{title}</h1>
-        <p className="mt-1 text-sm text-gray-500">Search and export the full request history.</p>
+        <p className="mt-1 text-sm text-slate-500">Search and export the full request history.</p>
       </header>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
@@ -76,7 +76,7 @@ export default function WorkflowReportPage({ kind }: { kind: WorkflowReportKind 
         {statuses.map((status) => <SummaryCard key={status} label={status[0] + status.slice(1).toLowerCase()} value={data?.summary.statusCounts[status] ?? 0} />)}
       </div>
 
-      <div className="grid gap-4 rounded-xl border bg-white p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)] md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <label className="text-sm font-medium">Search
           <input value={filters.search} onChange={(event) => updateFilter("search", event.target.value)} placeholder="Exam or faculty name" className="mt-1 w-full rounded-lg border px-3 py-2 font-normal" />
         </label>
@@ -104,7 +104,7 @@ export default function WorkflowReportPage({ kind }: { kind: WorkflowReportKind 
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-gray-500">{data?.pagination.total ?? 0} requests</p>
+        <p className="text-sm text-slate-500">{data?.pagination.total ?? 0} requests</p>
         <div className="flex gap-2">
           <ExportButton format="csv" exporting={exporting} onExport={handleExport}><Download size={16} /> CSV</ExportButton>
           <ExportButton format="excel" exporting={exporting} onExport={handleExport}><FileSpreadsheet size={16} /> Excel</ExportButton>
@@ -117,7 +117,7 @@ export default function WorkflowReportPage({ kind }: { kind: WorkflowReportKind 
         {isLoading ? <div className="space-y-3 p-6"><Skeleton /><Skeleton /><Skeleton /></div> : <>
           <div className="overflow-x-auto">
             <table className="min-w-250 w-full">
-              <thead><tr className="border-b bg-gray-50 text-left text-sm font-semibold">
+              <thead><tr className="border-b border-slate-200 bg-slate-50/90 text-left text-sm font-semibold">
                 <th className="px-4 py-3">Exam</th>
                 {isTransfer && <th className="px-4 py-3">Exam date</th>}
                 <th className="px-4 py-3">{isTransfer ? "From employee" : "Requester"}</th>
@@ -127,7 +127,7 @@ export default function WorkflowReportPage({ kind }: { kind: WorkflowReportKind 
                 <th className="px-4 py-3">Requested on</th>
               </tr></thead>
               <tbody>
-                {rows.length === 0 ? <tr><td colSpan={isTransfer ? 9 : 8} className="px-4 py-10 text-center text-sm text-gray-500">No requests match these filters.</td></tr> : rows.map((row) => <tr key={row.id} className="border-b last:border-b-0">
+                {rows.length === 0 ? <tr><td colSpan={isTransfer ? 9 : 8} className="px-4 py-10 text-center text-sm text-slate-500">No requests match these filters.</td></tr> : rows.map((row) => <tr key={row.id} className="border-b last:border-b-0">
                   <td className="px-4 py-3 text-sm">{row.exam}</td>
                   {isTransfer && <td className="whitespace-nowrap px-4 py-3 text-sm">{row.examDate ? new Date(row.examDate).toLocaleDateString() : "—"}</td>}
                   <td className="px-4 py-3 text-sm">{row.first}</td><td className="px-4 py-3 text-sm">{row.second}</td>
@@ -146,7 +146,7 @@ export default function WorkflowReportPage({ kind }: { kind: WorkflowReportKind 
 }
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
-  return <div className="rounded-xl border bg-white p-4"><p className="text-sm text-gray-500">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div>;
+  return <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]"><p className="text-sm text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div>;
 }
 
 function ExportButton({ format, exporting, onExport, children }: {
@@ -164,7 +164,7 @@ function Pagination({ page, totalPages, isFetching, onPageChange }: {
   isFetching: boolean;
   onPageChange: (page: number) => void;
 }) {
-  return <div className="flex items-center justify-between border-t px-4 py-3"><p className="text-sm text-gray-500">Page {page} of {totalPages}{isFetching ? " • Updating..." : ""}</p><div className="flex gap-2">
+  return <div className="flex items-center justify-between border-t px-4 py-3"><p className="text-sm text-slate-500">Page {page} of {totalPages}{isFetching ? " • Updating..." : ""}</p><div className="flex gap-2">
     <Button size="sm" variant="secondary" disabled={page <= 1 || isFetching} onClick={() => onPageChange(page - 1)}>Previous</Button>
     <Button size="sm" variant="secondary" disabled={page >= totalPages || isFetching} onClick={() => onPageChange(page + 1)}>Next</Button>
   </div></div>;

@@ -112,7 +112,7 @@ export default function ReviewTransferRequestDialog({
                 error={errors.approvalRemark?.message}
               >
                 <textarea
-                  className="min-h-24 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/[0.02] placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   {...register("approvalRemark", {
                     required: !approving ? "A reason is required." : false,
                     minLength: !approving

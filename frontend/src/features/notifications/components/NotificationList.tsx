@@ -63,7 +63,7 @@ export default function NotificationList({
         />
       ))}
       <div className="flex items-center justify-between border-t pt-4">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-slate-500">
           {data?.pagination.total ?? 0} notifications · Page {page} of{" "}
           {data?.pagination.totalPages ?? 1}
         </p>

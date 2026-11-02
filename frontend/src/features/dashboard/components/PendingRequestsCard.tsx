@@ -53,7 +53,7 @@ export default function PendingRequestsCard() {
               <div>
                 <p className="font-medium">Transfer Request</p>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   {request.fromEmployee.name}
                 </p>
               </div>
@@ -69,7 +69,7 @@ export default function PendingRequestsCard() {
               <div>
                 <p className="font-medium">Swap Request</p>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   {request.requester.name}
                 </p>
               </div>

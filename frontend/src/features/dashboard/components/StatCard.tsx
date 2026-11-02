@@ -18,38 +18,37 @@ export default function StatCard({
   description,
   onClick,
 }: StatCardProps) {
-  return (
-    <div
-      onClick={onClick}
-      className="
-        rounded-xl
-        border
-        bg-white
-        p-6
-        shadow-sm
-        transition-all
-        hover:shadow-md
-      "
-    >
+  const content = (
+    <>
       <div className="flex items-center justify-between">
         <div
-          className={`flex h-12 w-12 items-center justify-center rounded-lg ${color}`}
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ${color}`}
         >
-          {icon}
+          <span className="[&>svg]:h-5 [&>svg]:w-5">{icon}</span>
         </div>
 
-        {onClick && <ArrowUpRight className="h-5 w-5 text-gray-400" />}
+        {onClick && <ArrowUpRight className="h-4 w-4 text-slate-400 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-blue-600" />}
       </div>
 
-      <div className="mt-5">
-        <h3 className="text-sm font-medium text-gray-500">{title}</h3>
+      <div className="mt-4">
+        <h3 className="text-[13px] font-medium leading-5 text-slate-500">{title}</h3>
 
-        <p className="mt-2 text-3xl font-bold">{value}</p>
+        <p className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
 
         {description && (
-          <p className="mt-2 text-sm text-gray-500">{description}</p>
+          <p className="mt-2 text-xs leading-5 text-slate-500">{description}</p>
         )}
       </div>
-    </div>
+    </>
+  );
+
+  const className = "group w-full rounded-2xl border border-slate-200/80 bg-white p-4 text-left shadow-[0_6px_20px_rgba(15,23,42,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_12px_24px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:p-5";
+
+  return onClick ? (
+    <button type="button" onClick={onClick} className={className}>
+      {content}
+    </button>
+  ) : (
+    <div className={className}>{content}</div>
   );
 }

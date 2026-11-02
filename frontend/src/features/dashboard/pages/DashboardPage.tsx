@@ -10,7 +10,7 @@ export default function DashboardPage() {
   if (!user) {
     return (
       <div className="flex min-h-100 items-center justify-center">
-        <div className="text-sm text-gray-500">Loading user information...</div>
+        <div className="text-sm text-slate-500">Loading user information...</div>
       </div>
     );
   }
@@ -29,11 +29,11 @@ export default function DashboardPage() {
     default:
       return (
         <div className="rounded-xl border bg-white p-8 text-center shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-slate-900">
             Dashboard unavailable
           </h2>
 
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-slate-500">
             Your account role does not have a configured dashboard.
           </p>
         </div>

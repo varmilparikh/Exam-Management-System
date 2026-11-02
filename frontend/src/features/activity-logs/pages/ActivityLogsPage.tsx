@@ -47,13 +47,13 @@ export default function ActivityLogsPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold">Activity Logs</h1>
-        <p className="mt-1 text-sm text-gray-500">Review account and workflow activity across the system.</p>
+        <p className="mt-1 text-sm text-slate-500">Review account and workflow activity across the system.</p>
       </header>
 
-      <div className="grid gap-4 rounded-xl border bg-white p-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)] md:grid-cols-2 xl:grid-cols-4">
         <label className="text-sm font-medium">Search
           <input value={filters.search} onChange={(event) => updateFilter("search", event.target.value)} placeholder="User, employee code or description" className="mt-1 w-full rounded-lg border px-3 py-2 font-normal" />
         </label>
@@ -71,19 +71,19 @@ export default function ActivityLogsPage() {
         </label>
       </div>
 
-      <div className="rounded-xl border bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
         {isLoading ? <div className="space-y-3 p-6"><Skeleton /><Skeleton /><Skeleton /></div> : <>
           <div className="overflow-x-auto">
             <table className="min-w-220 w-full">
-              <thead><tr className="border-b bg-gray-50 text-left text-sm font-semibold">
+              <thead><tr className="border-b border-slate-200 bg-slate-50/90 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">Date</th><th className="px-4 py-3">User</th>
                 <th className="px-4 py-3">Action</th><th className="px-4 py-3">Entity</th>
                 <th className="px-4 py-3">Description</th>
               </tr></thead>
               <tbody>
-                {data?.logs.length === 0 ? <tr><td colSpan={5} className="px-4 py-10 text-center text-sm text-gray-500">No activity matches these filters.</td></tr> : data?.logs.map((log) => <tr key={log.id} className="border-b last:border-b-0">
+                {data?.logs.length === 0 ? <tr><td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">No activity matches these filters.</td></tr> : data?.logs.map((log) => <tr key={log.id} className="border-b border-slate-100 odd:bg-white even:bg-slate-50/35 hover:bg-blue-50/45 last:border-b-0">
                   <td className="whitespace-nowrap px-4 py-3 text-sm">{new Date(log.createdAt).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-sm"><span className="font-medium">{log.employee.name}</span><span className="block text-xs text-gray-500">{log.employee.employeeCode} · {log.employee.role}</span></td>
+                  <td className="px-4 py-3 text-sm"><span className="font-medium">{log.employee.name}</span><span className="block text-xs text-slate-500">{log.employee.employeeCode} · {log.employee.role}</span></td>
                   <td className="px-4 py-3 text-sm">{log.action.replaceAll("_", " ")}</td>
                   <td className="px-4 py-3 text-sm">{log.entityType?.replaceAll("_", " ") ?? "—"}</td>
                   <td className="max-w-100 px-4 py-3 text-sm">{log.description}</td>
@@ -92,7 +92,7 @@ export default function ActivityLogsPage() {
             </table>
           </div>
           <div className="flex items-center justify-between border-t px-4 py-3">
-            <p className="text-sm text-gray-500">{data?.total ?? 0} records · Page {filters.page} of {data?.totalPages ?? 1}{isFetching ? " · Updating" : ""}</p>
+            <p className="text-sm text-slate-500">{data?.total ?? 0} records · Page {filters.page} of {data?.totalPages ?? 1}{isFetching ? " · Updating" : ""}</p>
             <div className="flex gap-2">
               <Button size="sm" variant="secondary" disabled={filters.page <= 1 || isFetching} onClick={() => updateFilter("page", filters.page - 1)}>Previous</Button>
               <Button size="sm" variant="secondary" disabled={!data || filters.page >= data.totalPages || isFetching} onClick={() => updateFilter("page", filters.page + 1)}>Next</Button>

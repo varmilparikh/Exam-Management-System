@@ -250,7 +250,7 @@ export default function ImportEmployeesDialog() {
           />
           <Dialog.Body>
             <div className="space-y-4">
-              <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
+              <div className="rounded-lg bg-slate-50 p-4 text-sm text-slate-700">
                 Required headers: <code>{REQUIRED_HEADERS.join(", ")}</code>.
                 Add optional <code>phone</code>. The department value must match
                 an existing department name. Passwords must meet the account
@@ -272,20 +272,20 @@ export default function ImportEmployeesDialog() {
                 </Button>
               </div>
 
-              <label className="block space-y-2 text-sm font-medium text-gray-700">
+              <label className="block space-y-2 text-sm font-medium text-slate-700">
                 Select CSV file
                 <input
                   type="file"
                   accept=".csv,text/csv"
                   onChange={(event) => void handleFileChange(event)}
                   disabled={isParsing || isImporting || !!result}
-                  className="block w-full rounded-lg border border-gray-300 p-2 text-sm"
+                  className="block w-full rounded-lg border border-slate-300 p-2 text-sm"
                 />
               </label>
 
-              {fileName && <p className="text-sm text-gray-600">{fileName}</p>}
+              {fileName && <p className="text-sm text-slate-600">{fileName}</p>}
               {isParsing && (
-                <p className="text-sm text-gray-500">Checking CSV…</p>
+                <p className="text-sm text-slate-500">Checking CSV…</p>
               )}
               {rows.length > 0 && errors.length === 0 && !result && (
                 <p className="text-sm text-green-700">

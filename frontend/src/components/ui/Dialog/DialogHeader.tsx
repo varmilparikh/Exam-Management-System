@@ -15,15 +15,15 @@ export default function DialogHeader({
 }: DialogHeaderProps) {
   return (
     <div
-      className={cn("flex items-start justify-between border-b p-6", className)}
+      className={cn("flex items-start justify-between border-b border-slate-100 px-5 py-4 sm:px-6 sm:py-5", className)}
     >
       <div className="space-y-1">
-        <RadixDialog.Title className="text-lg font-semibold text-gray-900">
+        <RadixDialog.Title className="text-lg font-semibold tracking-tight text-slate-900">
           {title}
         </RadixDialog.Title>
 
         {description && (
-          <RadixDialog.Description className="text-sm text-gray-500">
+          <RadixDialog.Description className="text-sm leading-5 text-slate-500">
             {description}
           </RadixDialog.Description>
         )}

@@ -120,67 +120,67 @@ export default function FacultyWorkloadReportPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Faculty Workload Report</h1>
 
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-slate-500">
           Analyze faculty duty allocation and attendance.
         </p>
       </div>
 
       {/* Summary */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">Total Faculty</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
+          <p className="text-sm text-slate-500">Total Faculty</p>
 
           <p className="mt-2 text-2xl font-semibold">
             {report?.summary.totalFaculty ?? 0}
           </p>
         </div>
 
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">Total Duties</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
+          <p className="text-sm text-slate-500">Total Duties</p>
 
           <p className="mt-2 text-2xl font-semibold">
             {report?.summary.totalDuties ?? 0}
           </p>
         </div>
 
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">Assigned</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
+          <p className="text-sm text-slate-500">Assigned</p>
 
           <p className="mt-2 text-2xl font-semibold">
             {report?.summary.totalAssigned ?? 0}
           </p>
         </div>
 
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">Attended</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
+          <p className="text-sm text-slate-500">Attended</p>
 
           <p className="mt-2 text-2xl font-semibold">
             {report?.summary.totalAttended ?? 0}
           </p>
         </div>
 
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">Absent</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
+          <p className="text-sm text-slate-500">Absent</p>
 
           <p className="mt-2 text-2xl font-semibold">
             {report?.summary.totalAbsent ?? 0}
           </p>
         </div>
 
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">Transferred</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
+          <p className="text-sm text-slate-500">Transferred</p>
 
           <p className="mt-2 text-2xl font-semibold">
             {report?.summary.totalTransferred ?? 0}
           </p>
         </div>
 
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-sm text-gray-500">Avg Duties</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
+          <p className="text-sm text-slate-500">Avg Duties</p>
 
           <p className="mt-2 text-2xl font-semibold">
             {report?.summary.averageDutiesPerFaculty ?? 0}
@@ -189,7 +189,7 @@ export default function FacultyWorkloadReportPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-xl border bg-white p-4">
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
           <div>
             <label className="mb-1 block text-sm font-medium">Search</label>
@@ -198,7 +198,7 @@ export default function FacultyWorkloadReportPage() {
               value={filters.search}
               onChange={(event) => updateFilter("search", event.target.value)}
               placeholder="Name, code or email"
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/[0.02] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
@@ -210,7 +210,7 @@ export default function FacultyWorkloadReportPage() {
               onChange={(event) =>
                 updateFilter("departmentId", event.target.value)
               }
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/[0.02] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="">All Departments</option>
 
@@ -230,7 +230,7 @@ export default function FacultyWorkloadReportPage() {
               onChange={(event) =>
                 updateFilter("facultyId", event.target.value)
               }
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/[0.02] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="">All Faculty</option>
 
@@ -250,7 +250,7 @@ export default function FacultyWorkloadReportPage() {
               value={filters.fromDate}
               max={filters.toDate || undefined}
               onChange={(event) => updateFilter("fromDate", event.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/[0.02] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
@@ -262,7 +262,7 @@ export default function FacultyWorkloadReportPage() {
               value={filters.toDate}
               min={filters.fromDate || undefined}
               onChange={(event) => updateFilter("toDate", event.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/[0.02] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
@@ -271,7 +271,7 @@ export default function FacultyWorkloadReportPage() {
             <select
               value={filters.sortBy}
               onChange={(event) => updateFilter("sortBy", event.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/[0.02] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="name">Faculty name</option>
               <option value="employeeCode">Employee code</option>
@@ -290,7 +290,7 @@ export default function FacultyWorkloadReportPage() {
               onChange={(event) =>
                 updateFilter("sortOrder", event.target.value as "asc" | "desc")
               }
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/[0.02] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="asc">Ascending</option>
               <option value="desc">Descending</option>
@@ -301,7 +301,7 @@ export default function FacultyWorkloadReportPage() {
 
       {/* Export */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-slate-500">
           {report?.pagination.total ?? 0} faculty
         </p>
 
@@ -357,7 +357,7 @@ export default function FacultyWorkloadReportPage() {
             <div className="overflow-x-auto">
               <table className="min-w-250 w-full">
                 <thead>
-                  <tr className="border-b bg-gray-50">
+                  <tr className="border-b border-slate-200 bg-slate-50/90">
                     <th className="px-4 py-3 text-left text-sm font-semibold">
                       Employee Code
                     </th>
@@ -401,7 +401,7 @@ export default function FacultyWorkloadReportPage() {
                     <tr>
                       <td
                         colSpan={9}
-                        className="px-4 py-10 text-center text-sm text-gray-500"
+                        className="px-4 py-10 text-center text-sm text-slate-500"
                       >
                         No faculty workload data found.
                       </td>
@@ -452,7 +452,7 @@ export default function FacultyWorkloadReportPage() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between border-t px-4 py-3">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-500">
                 Page {report?.pagination.page ?? 1} of{" "}
                 {report?.pagination.totalPages ?? 1}
                 {isFetching ? " • Updating..." : ""}

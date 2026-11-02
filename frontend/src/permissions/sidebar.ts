@@ -25,7 +25,7 @@ export function getNavigation(role?: UserRole): NavigationItem[] {
         { label: "Employees", path: ROUTES.EMPLOYEES, icon: Users },
         { label: "Departments", path: ROUTES.DEPARTMENTS, icon: Building2 },
         { label: "Exams", path: ROUTES.EXAMS, icon: CalendarDays },
-        { label: "Exam Opt-ins", path: ROUTES.EXAM_OPT_INS, icon: CalendarDays },
+        { label: "Session requests", path: ROUTES.EXAM_OPT_INS, icon: CalendarDays },
         { label: "Exam Duties", path: ROUTES.DUTIES, icon: ClipboardList },
         {
           label: "Transfer Requests",
@@ -43,7 +43,7 @@ export function getNavigation(role?: UserRole): NavigationItem[] {
         { label: "Dashboard", path: ROUTES.HOME, icon: LayoutDashboard },
         { label: "Employees", path: ROUTES.EMPLOYEES, icon: Users },
         { label: "Exams", path: ROUTES.EXAMS, icon: CalendarDays },
-        { label: "Exam Opt-ins", path: ROUTES.EXAM_OPT_INS, icon: CalendarDays },
+        { label: "Session requests", path: ROUTES.EXAM_OPT_INS, icon: CalendarDays },
         { label: "Exam Duties", path: ROUTES.DUTIES, icon: ClipboardList },
         {
           label: "Transfer Requests",
@@ -59,7 +59,7 @@ export function getNavigation(role?: UserRole): NavigationItem[] {
     case "HOD":
       return [
         { label: "Dashboard", path: ROUTES.HOME, icon: LayoutDashboard },
-        { label: "Exam Opt-ins", path: ROUTES.EXAM_OPT_INS, icon: CalendarDays },
+        { label: "Session requests", path: ROUTES.EXAM_OPT_INS, icon: CalendarDays },
         { label: "Exam Duties", path: ROUTES.DUTIES, icon: ClipboardList },
         {
           label: "Transfer Requests",

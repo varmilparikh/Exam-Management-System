@@ -4,6 +4,7 @@ import FacultyQuickActions from "../components/FacultyQuickActions";
 import FacultyDutiesCard from "../components/FacultyDutiesCard";
 import NotificationsCard from "../components/NotificationsCard";
 import FacultyUpcomingExamOptIns from "@/features/exam-opt-ins/components/FacultyUpcomingExamOptIns";
+import DashboardLoadState from "../components/DashboardLoadState";
 
 import { useFacultyDashboard } from "../hooks/useFacultyDashboard";
 
@@ -17,57 +18,57 @@ import {
 } from "lucide-react";
 
 export default function FacultyDashboard() {
-  const { data, isLoading } = useFacultyDashboard();
+  const { data, isLoading, refetch } = useFacultyDashboard();
 
   if (isLoading || !data) {
-    return <p>Loading...</p>;
+    return <DashboardLoadState isLoading={isLoading} onRetry={() => void refetch()} />;
   }
 
   return (
     <div className="space-y-6">
       <DashboardHeader />
 
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         <StatCard
           title="Upcoming Duties"
           value={data.myUpcomingDuties}
           icon={<ClipboardList className="h-6 w-6" />}
-          color="bg-blue-100 text-blue-600"
+          color="bg-blue-50 text-blue-700"
         />
 
         <StatCard
           title="Completed Duties"
           value={data.completedDuties}
           icon={<CheckCircle className="h-6 w-6" />}
-          color="bg-green-100 text-green-600"
+          color="bg-teal-50 text-teal-700"
         />
 
         <StatCard
           title="Pending Transfers"
           value={data.pendingTransferRequests}
           icon={<ArrowRightLeft className="h-6 w-6" />}
-          color="bg-yellow-100 text-yellow-600"
+          color="bg-amber-50 text-amber-700"
         />
 
         <StatCard
           title="Pending Swaps"
           value={data.pendingSwapRequests}
           icon={<Repeat className="h-6 w-6" />}
-          color="bg-purple-100 text-purple-600"
+          color="bg-indigo-50 text-indigo-700"
         />
 
         <StatCard
-          title="Pending Exam Opt-ins"
+          title="My pending opt-ins"
           value={data.pendingExamOptIns}
           icon={<CalendarDays className="h-6 w-6" />}
-          color="bg-orange-100 text-orange-600"
+          color="bg-violet-50 text-violet-700"
         />
 
         <StatCard
           title="Notifications"
           value={data.unreadNotifications}
           icon={<Bell className="h-6 w-6" />}
-          color="bg-red-100 text-red-600"
+          color="bg-rose-50 text-rose-700"
         />
       </div>
 

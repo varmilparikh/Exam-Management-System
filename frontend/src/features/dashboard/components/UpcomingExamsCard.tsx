@@ -12,7 +12,7 @@ export default function UpcomingExamsCard() {
 
   return (
     <DashboardCard
-      title="Upcoming Exams"
+      title="Upcoming exam sessions"
       icon={<CalendarDays className="h-5 w-5 text-blue-600" />}
     >
       {isLoading ? (
@@ -23,7 +23,7 @@ export default function UpcomingExamsCard() {
         </div>
       ) : exams.length === 0 ? (
         <EmptyState
-          title="No Upcoming Exams"
+        title="No upcoming exam sessions"
           description="There are no scheduled upcoming examinations."
         />
       ) : (
@@ -31,20 +31,20 @@ export default function UpcomingExamsCard() {
           {exams.map((exam) => (
             <div
               key={exam.id}
-              className="rounded-lg border p-4 transition hover:bg-gray-50"
+              className="rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300 hover:bg-slate-50/70"
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">{exam.examName}</h3>
+                <h3 className="font-semibold text-slate-900">{exam.examName}</h3>
 
                 <StatusChip status={exam.status} />
               </div>
 
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-slate-500">
                 {new Date(exam.examDate).toLocaleDateString()}
                 {` · ${exam.sessionName} · ${formatTime(exam.startTime)}–${formatTime(exam.endTime)}`}
               </p>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-slate-500">
                 Required Faculty: {exam.requiredFaculty}
               </p>
             </div>

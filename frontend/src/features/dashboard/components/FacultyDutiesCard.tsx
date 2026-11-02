@@ -48,19 +48,19 @@ export default function FacultyDutiesCard() {
         {duties.map((duty) => (
           <div
             key={duty.id}
-            className="rounded-lg border p-4 transition hover:bg-gray-50"
+            className="rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300 hover:bg-slate-50/70"
           >
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold">{duty.exam.examName}</h3>
+              <h3 className="font-semibold text-slate-900">{duty.exam.examName}</h3>
 
               <StatusChip status={duty.status} />
             </div>
 
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-slate-500">
               {new Date(duty.exam.examDate).toLocaleDateString()}
             </p>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-slate-500">
               Required Faculty: {duty.exam.requiredFaculty}
             </p>
           </div>

@@ -62,10 +62,10 @@ export default function ExamReportPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold">Exam Report</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-slate-500">
           Review examination schedules, staffing requirements and status.
         </p>
       </header>
@@ -81,7 +81,7 @@ export default function ExamReportPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 rounded-xl border bg-white p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)] md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <label className="text-sm font-medium">
           Search
           <input
@@ -141,7 +141,7 @@ export default function ExamReportPage() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-gray-500">{data?.pagination.total ?? 0} exams</p>
+        <p className="text-sm text-slate-500">{data?.pagination.total ?? 0} exams</p>
         <div className="flex gap-2">
           <ExportButton format="csv" exporting={exporting} onExport={handleExport}>
             <Download size={16} /> CSV
@@ -163,7 +163,7 @@ export default function ExamReportPage() {
           <>
             <div className="overflow-x-auto">
               <table className="min-w-200 w-full">
-                <thead><tr className="border-b bg-gray-50 text-left text-sm font-semibold">
+                <thead><tr className="border-b border-slate-200 bg-slate-50/90 text-left text-sm font-semibold">
                   <th className="px-4 py-3">Exam</th><th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3 text-center">Required faculty</th>
                   <th className="px-4 py-3 text-center">Assigned</th><th className="px-4 py-3 text-center">Positions left</th>
@@ -171,7 +171,7 @@ export default function ExamReportPage() {
                 </tr></thead>
                 <tbody>
                   {data?.rows.length === 0 ? (
-                    <tr><td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-500">No exams match these filters.</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-10 text-center text-sm text-slate-500">No exams match these filters.</td></tr>
                   ) : data?.rows.map((exam) => (
                     <tr key={exam.id} className="border-b last:border-b-0">
                       <td className="px-4 py-3 text-sm font-medium">{exam.examName}</td>
@@ -201,7 +201,7 @@ export default function ExamReportPage() {
 }
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
-  return <div className="rounded-xl border bg-white p-4"><p className="text-sm text-gray-500">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div>;
+  return <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.035)]"><p className="text-sm text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div>;
 }
 
 function ExportButton({ format, exporting, onExport, children }: {
@@ -220,7 +220,7 @@ function Pagination({ page, totalPages, isFetching, onPageChange }: {
   onPageChange: (page: number) => void;
 }) {
   return <div className="flex items-center justify-between border-t px-4 py-3">
-    <p className="text-sm text-gray-500">Page {page} of {totalPages}{isFetching ? " • Updating..." : ""}</p>
+    <p className="text-sm text-slate-500">Page {page} of {totalPages}{isFetching ? " • Updating..." : ""}</p>
     <div className="flex gap-2">
       <Button size="sm" variant="secondary" disabled={page <= 1 || isFetching} onClick={() => onPageChange(page - 1)}>Previous</Button>
       <Button size="sm" variant="secondary" disabled={page >= totalPages || isFetching} onClick={() => onPageChange(page + 1)}>Next</Button>

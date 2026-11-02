@@ -1,7 +1,8 @@
-import { LogOut, UserCircle } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
+import Avatar from "@/components/common/Avatar";
 
 import { useLocation } from "react-router-dom";
 
@@ -18,30 +19,40 @@ export default function Navbar() {
     await logout.mutateAsync();
   };
 
+  const roleLabel =
+    user?.role === "SUPER_ADMIN"
+      ? "Super administrator"
+      : user?.role === "COE"
+        ? "Controller of Examinations"
+        : user?.role === "HOD"
+          ? "Head of Department"
+          : "Faculty";
+
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900">{pageTitle}</h2>
+    <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] backdrop-blur sm:px-6">
+      <div className="min-w-0">
+        <h2 className="truncate text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">{pageTitle}</h2>
+        <p className="mt-0.5 hidden text-xs text-slate-500 sm:block">Examination duty workspace</p>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <UserCircle className="h-8 w-8 text-gray-500" />
-
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">{user?.name}</span>
-
-            <span className="text-xs text-gray-500">{user?.role}</span>
+      <div className="ml-3 flex shrink-0 items-center gap-2 sm:gap-4">
+        <div className="hidden items-center gap-2.5 sm:flex">
+          <Avatar name={user?.name ?? ""} src={user?.profileImage} size="sm" className="border-slate-200 bg-blue-600" />
+          <div className="flex min-w-0 flex-col">
+            <span className="max-w-40 truncate text-sm font-semibold text-slate-800">{user?.name}</span>
+            <span className="text-[11px] text-slate-500">{roleLabel}</span>
           </div>
         </div>
 
         <Button
-          variant="secondary"
+          variant="outline"
+          size="sm"
           onClick={handleLogout}
           loading={logout.isPending}
+          aria-label="Log out"
         >
           <LogOut className="h-4 w-4" />
-          Logout
+          <span className="hidden sm:inline">Log out</span>
         </Button>
       </div>
     </header>

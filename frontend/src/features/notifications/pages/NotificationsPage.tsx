@@ -15,7 +15,7 @@ export default function NotificationsPage() {
         <div>
           <h1 className="text-3xl font-bold">Notifications</h1>
 
-          <p className="text-gray-500">View and manage your notifications.</p>
+          <p className="text-slate-500">View and manage your notifications.</p>
         </div>
 
         <Button

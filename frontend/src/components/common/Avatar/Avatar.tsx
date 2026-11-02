@@ -52,7 +52,7 @@ export default function Avatar({
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-full border bg-blue-600 font-semibold text-white",
+        "flex items-center justify-center rounded-full border border-blue-100 bg-blue-700 font-semibold text-white shadow-sm",
         sizes[size],
         className,
       )}

@@ -12,9 +12,10 @@ import { cn } from "@/lib/utils";
 const buttonVariants = cva(
   [
     "inline-flex items-center justify-center gap-2",
-    "rounded-lg",
-    "font-medium",
-    "transition-colors duration-200",
+    "rounded-xl",
+    "font-semibold",
+    "transition-all duration-150",
+    "active:translate-y-px",
     "focus-visible:outline-none",
     "focus-visible:ring-2",
     "focus-visible:ring-blue-500",
@@ -26,19 +27,19 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-blue-600 text-white hover:bg-blue-700",
+          "bg-blue-700 text-white shadow-sm shadow-blue-900/15 hover:bg-blue-800 hover:shadow-md",
 
         secondary:
-          "bg-gray-200 text-gray-900 hover:bg-gray-300",
+          "border border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300 hover:bg-slate-200",
 
         success:
-          "bg-green-600 text-white hover:bg-green-700",
+          "bg-emerald-700 text-white shadow-sm shadow-emerald-900/10 hover:bg-emerald-800",
 
         danger:
-          "bg-red-600 text-white hover:bg-red-700",
+          "bg-rose-600 text-white shadow-sm shadow-rose-900/10 hover:bg-rose-700",
 
         outline:
-          "border border-gray-300 bg-white text-gray-900 hover:bg-gray-100",
+          "border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50",
       },
 
       size: {

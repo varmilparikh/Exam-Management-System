@@ -63,7 +63,7 @@ function RouteLoading() {
       role="status"
     >
       <Spinner size="lg" />
-      <span className="text-sm text-gray-600">Loading page…</span>
+      <span className="text-sm text-slate-600">Loading page…</span>
     </div>
   );
 }

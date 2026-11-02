@@ -5,17 +5,18 @@ import StatCard from "../components/StatCard";
 import FacultyWorkloadCard from "../components/FacultyWorkloadCard";
 import UpcomingExamsCard from "../components/UpcomingExamsCard";
 import NotificationsCard from "../components/NotificationsCard";
+import DashboardLoadState from "../components/DashboardLoadState";
 
 import { useHodDashboard } from "../hooks/useHodDashboard";
 
 export default function HodDashboard() {
-  const { data, isLoading } = useHodDashboard();
+  const { data, isLoading, refetch } = useHodDashboard();
 
   if (isLoading || !data) {
     return (
       <div className="space-y-6">
         <DashboardHeader />
-        <p>Loading dashboard...</p>
+        <DashboardLoadState isLoading={isLoading} onRetry={() => void refetch()} />
       </div>
     );
   }
@@ -24,40 +25,40 @@ export default function HodDashboard() {
     <div className="space-y-6">
       <DashboardHeader />
 
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         <StatCard
           title="Faculty"
           value={data.totalFaculty}
           icon={<Users className="h-6 w-6" />}
-          color="bg-blue-100 text-blue-600"
+          color="bg-blue-50 text-blue-700"
         />
 
         <StatCard
           title="Upcoming Duties"
           value={data.upcomingDepartmentDuties}
           icon={<ClipboardList className="h-6 w-6" />}
-          color="bg-green-100 text-green-600"
+          color="bg-teal-50 text-teal-700"
         />
 
         <StatCard
-          title="Pending Exam Opt-ins"
+          title="Department opt-ins"
           value={data.pendingExamOptIns}
           icon={<CalendarDays className="h-6 w-6" />}
-          color="bg-orange-100 text-orange-600"
+          color="bg-violet-50 text-violet-700"
         />
 
         <StatCard
           title="Pending Transfers"
           value={data.pendingTransferRequests}
           icon={<ArrowRightLeft className="h-6 w-6" />}
-          color="bg-yellow-100 text-yellow-600"
+          color="bg-amber-50 text-amber-700"
         />
 
         <StatCard
           title="Pending Swaps"
           value={data.pendingSwapRequests}
           icon={<Repeat className="h-6 w-6" />}
-          color="bg-purple-100 text-purple-600"
+          color="bg-indigo-50 text-indigo-700"
         />
       </div>
 

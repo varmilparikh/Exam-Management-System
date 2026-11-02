@@ -13,7 +13,7 @@ export default function Label({
   return (
     <RadixLabel.Root
       className={cn(
-        "text-sm font-medium leading-none text-gray-900",
+        "text-sm font-medium leading-none text-slate-900",
         "peer-disabled:cursor-not-allowed",
         "peer-disabled:opacity-70",
         className
