@@ -148,12 +148,21 @@ class ExamOptInRepository {
   }
 
   async cancelPending(employeeId: string, id: string): Promise<ExamOptInResponse> {
-    const optIn = await prisma.examOptIn.findFirst({ where: { id, employeeId } });
-    if (!optIn) throw new ApiError(404, "Opt-in not found.");
-    if (optIn.status !== ExamOptInStatus.PENDING) throw new ApiError(409, "Only pending opt-ins can be cancelled.");
-    return prisma.examOptIn.update({
-      where: { id },
+    const updated = await prisma.examOptIn.updateMany({
+      where: { id, employeeId, status: ExamOptInStatus.PENDING },
       data: { status: ExamOptInStatus.CANCELLED },
+    });
+    if (updated.count !== 1) {
+      const optIn = await prisma.examOptIn.findFirst({
+        where: { id, employeeId },
+        select: { id: true },
+      });
+      if (!optIn) throw new ApiError(404, "Opt-in not found.");
+      throw new ApiError(409, "Only pending opt-ins can be cancelled.");
+    }
+
+    return prisma.examOptIn.findUniqueOrThrow({
+      where: { id },
       select: examOptInSelect,
     });
   }
@@ -220,14 +229,20 @@ class ExamOptInRepository {
             data: { employeeId: optIn.employeeId, examId: optIn.examId, status: DutyStatus.ASSIGNED },
           });
         }
-        return tx.examOptIn.update({
-          where: { id },
+        const updated = await tx.examOptIn.updateMany({
+          where: { id, status: ExamOptInStatus.PENDING },
           data: {
             status: action === "CONFIRM" ? ExamOptInStatus.CONFIRMED : ExamOptInStatus.REJECTED,
             reviewedById: reviewerId,
             reviewedAt: new Date(),
             reviewRemark: remark,
           },
+        });
+        if (updated.count !== 1) {
+          throw new ApiError(409, "Only pending opt-ins can be reviewed.");
+        }
+        return tx.examOptIn.findUniqueOrThrow({
+          where: { id },
           select: examOptInSelect,
         });
       }, { isolationLevel: "Serializable" });

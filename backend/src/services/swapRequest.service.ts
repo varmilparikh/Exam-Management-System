@@ -337,10 +337,11 @@ class SwapRequestService {
     this.ensurePending(swapRequest);
 
     // 4. Update request
-    const updatedSwapRequest = await swapRequestRepository.update(id, {
-      status: SwapStatus.REJECTED,
-      reason: data.reason,
-    });
+    const updatedSwapRequest = await swapRequestRepository.rejectPending(
+      id,
+      receiverId,
+      data.reason,
+    );
 
     // 5. Activity Log
     await activityLogService.log({
@@ -393,10 +394,11 @@ class SwapRequestService {
     this.ensurePending(swapRequest);
 
     // 4. Update request
-    const updatedSwapRequest = await swapRequestRepository.update(id, {
-      status: SwapStatus.CANCELLED,
-      reason: data.reason ?? swapRequest.reason,
-    });
+    const updatedSwapRequest = await swapRequestRepository.cancelPending(
+      id,
+      requesterId,
+      data.reason ?? swapRequest.reason,
+    );
 
     // 5. Activity Log
     await activityLogService.log({

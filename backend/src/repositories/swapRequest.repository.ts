@@ -437,18 +437,58 @@ class SwapRequestRepository {
     });
   }
 
-  /**
-   * Update
-   */
-  async update(
+  async rejectPending(
     id: string,
-    data: Prisma.SwapRequestUpdateInput,
+    receiverId: string,
+    reason?: string,
   ): Promise<SwapRequestResponse> {
-    return prisma.swapRequest.update({
+    const updated = await prisma.swapRequest.updateMany({
       where: {
         id,
+        receiverId,
+        status: SwapStatus.PENDING,
+        isDeleted: false,
       },
-      data,
+      data: {
+        status: SwapStatus.REJECTED,
+        reason,
+      },
+    });
+
+    if (updated.count !== 1) {
+      throw new ApiError(409, "This swap request has already been processed.");
+    }
+
+    return prisma.swapRequest.findUniqueOrThrow({
+      where: { id },
+      select: swapRequestSelect,
+    });
+  }
+
+  async cancelPending(
+    id: string,
+    requesterId: string,
+    reason: string | null,
+  ): Promise<SwapRequestResponse> {
+    const updated = await prisma.swapRequest.updateMany({
+      where: {
+        id,
+        requesterId,
+        status: SwapStatus.PENDING,
+        isDeleted: false,
+      },
+      data: {
+        status: SwapStatus.CANCELLED,
+        reason,
+      },
+    });
+
+    if (updated.count !== 1) {
+      throw new ApiError(409, "This swap request has already been processed.");
+    }
+
+    return prisma.swapRequest.findUniqueOrThrow({
+      where: { id },
       select: swapRequestSelect,
     });
   }

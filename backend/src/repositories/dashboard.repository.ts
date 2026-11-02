@@ -204,7 +204,7 @@ class DashboardRepository {
   async countPendingSwapsByEmployee(employeeId: string): Promise<number> {
     return prisma.swapRequest.count({
       where: {
-        requesterId: employeeId,
+        OR: [{ requesterId: employeeId }, { receiverId: employeeId }],
         status: SwapStatus.PENDING,
         isDeleted: false,
       },
@@ -216,6 +216,7 @@ class DashboardRepository {
       where: {
         employeeId,
         status: DutyStatus.ATTENDED,
+        isDeleted: false,
       },
     });
   }
@@ -225,6 +226,7 @@ class DashboardRepository {
       where: {
         employeeId,
         status: DutyStatus.ASSIGNED,
+        isDeleted: false,
         exam: {
           status: ExamStatus.UPCOMING,
           isDeleted: false,
