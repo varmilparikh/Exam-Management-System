@@ -68,6 +68,7 @@ export async function seedTransferRequests() {
         },
         data: {
           toEmployeeId: toEmployee?.id ?? null,
+          requestType: request.requestType,
           status: request.status,
           reason: request.reason,
           approvalRemark: request.approvalRemark,
@@ -85,6 +86,7 @@ export async function seedTransferRequests() {
           fromEmployeeId: fromEmployee.id,
           toEmployeeId: toEmployee?.id ?? null,
           examDutyId: duty.id,
+          requestType: request.requestType,
           status: request.status,
           reason: request.reason,
           approvalRemark: request.approvalRemark,

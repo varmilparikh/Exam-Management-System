@@ -19,6 +19,7 @@ export async function seedApprovalRequests() {
 
     switch (transfer.status) {
       case TransferStatus.PENDING:
+      case TransferStatus.ACCEPTED:
         status = ApprovalStatus.PENDING;
         break;
 
@@ -69,6 +70,7 @@ export async function seedApprovalRequests() {
         break;
 
       case SwapStatus.APPROVED:
+      case SwapStatus.COMPLETED:
         status = ApprovalStatus.APPROVED;
         break;
 

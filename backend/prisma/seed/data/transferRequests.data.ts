@@ -1,10 +1,14 @@
-import { TransferStatus } from "../../../src/generated/prisma/enums.js";
+import {
+  TransferRequestType,
+  TransferStatus,
+} from "../../../src/generated/prisma/enums.js";
 
 export const transferRequests = [
   {
     fromEmployeeCode: "EMP006",
     toEmployeeCode: "EMP009",
     examName: "Database Management Systems",
+    requestType: TransferRequestType.REPLACEMENT_FOUND,
     status: TransferStatus.APPROVED,
     reason: "Medical leave",
     approvalRemark: "Approved due to medical reason",
@@ -15,6 +19,7 @@ export const transferRequests = [
     fromEmployeeCode: "EMP010",
     toEmployeeCode: "EMP013",
     examName: "Operating Systems",
+    requestType: TransferRequestType.REPLACEMENT_FOUND,
     status: TransferStatus.PENDING,
     reason: "Personal work",
     approvalRemark: null,
@@ -25,6 +30,7 @@ export const transferRequests = [
     fromEmployeeCode: "EMP013",
     toEmployeeCode: "EMP015",
     examName: "Cyber Security",
+    requestType: TransferRequestType.REPLACEMENT_FOUND,
     status: TransferStatus.REJECTED,
     reason: "Conference attendance",
     approvalRemark: "Insufficient justification",
@@ -35,6 +41,7 @@ export const transferRequests = [
     fromEmployeeCode: "EMP008",
     toEmployeeCode: "EMP011",
     examName: "Cloud Computing",
+    requestType: TransferRequestType.REPLACEMENT_FOUND,
     status: TransferStatus.CANCELLED,
     reason: "No longer required",
     approvalRemark: null,

@@ -27,6 +27,7 @@ export async function seedActivityLogs() {
 
     switch (transfer.status) {
       case TransferStatus.PENDING:
+      case TransferStatus.ACCEPTED:
         action = ActivityAction.CREATE_TRANSFER_REQUEST;
         break;
 
@@ -103,6 +104,10 @@ export async function seedActivityLogs() {
 
       case SwapStatus.ACCEPTED:
         action = ActivityAction.ACCEPT_SWAP_REQUEST;
+        break;
+
+      case SwapStatus.COMPLETED:
+        action = ActivityAction.COMPLETE_SWAP_REQUEST;
         break;
     }
 

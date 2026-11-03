@@ -6,74 +6,81 @@ const generalSession = {
   endTime: new Date("1970-01-01T12:00:00.000Z"),
 };
 
+const dateOffset = (days: number) => {
+  const date = new Date();
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date;
+};
+
 export const exams = [
   {
     ...generalSession,
     examName: "Database Management Systems",
-    examDate: new Date("2026-09-10T09:00:00"),
+    examDate: dateOffset(7),
     requiredFaculty: 4,
     status: ExamStatus.UPCOMING,
   },
   {
     ...generalSession,
     examName: "Operating Systems",
-    examDate: new Date("2026-09-12T09:00:00"),
+    examDate: dateOffset(9),
     requiredFaculty: 3,
     status: ExamStatus.UPCOMING,
   },
   {
     ...generalSession,
     examName: "Computer Networks",
-    examDate: new Date("2026-09-15T09:00:00"),
+    examDate: dateOffset(12),
     requiredFaculty: 3,
     status: ExamStatus.UPCOMING,
   },
   {
     ...generalSession,
     examName: "Data Structures",
-    examDate: new Date("2026-07-01T09:00:00"),
+    examDate: dateOffset(0),
     requiredFaculty: 4,
     status: ExamStatus.ACTIVE,
   },
   {
     ...generalSession,
     examName: "Machine Learning",
-    examDate: new Date("2026-05-15T09:00:00"),
+    examDate: dateOffset(-14),
     requiredFaculty: 3,
     status: ExamStatus.COMPLETED,
   },
   {
     ...generalSession,
     examName: "Cloud Computing",
-    examDate: new Date("2026-09-18T09:00:00"),
+    examDate: dateOffset(16),
     requiredFaculty: 3,
     status: ExamStatus.UPCOMING,
   },
   {
     ...generalSession,
     examName: "Artificial Intelligence",
-    examDate: new Date("2026-09-20T09:00:00"),
+    examDate: dateOffset(18),
     requiredFaculty: 4,
     status: ExamStatus.UPCOMING,
   },
   {
     ...generalSession,
     examName: "Software Engineering",
-    examDate: new Date("2026-06-05T09:00:00"),
+    examDate: dateOffset(-30),
     requiredFaculty: 2,
     status: ExamStatus.COMPLETED,
   },
   {
     ...generalSession,
     examName: "Compiler Design",
-    examDate: new Date("2026-08-25T09:00:00"),
+    examDate: dateOffset(21),
     requiredFaculty: 2,
     status: ExamStatus.CANCELLED,
   },
   {
     ...generalSession,
     examName: "Cyber Security",
-    examDate: new Date("2026-07-10T09:00:00"),
+    examDate: dateOffset(0),
     requiredFaculty: 3,
     status: ExamStatus.ACTIVE,
   },

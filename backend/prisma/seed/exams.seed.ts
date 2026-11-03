@@ -10,6 +10,9 @@ export async function seedExams() {
         examName: exam.examName,
       },
       update: {
+        sessionName: exam.sessionName,
+        startTime: exam.startTime,
+        endTime: exam.endTime,
         examDate: exam.examDate,
         requiredFaculty: exam.requiredFaculty,
         status: exam.status,
