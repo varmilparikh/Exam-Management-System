@@ -3,6 +3,7 @@ import { ApiError } from "../utils/apiError.js";
 
 import {
   DutyStatus,
+  ExamOptInStatus,
   ExamStatus,
   type Prisma,
 } from "../generated/prisma/client.js";
@@ -13,13 +14,15 @@ import {
   type ExamDutyResponse,
 } from "../constants/prismaSelect.js";
 
-class ExamDutyRepository {
+export class ExamDutyRepository {
+  constructor(private readonly database: typeof prisma = prisma) {}
+
   async createAssignedWithCapacity(
     employeeId: string,
     examId: string,
   ): Promise<ExamDutyResponse> {
     try {
-      return await prisma.$transaction(
+      return await this.database.$transaction(
         async (tx) => {
           const exam = await tx.exam.findFirst({
             where: { id: examId, isDeleted: false },
@@ -50,12 +53,28 @@ class ExamDutyRepository {
               409,
               "Employee is already assigned to this exam.",
             );
-          const [assignedCount, pendingOptIns] = await Promise.all([
-            tx.examDuty.count({
-              where: { examId, isDeleted: false, employeeId: { not: null } },
-            }),
-            tx.examOptIn.count({ where: { examId, status: "PENDING" } }),
-          ]);
+          const [assignedCount, pendingOptIns, sameExamOptIn] =
+            await Promise.all([
+              tx.examDuty.count({
+                where: { examId, isDeleted: false, employeeId: { not: null } },
+              }),
+              tx.examOptIn.count({ where: { examId, status: "PENDING" } }),
+              tx.examOptIn.findFirst({
+                where: {
+                  employeeId,
+                  examId,
+                  status: {
+                    in: [ExamOptInStatus.PENDING, ExamOptInStatus.CONFIRMED],
+                  },
+                },
+                select: { id: true },
+              }),
+            ]);
+          if (sameExamOptIn)
+            throw new ApiError(
+              409,
+              "Employee already has an active opt-in for this exam. Review the opt-in instead.",
+            );
           if (assignedCount + pendingOptIns >= exam.requiredFaculty)
             throw new ApiError(409, "Required faculty limit reached.");
           const overlappingDuty = await tx.examDuty.findFirst({

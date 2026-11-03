@@ -7,7 +7,9 @@ import { ApiError } from "../utils/apiError.js";
 
 const activeOptInStatuses = [ExamOptInStatus.PENDING, ExamOptInStatus.CONFIRMED];
 
-class ExamOptInRepository {
+export class ExamOptInRepository {
+  constructor(private readonly database: typeof prisma = prisma) {}
+
   async findUpcomingForFaculty(employeeId: string) {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
@@ -187,7 +189,7 @@ class ExamOptInRepository {
 
   async review(id: string, reviewerId: string, action: "CONFIRM" | "REJECT", remark?: string): Promise<ExamOptInResponse> {
     try {
-      return await prisma.$transaction(async (tx) => {
+      return await this.database.$transaction(async (tx) => {
         const optIn = await tx.examOptIn.findUnique({
           where: { id },
           select: {
@@ -203,6 +205,20 @@ class ExamOptInRepository {
         if (action === "CONFIRM") {
           if (optIn.exam.status !== ExamStatus.UPCOMING || hasSessionStarted(optIn.exam)) {
             throw new ApiError(409, "This exam session is no longer open for confirmation.");
+          }
+          const existingDuty = await tx.examDuty.findFirst({
+            where: {
+              employeeId: optIn.employeeId,
+              examId: optIn.examId,
+              isDeleted: false,
+            },
+            select: { id: true },
+          });
+          if (existingDuty) {
+            throw new ApiError(
+              409,
+              "Faculty is already assigned to this exam. Reject the opt-in instead.",
+            );
           }
           const assignedCount = await tx.examDuty.count({ where: { examId: optIn.examId, isDeleted: false, employeeId: { not: null } } });
           if (assignedCount >= optIn.exam.requiredFaculty) throw new ApiError(409, "The exam session has no remaining capacity.");
