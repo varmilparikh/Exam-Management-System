@@ -101,7 +101,8 @@ class AuthService {
     // Find employee
     const employee = await authRepository.findByEmail(data.email);
 
-    const passwordHash = employee?.password ?? (await dummyPasswordHash);
+    const fallbackPasswordHash = await dummyPasswordHash;
+    const passwordHash = employee?.password ?? fallbackPasswordHash;
     const isPasswordValid = await bcrypt.compare(data.password, passwordHash);
 
     if (!employee?.password || !isPasswordValid) {
