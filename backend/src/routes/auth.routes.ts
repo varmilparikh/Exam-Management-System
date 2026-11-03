@@ -11,6 +11,7 @@ import {
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
+import { loginRateLimiter } from "../middleware/loginRateLimiter.js";
 
 import { registerSchema, loginSchema } from "../validators/auth.validator.js";
 
@@ -26,7 +27,7 @@ router.post(
   register,
 );
 
-router.post("/login", validate(loginSchema), login);
+router.post("/login", loginRateLimiter, validate(loginSchema), login);
 
 router.post("/logout", verifyJWT, logout);
 

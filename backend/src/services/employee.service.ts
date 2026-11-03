@@ -152,9 +152,15 @@ class EmployeeService {
     }
 
     const { departmentId, ...rest } = data;
+    const shouldRevokeRefreshTokens =
+      (data.isActive === false && employee.isActive) ||
+      (data.role !== undefined && data.role !== employee.role);
 
     const updatedEmployee = await employeeRepository.update(id, {
       ...rest,
+      ...(shouldRevokeRefreshTokens && {
+        refreshTokenVersion: { increment: 1 },
+      }),
       department: departmentId
         ? {
             connect: {

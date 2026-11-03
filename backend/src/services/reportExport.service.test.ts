@@ -33,3 +33,17 @@ test("CSV exports neutralize spreadsheet formulas in text values", () => {
   assert.match(csv, /ordinary text/);
   assert.match(csv, /unchanged/);
 });
+
+test("Excel exports remain readable with the patched UUID dependency", async () => {
+  const buffer = await reportExportService.generateExcel(
+    [{ employee: "Example Faculty", dutyCount: 2 }],
+    [
+      { id: "employee", title: "Employee" },
+      { id: "dutyCount", title: "Duty count" },
+    ],
+    "Security smoke",
+  );
+
+  assert.equal(buffer.subarray(0, 2).toString("ascii"), "PK");
+  assert.ok(buffer.length > 100);
+});

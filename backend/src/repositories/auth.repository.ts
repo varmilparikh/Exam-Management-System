@@ -93,6 +93,14 @@ class AuthRepository {
       select: employeeSelect,
     });
   }
+
+  async incrementRefreshTokenVersion(id: string): Promise<void> {
+    await prisma.employee.update({
+      where: { id },
+      data: { refreshTokenVersion: { increment: 1 } },
+      select: { id: true },
+    });
+  }
 }
 
 export default new AuthRepository();

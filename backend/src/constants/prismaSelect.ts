@@ -7,6 +7,7 @@ export const employeeLoginSelect = {
   name: true,
   email: true,
   password: true,
+  refreshTokenVersion: true,
   phone: true,
   profileImage: true,
   designation: true,

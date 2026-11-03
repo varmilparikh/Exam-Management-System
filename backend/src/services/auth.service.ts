@@ -20,7 +20,13 @@ import type { JwtPayload } from "../types/jwt.types.js";
 import { generateAccessToken } from "../auth/tokens/generateAccessToken.js";
 import { generateRefreshToken } from "../auth/tokens/generateRefreshToken.js";
 import { verifyRefreshToken } from "../auth/tokens/verifyRefreshToken.js";
+import { isRefreshTokenVersionCurrent } from "../auth/tokens/refreshTokenVersion.js";
 import { toEmployeeResponse } from "../mappers/employee.mapper.js";
+
+const dummyPasswordHash = bcrypt.hash(
+  "invalid-login-placeholder",
+  env.bcryptSaltRounds,
+);
 
 class AuthService {
   async register(
@@ -95,22 +101,10 @@ class AuthService {
     // Find employee
     const employee = await authRepository.findByEmail(data.email);
 
-    if (!employee) {
-      throw new ApiError(401, "Invalid email or password");
-    }
+    const passwordHash = employee?.password ?? (await dummyPasswordHash);
+    const isPasswordValid = await bcrypt.compare(data.password, passwordHash);
 
-    // LOCAL login requires a password
-    if (!employee.password) {
-      throw new ApiError(401, "This account uses social login");
-    }
-
-    // Compare password
-    const isPasswordValid = await bcrypt.compare(
-      data.password,
-      employee.password,
-    );
-
-    if (!isPasswordValid) {
+    if (!employee?.password || !isPasswordValid) {
       throw new ApiError(401, "Invalid email or password");
     }
 
@@ -141,6 +135,7 @@ class AuthService {
       id: updatedEmployee.id,
       email: updatedEmployee.email,
       role: updatedEmployee.role,
+      refreshTokenVersion: employee.refreshTokenVersion,
     };
 
     const accessToken = generateAccessToken(payload);
@@ -164,6 +159,8 @@ class AuthService {
   }
 
   async logout(user: JwtPayload): Promise<void> {
+    await authRepository.incrementRefreshTokenVersion(user.id);
+
     try {
       await activityLogService.log({
         employeeId: user.id,
@@ -186,10 +183,20 @@ class AuthService {
       throw new ApiError(401, "Invalid refresh token");
     }
 
+    if (
+      !isRefreshTokenVersionCurrent(
+        payload.refreshTokenVersion,
+        employee.refreshTokenVersion,
+      )
+    ) {
+      throw new ApiError(401, "Invalid or expired refresh token");
+    }
+
     return generateAccessToken({
       id: employee.id,
       email: employee.email,
       role: employee.role,
+      refreshTokenVersion: employee.refreshTokenVersion,
     });
   }
 }

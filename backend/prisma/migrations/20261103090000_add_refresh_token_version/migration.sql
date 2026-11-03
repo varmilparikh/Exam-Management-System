@@ -1,0 +1,2 @@
+ALTER TABLE "employees"
+ADD COLUMN "refreshTokenVersion" INTEGER NOT NULL DEFAULT 0;

@@ -130,6 +130,29 @@ test("malformed JSON returns a client error instead of an internal error", async
   });
 });
 
+test("login limits repeated failed attempts by client IP", async () => {
+  let response: Awaited<ReturnType<typeof fetch>> | undefined;
+
+  for (let attempt = 0; attempt < 11; attempt += 1) {
+    response = await fetch(`${baseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Connection: "close",
+      },
+      body: JSON.stringify({ email: "invalid-email", password: "wrong" }),
+    });
+  }
+
+  assert.equal(response?.status, 429);
+  assert.ok(response?.headers.has("ratelimit"));
+  assert.deepEqual(await response?.json(), {
+    success: false,
+    statusCode: 429,
+    message: "Too many login attempts. Try again in 15 minutes.",
+  });
+});
+
 test("Prisma uniqueness conflicts map to HTTP 409", () => {
   const error = new Prisma.PrismaClientKnownRequestError(
     "Unique constraint failed",

@@ -54,6 +54,8 @@ model Employee {
   // Authentication
   password String?
 
+  refreshTokenVersion Int @default(0)
+
   loginProvider LoginProvider @default(LOCAL)
 
   isEmailVerified Boolean @default(false)
