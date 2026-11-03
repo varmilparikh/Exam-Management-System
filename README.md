@@ -199,6 +199,12 @@ frontend origin. The Vite development server proxies `/api` to
 `/api/*` to the backend service's `/api/*` URL before the client-side route
 fallback to `/index.html`.
 
+The API exposes `GET /health/live` for process liveness and
+`GET /health/ready` for database readiness. Configure `CLIENT_URL` in the
+backend environment as a comma-separated list of frontend origins when the
+browser calls the API cross-origin. Same-origin `/api` rewrites do not need
+CORS configuration.
+
 ```bash
 npm run dev
 ```
